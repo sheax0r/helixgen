@@ -109,10 +109,13 @@ rule). **[discovery]** = also needs an OSC command we haven't captured yet.
     finding #3.
 
 ### IR polish
-- **#5 IR hash cache** **[local]** — cache `abspath (+ mtime/size) → irhash` in
-  `~/.helixgen/cache/irhash.json` so reusing an IR across presets doesn't
-  recompute the libsndfile round-trip + MD5. Invalidate on stat change. Ties into
-  `mapping.json`, `compute_irhash`, and the bridge IR check. **No blocker.**
+- **#5 IR hash cache** — **✅ SHIPPED (`helixgen ir-cache`).** Caches
+  `abspath (+ mtime/size) → irhash` in `~/.helixgen/cache/irhash.json`
+  (override `$HELIXGEN_IRHASH_CACHE`, or `$HELIXGEN_CACHE` for the dir) so
+  reusing an IR across presets skips the libsndfile round-trip + MD5;
+  invalidated on any stat (mtime/size) change. Shared transparently by
+  `register-irs`, `ir-scan`, and the MCP IR tools; inspected/maintained via
+  `helixgen ir-cache --stats | --clear | --prune` (`src/helixgen/irhash_cache.py`).
 
 ### Single-tone install/remove parity with bulk sync
 - **#6 Single-tone install/manifest parity** — **✅ MOSTLY RESOLVED (2.19.0,
@@ -269,30 +272,31 @@ assumption — see #9); the reference-based redesign below then **shipped
 
 ### Transcoder snapshot residuals (from the 2.21.1 bypass-semantics fix review)
 
-- **#23 Input-block state is dropped on transcode** — `bridge.hsp_to_paths`
-  skips `b00` after reading its input mode, so an input block's `@enabled`
-  base value and per-snapshot array never reach the synthesizer (the Stadium
-  app's own import snapshot-tracks the DSP-B input as a bypass target). A
-  `.hsp` that mutes an input per-snapshot, or loads with an input bypassed,
-  silently loses that on `device install`/`sync`. Found by the 2.21.1
-  adversarial review (protocol lens); inert for typical tones.
-- **#24 EXP-driven param leaves don't carry their target id** — on real device
-  blobs a controller-driven param leaf carries `tid_=<trg id>` with
-  `snap=False` (all three `preset_15x` fixtures); helixgen stamps `tid_` only
-  on snapshot-tracked leaves. EXP sweeps were HW-validated at 2.18.0 with
-  `tid_=0`, so this is presumed inert — but it's the symmetric case to the
-  block-level binding the 2.21.1 fix added. Match the device convention.
-  (The #21 controller-depth pass kept the same behavior for its FS→param
-  toggle leaves — fix both together.)
+- **#23 Input-block state is dropped on transcode** — **✅ SHIPPED
+  (2026-07-14).** `bridge.hsp_to_paths` now captures `b00`'s base `@enabled`
+  (→ input endpoint `enbl=0` when bypassed) AND its per-snapshot bypass array;
+  the transcoder registers the input endpoint's instance id (`(pi,-1,-1)`
+  sentinel), emits a bypass `trgs` target when the array varies, and binds the
+  input block (`snap=True, tid_`) — so an input muted per-snapshot / bypassed
+  at load survives `device install`/`sync`. Offline-tested in
+  `tests/test_transcode.py`.
+- **#24 EXP-driven param leaves don't carry their target id** — **✅ SHIPPED
+  (2026-07-14).** A controller-ONLY param leaf (EXP sweep AND footswitch
+  param toggle) now carries `tid_=<trg id>` with `snap=False`, matching the
+  `preset_15x` device blobs; a param that is ALSO snapshot-tracked keeps
+  `snap=True` (snapshot binding wins). Fixed both cases together (the #21
+  controller-depth pass had kept the old `tid_=0`).
+  `tests/test_transcode.py`.
 
 - **#25 `device slots restore --force` doesn't force for `.hsp` sources** —
-  `_install_hsp_open` unconditionally refuses an occupied slot, so `--force`
-  only works for `.sbe` restores; also a manifest-v2 tone with `slot: "3A"`
-  reports "no recorded slot" unless `--pos` is passed. Both hit while
-  force-refreshing a synced tone after the 2.21.1 transcoder fix (workaround:
-  `device pull` a validated blob + `device restore <sbe> <cid>`). Related:
-  `device sync` change detection hashes the `.hsp`, so a transcoder fix never
-  re-pushes already-synced tones — consider a `--repush`/transcode-hash mode.
+  **✅ SHIPPED (2026-07-14).** `_install_hsp_open` takes a `force` flag (restore
+  passes `--force`) so an occupied slot can be overwritten for `.hsp` sources,
+  not just `.sbe`; and restore's slot resolution falls back to the last
+  observed `device.posi` when the manifest `slot` doesn't resolve (so a synced
+  tone no longer reports "no recorded slot"). Remaining note (out of scope
+  here): `device sync` change detection hashes the `.hsp`, so a transcoder fix
+  never re-pushes already-synced tones — consider a `--repush`/transcode-hash
+  mode.
 
 ### Double-click a `.hsp` to load onto the Helix's ACTIVE slot **[device-write]**
 - Requested 2026-07-13. A macOS file-association / tiny app wrapper so
@@ -514,15 +518,21 @@ LED control, focus-view/UI cosmetics.
 
 - **#32 ir-prune / delete-ir minor residuals (PR #37 review)** — non-gating
   leftovers from the adversarial review, all fail-closed or flag-gated today:
-  (a) `ir-prune --force` conflates two consents (delete *protected* IRs AND
-  override manifest-path *warnings*) — split out an `--ignore-warnings`;
-  (b) a dangling setlist `rcid` (reference to a deleted pool preset) makes the
-  pool-coverage cross-check fail forever with a misleading "listing looks
-  incomplete / reboot" error — detect and suggest removing the stale reference;
-  (c) the `--force-wedge` path still resolves via non-strict listings — make the
-  wedge-path resolution strict too;
+  (a) **✅ SHIPPED (2026-07-14)** — `ir-prune`'s two consents are split:
+  `--force` deletes *protected* (locally-referenced) IRs; a new
+  `--ignore-warnings` proceeds despite unverifiable-local-tone *warnings*
+  (CLI + MCP `ignore_warnings` arg);
+  (b) **✅ SHIPPED (2026-07-14)** — a dangling setlist `rcid` (reference to a
+  deleted pool preset) is now detected (probing the cid via `get_ref`) and
+  aborts with an actionable error naming the stale reference + suggesting a
+  re-sync/removal, instead of the misleading "listing looks incomplete /
+  reboot" error (which is now reserved for a genuinely incomplete listing);
+  (c) **✅ SHIPPED (2026-07-14)** — `resolve_device_ir_live` (the `--force-wedge`
+  path's resolver) lists strictly, so a dropped/partial `-11` reply raises
+  rather than resolving as "no such IR" and silently taking the file-only
+  wedge cleanup;
   (d) theoretical: multi-message paginated listings (never observed; blob
-  chunking IS covered) could evade the cross-check — note only.
+  chunking IS covered) could evade the cross-check — **note only** (still open).
 
 - **#35 Tone naming schema + embedded metadata + guitar variants** — requested
   2026-07-13. Three coupled changes to the tone library (needs its own
