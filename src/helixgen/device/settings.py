@@ -21,8 +21,51 @@ commands live in ``client.py`` and call in here.
 """
 from __future__ import annotations
 
+import json
+import os
 import struct
 from typing import Any, Dict, List, NamedTuple, Optional
+
+_PAGES_FILE = os.path.join(os.path.dirname(__file__), "_settings_pages.json")
+_PAGES_CACHE: Optional[Dict[str, List[str]]] = None
+
+
+def pages() -> Dict[str, List[str]]:
+    """Curated ``page-name -> [property key]`` catalog of the device's Global
+    Settings, grouped like the app's Global Settings screens. Sourced from the
+    app binary's ``global.*`` namespace; the device supplies each key's name,
+    type, range, and enum labels via :meth:`HelixClient.get_property_def`."""
+    global _PAGES_CACHE
+    if _PAGES_CACHE is None:
+        with open(_PAGES_FILE) as f:
+            _PAGES_CACHE = json.load(f)
+    return _PAGES_CACHE
+
+
+def page_names() -> List[str]:
+    return sorted(pages())
+
+
+def keys_for_page(page: str) -> List[str]:
+    """Keys on ``page``; raises :class:`KeyError` for an unknown page."""
+    p = pages()
+    if page not in p:
+        raise KeyError(page)
+    return list(p[page])
+
+
+def all_keys() -> List[str]:
+    out: List[str] = []
+    for ks in pages().values():
+        out.extend(ks)
+    return sorted(out)
+
+
+def page_for_key(key: str) -> Optional[str]:
+    for page, ks in pages().items():
+        if key in ks:
+            return page
+    return None
 
 # 8-byte magics
 VALUE_MAGIC = b"lavppgsm"   # property *value* blob

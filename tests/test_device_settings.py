@@ -115,3 +115,36 @@ def test_render_value_enum_label():
     d = S.decode_property_def(DEF_TUNER_TYPE)
     assert S.render_value(d, 1) == "Strobe (1)"
     assert S.render_value(d, 0) == "Needle (0)"
+
+
+# --- catalog integrity (offline) ------------------------------------------
+
+def test_pages_catalog_loads_and_is_disjoint():
+    pages = S.pages()
+    assert set(pages) >= {"ins-outs", "midi", "tuner", "tempo-click",
+                          "switches-pedals", "displays", "date-time"}
+    seen = {}
+    for page, keys in pages.items():
+        for k in keys:
+            assert k.startswith("global."), k
+            assert k not in seen, f"{k} in both {seen.get(k)} and {page}"
+            seen[k] = page
+    assert len(seen) == len(S.all_keys()) >= 150
+
+
+def test_page_for_key_and_keys_for_page():
+    assert S.page_for_key("global.tuner.type") == "tuner"
+    assert "global.tuner.type" in S.keys_for_page("tuner")
+    assert S.page_for_key("global.nonexistent.key") is None
+
+
+def test_keys_for_unknown_page_raises():
+    with pytest.raises(KeyError):
+        S.keys_for_page("nope")
+
+
+def test_mcp_settings_list_offline():
+    from mcp_server import tools as T
+    out = T.device_settings_list_handler(page="tuner", values=False)
+    assert "pages" in out and "tuner" in out["pages"]
+    assert "global.tuner.type" in out["pages"]["tuner"]
