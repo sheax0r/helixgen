@@ -38,6 +38,9 @@ Findings verified against the code by the reviewer; line numbers as of 2.19.0.
    the **delete** bucket with the untracked cid.
 
 3. **v1→v2 migration silently drops ledger-only placements (local data loss).**
+   **→ DISMISSED by the owner (2026-07-13): historical/ledger data is disposable,
+   the ledger is being retired, and nobody else uses helixgen yet. No migration
+   is needed — do NOT spend effort here.**
    2.16–2.18 `device install/push/save/create` recorded placements **only** in the
    ledger `entries`. `_migrate_v1` (`manifest.py:186-202`) builds tone records
    only by iterating `data["tones"]`, so every entries-only placement loses its
@@ -91,6 +94,7 @@ per-tone error isolation; partial-sync re-runs converge.
 
 Most urgent: (1) wire or gate `device add`/`unsync`/`sync-off` so they don't
 misrepresent sync; (2) match pool by name **and** managed-ownership before any
-overwrite/delete; (3) fix entries-only migration; (5) refuse to save over a
-manifest that failed to load. Route to the library owner; **do not** ship further
-library changes on top until (3)/(5) (data-loss) are addressed.
+overwrite/delete; (5) refuse to save over a manifest that failed to load (guards
+*future* v2 corruption — distinct from migration). Finding (3) is **dismissed by
+the owner** (no historical migration wanted). Route the rest to the library
+owner.
