@@ -50,13 +50,6 @@
   "global.return.type.12",
   "global.return.type.34"
  ],
- "wireless": [
-  "global.bluetooth.autoconnect",
-  "global.bluetooth.enable",
-  "global.bluetooth.namepolicy",
-  "global.remote.access",
-  "global.wifi.enable"
- ],
  "tempo-click": [
   "global.bpm.hundredths",
   "global.bpm.whole",

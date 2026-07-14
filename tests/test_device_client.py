@@ -658,3 +658,11 @@ def test_get_property_raises_on_error():
     _wire(h, [reply])
     with pytest.raises(HelixError):
         h.get_property("global.bad.key")
+
+
+def test_set_property_refuses_self_severing_key():
+    h = HelixClient()
+    # no socket wired — guard must fire BEFORE any RPC attempt (ValueError,
+    # same type coerce_value raises, so the CLI/MCP set paths surface it cleanly)
+    with pytest.raises(ValueError):
+        h.set_property("global.wifi.enable", "i", 0)

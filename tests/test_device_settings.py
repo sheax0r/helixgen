@@ -148,3 +148,63 @@ def test_mcp_settings_list_offline():
     out = T.device_settings_list_handler(page="tuner", values=False)
     assert "pages" in out and "tuner" in out["pages"]
     assert "global.tuner.type" in out["pages"]["tuner"]
+
+
+# --- hardening (adversarial-review fixes) ---------------------------------
+
+def test_coerce_rejects_non_finite_float():
+    d = S.decode_property_def(DEF_MIDI_CH)._replace(type="f", vmin=None, vmax=None,
+                                                    enum=[])
+    for bad in ("nan", "inf", "-inf", "1e999"):
+        with pytest.raises(ValueError):
+            S.coerce_value(d, bad)
+
+
+def test_coerce_rejects_huge_int():
+    d = S.decode_property_def(DEF_MIDI_CH)._replace(vmin=None, vmax=None)
+    with pytest.raises(ValueError):
+        S.coerce_value(d, "99999999999999999999999")
+
+
+def test_encode_rejects_non_finite_and_non_integral():
+    with pytest.raises(ValueError):
+        S.encode_value_blob("k", "f", float("inf"))
+    with pytest.raises(ValueError):
+        S.encode_value_blob("k", "i", 1.5)
+    # integral float is fine for an int prop
+    assert S.decode_value_blob(S.encode_value_blob("k", "i", 3.0)).value == 3
+
+
+def test_guard_key_refuses_self_severing_keys():
+    for k in ("global.wifi.enable", "global.remote.access"):
+        with pytest.raises(ValueError):
+            S.guard_key(k)
+    S.guard_key("global.tuner.type")   # safe key: no raise
+
+
+def test_decode_rejects_non_map_body():
+    import msgpack
+    bad = S.VALUE_MAGIC + msgpack.packb([1, 2, 3])
+    with pytest.raises(ValueError):
+        S.decode_value_blob(bad)
+
+
+def test_decode_def_survives_non_str_name_and_missing_dval():
+    import msgpack, struct
+    u32 = lambda s: struct.unpack(">I", s.encode())[0]
+    blob = S.DEF_MAGIC + msgpack.packb({u32("name"): 5, u32("key_"): "x.y"})
+    d = S.decode_property_def(blob)          # must not raise
+    assert d.name == "" and d.type == "f" and d.default is None and d.enum == []
+
+
+def test_pages_returns_defensive_copy():
+    p = S.pages()
+    p["tuner"].append("global.bogus")
+    assert "global.bogus" not in S.pages()["tuner"]
+
+
+def test_catalog_excludes_connectivity_footguns():
+    keys = set(S.all_keys())
+    for k in S.DANGEROUS_KEYS:
+        assert k not in keys
+    assert "wireless" not in S.pages()

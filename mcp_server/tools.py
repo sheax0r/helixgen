@@ -502,8 +502,10 @@ def device_settings_list_handler(
                                      "value": v.value, "type": d.type,
                                      "min": d.vmin, "max": d.vmax,
                                      "enum": d.enum})
-                    except HelixError as e:
+                    except (HelixError, ValueError) as e:
                         rows.append({"page": pg, "key": k, "error": str(e)})
+                    if client.sock is None:  # connection lost — stop cleanly
+                        return {"settings": rows, "aborted_at": k}
     except HelixError as e:
         raise ValueError(f"device error: {e}") from e
     return {"settings": rows}

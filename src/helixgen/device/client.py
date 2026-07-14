@@ -483,8 +483,11 @@ class HelixClient:
         """Write a property value (``/PropertyValueSet [reqid, ctx=0, blob]``).
 
         ``typ`` is ``'f'``/``'i'`` (from the property's definition). Returns
-        ``True`` when the device replies ``/success [reqid, 0]``.
+        ``True`` when the device replies ``/success [reqid, 0]``. Refuses keys
+        whose write would sever this control channel (see
+        :data:`settings.DANGEROUS_KEYS`).
         """
+        _settings.guard_key(key)
         blob = _settings.encode_value_blob(key, typ, value)
         for addr, args in self._rpc("/PropertyValueSet", [("i", 0), ("b", blob)]):
             if addr == "/success":

@@ -876,6 +876,7 @@ def device_settings_list(page, values, as_json, ip, port):
         return
 
     rows = []
+    aborted = None
     try:
         with HelixClient(ip, port) as h:
             for pg in sorted(catalog):
@@ -888,14 +889,24 @@ def device_settings_list(page, values, as_json, ip, port):
                                      "display": S.render_value(d, v.value),
                                      "type": d.type, "min": d.vmin, "max": d.vmax,
                                      "enum": d.enum})
-                    except HelixError as e:
+                    except (HelixError, ValueError) as e:
                         rows.append({"page": pg, "key": k, "error": str(e)})
+                    # a dead socket (reconnect exhausted) makes every remaining
+                    # key fast-fail — stop and report a clean partial result.
+                    if h.sock is None:
+                        aborted = k
+                        break
+                if aborted:
+                    break
     except HelixError as e:
         raise click.ClickException(str(e)) from e
     except OSError as e:
         raise click.ClickException(str(e)) from e
     if as_json:
-        click.echo(json.dumps(rows, indent=2))
+        out = {"settings": rows}
+        if aborted:
+            out["aborted_at"] = aborted
+        click.echo(json.dumps(out, indent=2))
         return
     cur = None
     for r in rows:
@@ -903,11 +914,13 @@ def device_settings_list(page, values, as_json, ip, port):
             cur = r["page"]
             click.echo(f"\n[{cur}]")
         if "error" in r:
-            click.echo(f"  {r['key']:<40} <err>")
+            click.echo(f"  {r['key']:<40} <err: {r['error']}>")
         else:
             rng = (f"  {{{', '.join(r['enum'])}}}" if r["enum"]
                    else f"  [{r['min']}..{r['max']}]")
             click.echo(f"  {r['key']:<40} = {r['display']:<16} {r['name']}{rng}")
+    if aborted:
+        click.echo(f"\n(connection lost — stopped at {aborted}; re-run to continue)")
 
 
 @device_settings.command(name="get")
@@ -924,7 +937,7 @@ def device_settings_get(key, as_json, ip, port):
         with HelixClient(ip, port) as h:
             d = h.get_property_def(key)
             v = h.get_property(key)
-    except HelixError as e:
+    except (HelixError, ValueError) as e:
         raise click.ClickException(str(e)) from e
     except OSError as e:
         raise click.ClickException(str(e)) from e

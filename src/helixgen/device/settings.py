@@ -22,9 +22,21 @@ commands live in ``client.py`` and call in here.
 from __future__ import annotations
 
 import json
+import math
 import os
 import struct
 from typing import Any, Dict, List, NamedTuple, Optional
+
+_INT64_MIN, _INT64_MAX = -(2 ** 63), 2 ** 63 - 1
+
+# Keys whose write would sever this very (network) control channel or lock the
+# device out of remote control — refused by :func:`guard_key` so neither a
+# catalog browse nor a direct `settings set` can strand the device. (Change
+# these on the device's own touchscreen.)
+DANGEROUS_KEYS = frozenset({
+    "global.wifi.enable",       # disabling WiFi kills the LAN transport
+    "global.remote.access",     # disabling remote access locks out all clients
+})
 
 _PAGES_FILE = os.path.join(os.path.dirname(__file__), "_settings_pages.json")
 _PAGES_CACHE: Optional[Dict[str, List[str]]] = None
@@ -39,7 +51,8 @@ def pages() -> Dict[str, List[str]]:
     if _PAGES_CACHE is None:
         with open(_PAGES_FILE) as f:
             _PAGES_CACHE = json.load(f)
-    return _PAGES_CACHE
+    # return a fresh copy so a mutating caller can't poison the process cache
+    return {k: list(v) for k, v in _PAGES_CACHE.items()}
 
 
 def page_names() -> List[str]:
@@ -52,6 +65,16 @@ def keys_for_page(page: str) -> List[str]:
     if page not in p:
         raise KeyError(page)
     return list(p[page])
+
+
+def guard_key(key: str) -> None:
+    """Raise :class:`ValueError` for a write that would strand the device."""
+    if key in DANGEROUS_KEYS:
+        raise ValueError(
+            f"refusing to set {key!r}: changing it over the network can sever "
+            "this control channel and lock out remote access. Change it on the "
+            "device's own screen."
+        )
 
 
 def all_keys() -> List[str]:
@@ -133,7 +156,16 @@ def encode_value_blob(key: str, typ: str, value: Any) -> bytes:
     if typ not in ("f", "i"):
         raise ValueError(f"unsupported property type {typ!r} (want 'f' or 'i')")
     msgpack = _require_msgpack()
-    val = float(value) if typ == "f" else int(value)
+    if typ == "f":
+        val: Any = float(value)
+        if not math.isfinite(val):
+            raise ValueError(f"{key}: non-finite value {value!r} not allowed")
+    else:
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError(f"{key}: {value!r} is not an integer")
+        val = int(value)
+        if not _INT64_MIN <= val <= _INT64_MAX:
+            raise ValueError(f"{key}: {val} outside 64-bit integer range")
     payload = msgpack.packb(
         {K_KEY: key, K_TYPE: typ, K_VAL: val}, use_single_float=False)
     return VALUE_MAGIC + payload
@@ -144,7 +176,13 @@ def _unpack(blob: bytes, magic: bytes) -> Dict[int, Any]:
         raise ValueError(
             f"blob magic {blob[:8]!r} != expected {magic!r}")
     msgpack = _require_msgpack()
-    return msgpack.unpackb(blob[8:], raw=False, strict_map_key=False)
+    try:
+        m = msgpack.unpackb(blob[8:], raw=False, strict_map_key=False)
+    except Exception as exc:  # msgpack errors subclass ValueError, but be explicit
+        raise ValueError(f"undecodable property blob: {exc}") from exc
+    if not isinstance(m, dict):
+        raise ValueError(f"property blob body is {type(m).__name__}, not a map")
+    return m
 
 
 def decode_value_blob(blob: bytes) -> PropertyValue:
@@ -157,13 +195,17 @@ def decode_value_blob(blob: bytes) -> PropertyValue:
 def decode_property_def(blob: bytes) -> PropertyDef:
     """Decode a ``fedppgsm`` definition blob into a :class:`PropertyDef`."""
     m = _unpack(blob, DEF_MAGIC)
-    dval = m.get(K_DVAL) or {}
-    default = dval.get(K_VAL) if isinstance(dval, dict) else None
-    typ = dval.get(K_TYPE, "f") if isinstance(dval, dict) else "f"
-    name = (m.get(K_NAME) or "").replace("\n", " ")
-    enum = list(m.get(K_VNME) or [])
+    dval = m.get(K_DVAL) if isinstance(m.get(K_DVAL), dict) else {}
+    default = dval.get(K_VAL)
+    typ = dval.get(K_TYPE, "f")
+    if typ not in ("f", "i"):
+        typ = "f"
+    raw_name = m.get(K_NAME)
+    name = (raw_name if isinstance(raw_name, str) else "").replace("\n", " ")
+    vnme = m.get(K_VNME)
+    enum = [str(x) for x in vnme] if isinstance(vnme, list) else []
     return PropertyDef(
-        key=m.get(K_KEY) or (dval.get(K_KEY) if isinstance(dval, dict) else "") or "",
+        key=m.get(K_KEY) or dval.get(K_KEY) or "",
         name=name,
         short=m.get(K_SHRT) or "",
         type=typ,
@@ -201,11 +243,15 @@ def coerce_value(pdef: PropertyDef, raw: str) -> Any:
             val: Any = int(raw)
         except ValueError:
             raise ValueError(f"{pdef.key}: {raw!r} is not an integer")
+        if not _INT64_MIN <= val <= _INT64_MAX:
+            raise ValueError(f"{pdef.key}: {val} outside 64-bit integer range")
     else:
         try:
             val = float(raw)
         except ValueError:
             raise ValueError(f"{pdef.key}: {raw!r} is not a number")
+        if not math.isfinite(val):
+            raise ValueError(f"{pdef.key}: {raw!r} is not a finite number")
     if pdef.vmin is not None and val < pdef.vmin:
         raise ValueError(f"{pdef.key}: {val} below min {pdef.vmin}")
     if pdef.vmax is not None and val > pdef.vmax:
