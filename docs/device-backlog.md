@@ -284,17 +284,16 @@ setlist/preset CRUD (#20 create-setlist/#1, setlist rename/delete) must sequence
 **after** it merges to avoid collisions. The P1 item below is deliberately
 orthogonal to it.
 
-- **P1 · #15 Global settings read/write** **[device-write][discovery]** — the
-  biggest app-only surface. The 8 Global Settings pages (Ins/Outs,
-  Switches/Pedals, Displays, Preferences, Songs, Tempo/Click, MIDI, Date/Time)
-  plus Global EQ are all addressable via the `global.*` / `dsp.globaleq.*`
-  property namespace (251 keys) over `/PropertyValueGet` / `/PropertyValueSet`.
-  Deliver: (a) one frida capture of the `PropertyValueGet`/`Set` arg shape +
-  value typing; (b) a settings module with a curated key catalog (name↔key↔type↔
-  range, sourced from the bundle); (c) CLI `helixgen device settings
-  get|set|list [--page]` + MCP `device_settings_*`; (d) Global EQ via
-  `/GraphEnableSet` + param writes. Orthogonal to the library agent. **Chosen
-  first wave.** Matrix §8.
+- **P1 · #15 Global settings read/write** — **✅ SHIPPED 2.20.0.** The 8 Global
+  Settings pages + Tuner + Wireless (161 curated `global.*` keys) are read/written
+  over `/PropertyValueGet` / `/PropertyValueSet` via `helixgen device settings
+  list|get|set` + MCP `device_settings_*`. Protocol RE'd + hardware-validated
+  (get/set/def, enum-by-label, range validation, round-trip) — see
+  `docs/superpowers/specs/2026-07-13-global-settings-re-findings.md`. The device
+  self-describes each key (name/type/range/enum) via `/PropertyDefWithKeyGet`, so
+  the catalog is live. **Remaining follow-up: Global EQ** (`dsp.globaleq.*` +
+  `/GraphEnableSet`) is a separate, non-property screen — its param-write path
+  still needs a capture. Matrix §8.
 - **P2 · #16 Command Center** **[device-write][discovery]** — the footswitch-
   command subsystem (`commanddefs` families: PresetSnapshot, Song, Looper,
   Utility, ExtAmp, MIDI CC/PC/Note/MMC, HotKey; 2 cmds/switch, 16 instant

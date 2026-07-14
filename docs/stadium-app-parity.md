@@ -134,25 +134,30 @@ A ✅ requires a shipped-release / test / hardware ref — never memory.
 | Register / hash IRs locally | — | local | full | full | full | ✅ | `register-irs`/`ir-scan`/`ir-cache` |
 | IR block params (hi/lo cut, mix) | IR block | `.hsp` params | full | full | full | ✅ | authored on the IR block |
 
-## 8. Global settings — app exposes 8 pages; all `global.*` via `/PropertyValueGet`/`Set` (251 keys)
+## 8. Global settings — ✅ SHIPPED (2.20.0) via `device settings` (161 `global.*` keys)
 
-The app **does** expose these (Global Settings pages), and every value is
-addressable over the network via the `global.*` property namespace. helixgen
-covers **none** today — this is the single largest in-scope gap.
+The app exposes these as Global Settings pages; every value is a device
+*property* read/written over `/PropertyValueGet` / `/PropertyValueSet` (protocol
+RE'd + hardware-validated 2026-07-13, see
+`docs/superpowers/specs/2026-07-13-global-settings-re-findings.md`). helixgen now
+covers the whole property surface with `helixgen device settings list|get|set`
+(+ MCP `device_settings_*`). The device self-describes each key (name/type/range/
+enum) via `/PropertyDefWithKeyGet`, so the catalog is live, not hardcoded.
 
-| Page / function | App location | Protocol | Verdict | Notes |
-|---|---|---|---|---|
-| Read/write ANY global setting | Global Settings | `/PropertyValueGet`/`Set [key,val]` | 🔍 | property get/set arg shape = the one capture that unlocks the whole page set |
-| Ins/Outs (levels, impedance, pad, trim, mic gain/phantom/lowcut, S/PDIF, USB, reamp) | Ins/Outs | `global.out.*`, `global.offset.input.*`, `global.in.mic.*` | 🔴 | ~40 keys |
-| Switches/Pedals (FS6 mode, up/down, combo rows, EXP position/polarity, Control A-D type/polarity, trigger sens/thresh, snapshot/preset return) | Switches/Pedals | `global.fs6.*`, `global.up.down.*`, `global.exp.*`, `global.polarity.control.*`, `global.trigger.*`, `global.snap.*` | 🔴 | ~40 keys |
-| Displays (brightness, dim timeout, tap LED) | Displays | `global.brighness.*`, `global.timeout.screen.dim`, `global.tap.led` | 🔴 | |
-| Preferences (numbering, tap-tempo pitch, geolocation, remote access + PIN) | Preferences | `global.numbering.*`, `global.tap.tempo.pitch`, `global.remote.*` | 🔴 | remote-access = cloud gate |
-| Songs (select song/marker, song play, looper-stops-with-song) | Songs | `global.select.song`, `global.select.marker`, `global.song.play`, `global.looper.stops.with.song` | 🔴 | tied to Showcase (§11) |
-| Tempo/Click (bpm, follow, select, click sounds, MIDI clock) | Tempo/Click | `global.tempo.*`, `global.bpm.*`, `global.click*`, `global.midi.clock.*` | 🔴 | see §10 |
-| MIDI (USB-C, thru, channel, PC send/receive, snapshot CC) | MIDI | `global.midi.*` | 🔴 | |
-| Date/Time (NTP, timezone, clock fields, format, hide) | Date/Time | `global.clock.*` | 🔴 | |
-| Global EQ (3 EQs: 1/4"/XLR/Phones, bands, bypass, copy/paste/reset) | Global EQ view | `dsp.globaleq.*` + `/GraphEnableSet` | 🔴 | dedicated screen; param write arg 🔍 |
-| WiFi / Bluetooth enable | (device) | `global.wifi.*`, `global.bluetooth.*` | 🔴 | in-namespace |
+| Page / function | App location | Protocol | CLI | MCP | Verdict | Notes |
+|---|---|---|---|---|---|---|
+| Read/write ANY global setting | Global Settings | `/PropertyValueGet`/`Set [key,val]` | full | full | ✅ | `device settings get/set`; enum-by-label + range validation |
+| Ins/Outs (levels, impedance, pad, trim, mic gain/phantom/lowcut, S/PDIF, USB, reamp) | Ins/Outs | `global.out.*`, `global.offset.input.*`, `global.in.mic.*` | full | full | ✅ | page `ins-outs` (49 keys) |
+| Switches/Pedals (FS6 mode, up/down, combo, EXP, Control A-D, trigger, snapshot/preset return) | Switches/Pedals | `global.fs6.*`, `global.up.down.*`, `global.exp.*`, `global.polarity.control.*`, `global.trigger.*`, `global.snap.*` | full | full | ✅ | page `switches-pedals` (30 keys) |
+| Displays (brightness, dim timeout, tap LED) | Displays | `global.brighness.*`, `global.timeout.screen.dim`, `global.tap.led` | full | full | ✅ | page `displays` |
+| Preferences (numbering, tap-tempo pitch) | Preferences | `global.numbering.*`, `global.tap.tempo.pitch` | full | full | ✅ | page `preferences`; geolocation/remote-PIN excluded (cloud/privacy) |
+| Songs (select song/marker, song play, looper-stops-with-song) | Songs | `global.song.*`, `global.looper.stops.with.song` | full | full | ✅ | page `songs` |
+| Tempo/Click (bpm, follow, select, click sounds, MIDI clock) | Tempo/Click | `global.tempo.*`, `global.bpm.*`, `global.click*`, `global.midi.clock.*` | full | full | ✅ | page `tempo-click`; also `/SetTempo` (§10) |
+| MIDI (USB-C, thru, channel, PC send/receive, snapshot CC) | MIDI | `global.midi.*` | full | full | ✅ | page `midi` |
+| Date/Time (NTP, timezone, clock fields, format, hide) | Date/Time | `global.clock.*` | full | full | ✅ | page `date-time` |
+| Tuner config (ref pitch, offsets, type, in/out, trails) | (device tuner) | `global.tuner.*` | full | full | ✅ | page `tuner` (19 keys) — also §9 |
+| WiFi / Bluetooth enable | (device) | `global.wifi.*`, `global.bluetooth.*` | full | full | ✅ | page `wireless` |
+| Global EQ (3 EQs: 1/4"/XLR/Phones, bands, bypass, copy/paste/reset) | Global EQ view | `dsp.globaleq.*` + `/GraphEnableSet` | none | none | 🔍 | **not property-based** — separate screen; param write path still to capture (follow-up) |
 
 ## 9. Tuner (device-only in the app — but network-addressable)
 
