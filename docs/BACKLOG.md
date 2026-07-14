@@ -279,7 +279,12 @@ assumption — see #9); the reference-based redesign below then **shipped
   sentinel), emits a bypass `trgs` target when the array varies, and binds the
   input block (`snap=True, tid_`) — so an input muted per-snapshot / bypassed
   at load survives `device install`/`sync`. Offline-tested in
-  `tests/test_transcode.py`.
+  `tests/test_transcode.py`. **HW caveat:** a snapshot-varying **DSP-A** input
+  round-trip is not hardware-validated — its endpoint sits at instance id 0,
+  so its bypass trg carries `eID_=0`, and the device treats id 0 as
+  null/unassigned in the *trg-id* space (block-id space is separate, so this
+  is presumed fine, but unproven). DSP-B (`eID_=28`, the case the Stadium app
+  itself produces) is covered by an offline test.
 - **#24 EXP-driven param leaves don't carry their target id** — **✅ SHIPPED
   (2026-07-14).** A controller-ONLY param leaf (EXP sweep AND footswitch
   param toggle) now carries `tid_=<trg id>` with `snap=False`, matching the
@@ -526,7 +531,10 @@ LED control, focus-view/UI cosmetics.
   deleted pool preset) is now detected (probing the cid via `get_ref`) and
   aborts with an actionable error naming the stale reference + suggesting a
   re-sync/removal, instead of the misleading "listing looks incomplete /
-  reboot" error (which is now reserved for a genuinely incomplete listing);
+  reboot" error (which is now reserved for a genuinely incomplete listing).
+  Unvalidated assumption: `/GetContentRef` is presumed to return a dict for
+  an existing-but-unlisted pool cid (a `None` reads as "dangling") — either
+  way the prune aborts (fail closed), only the error text differs;
   (c) **✅ SHIPPED (2026-07-14)** — `resolve_device_ir_live` (the `--force-wedge`
   path's resolver) lists strictly, so a dropped/partial `-11` reply raises
   rather than resolving as "no such IR" and silently taking the file-only

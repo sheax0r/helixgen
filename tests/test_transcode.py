@@ -801,6 +801,43 @@ def test_input_snapshot_bypass_is_tracked_and_bound():
     assert row == [True] + [False] * 7, row
 
 
+def test_dsp_b_input_snapshot_bypass_uses_nonzero_eid():
+    """#23 on the DSP-B path (the case the Stadium app itself produces): the
+    flow-1 input endpoint's bypass trg is keyed by ``eID_ == 28`` (base 28 +
+    gridpos 0) — a NON-zero id, unlike DSP-A's ``eID_ == 0`` (see the
+    trg-id-space null caveat in the backlog #23 entry)."""
+    body = _input_bypass_hsp_body(base_bypassed=False, snapshots=False)
+    # add a DSP-B flow whose input is snapshot-muted
+    flow1 = {
+        "b00": {"@enabled": {"value": True,
+                             "snapshots": [False, True, True, True,
+                                           True, True, True, True]},
+                "slot": [{"model": "P35_InputNone", "params": {}}]},
+        "b01": {"@enabled": {"value": True},
+                "slot": [{"model": "HD2_AmpBritPlexiNrm",
+                          "params": {"Bass": {"value": 0.5}}}]},
+        "b13": {"@enabled": {"value": True},
+                "slot": [{"model": "P35_OutputMatrix", "params": {}}]},
+    }
+    body["preset"]["flow"].append(flow1)
+    doc = content.decode_any(transcode.hsp_to_sbepgsm(body))
+    entt = doc["cg__"]["entt"]
+    cats = defs.load_defs()["model_categories"]
+    ip1 = None
+    for b in doc["sfg_"]["flow"][1]["blks"]:
+        if isinstance(b, dict):
+            mid = (b.get("mdls") or [{}])[0].get("id__")
+            if cats.get(defs.model_name_for(mid)) == "input":
+                ip1 = b
+                break
+    assert ip1 is not None and ip1["id__"] == 28  # base 28 + gridpos 0
+    trg = _trg_by(entt, type=1, eID_=28)
+    assert ip1["snap"] is True and ip1["tid_"] == trg["id__"]
+    snps = sorted(entt["snps"], key=lambda s: s["si__"])
+    row = [_tamv_map(s)[trg["id__"]] for s in snps]
+    assert row == [True] + [False] * 7, row
+
+
 def test_input_snapshot_bypass_ignored_without_variation():
     """No input bypass trg when the input's per-snapshot bypass never varies
     (avoids spurious targets)."""
@@ -872,7 +909,11 @@ def test_snapshot_and_controller_param_leaf_stays_snap_true():
     doc = content.decode_any(
         content.encode_content_data(transcode.recipe_to_sbepgsm(recipe)))
     entt = doc["cg__"]["entt"]
-    par = _trg_by(entt, type=2)  # single shared trg
+    # exactly ONE type-2 trg: the snapshot target is REUSED by the controller,
+    # never duplicated (a second trg would double-bind the leaf).
+    type2 = [t for t in entt["trgs"] if t.get("type") == 2]
+    assert len(type2) == 1, type2
+    par = type2[0]
     blk = _blocks_by_mid(doc)[mid]
     leaf = next(p for p in blk["mdls"][0]["parm"] if p["pid_"] == gain_pid)
     assert leaf["snap"] is True and leaf["tid_"] == par["id__"]

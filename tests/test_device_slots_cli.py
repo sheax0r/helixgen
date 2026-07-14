@@ -199,8 +199,10 @@ def test_slots_restore_hsp_occupied_slot_refused_without_force(monkeypatch, tmp_
     assert "not empty" in r.output.lower()
 
 
-def test_slots_restore_hsp_force_overwrites_occupied_slot(monkeypatch, tmp_path):
-    """#25a: --force lets an .hsp restore overwrite an occupied slot."""
+def test_slots_restore_hsp_force_pushes_into_occupied_posi(monkeypatch, tmp_path):
+    """#25a: --force lets an .hsp restore proceed at an occupied posi — it
+    skips the emptiness check and pushes there (the occupant is NOT deleted),
+    matching the .sbe path's --force semantics."""
     hsp = tmp_path / "t.hsp"
     hsp.write_bytes(HSP_MAGIC + json.dumps({"meta": {"name": "t"},
                                             "preset": {"flow": []}}).encode())

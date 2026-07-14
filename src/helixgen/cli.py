@@ -748,8 +748,10 @@ def _install_hsp_open(h, body: dict, container: int, pos: int, name: str, *,
     ``_sbepgsm`` blob (:func:`transcode.hsp_to_sbepgsm`) and written into an
     empty slot — no device template is loaded, so the active tone is untouched.
 
-    ``force`` lets a caller overwrite an occupied slot (``device slots restore
-    --force`` — #25); without it an occupied slot is refused.
+    ``force`` skips the slot-emptiness check so the push proceeds at an
+    occupied posi (``device slots restore --force`` — #25; the occupant is
+    NOT deleted, matching the ``.sbe`` path); without it an occupied slot is
+    refused.
     """
     from helixgen.device import bridge, transcode
 

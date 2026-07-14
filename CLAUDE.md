@@ -97,9 +97,12 @@ slot ledger** — this one manifest is the single management record (design
 - `helixgen device slots restore <name-or-slot> [--pos N] [--setlist S] [--force]`
   — re-install a tone from its recorded `.hsp` (re-authored) or `.sbe` (re-pushed).
   Pathless `save`/`create` tones have no local source and can't be restored.
-  `--force` overwrites an occupied destination slot (for **both** `.hsp` and
-  `.sbe` sources). The destination slot is the recorded slot label, else the
-  last observed `device.posi`, else `--pos`.
+  `--force` pushes into an occupied destination slot (for **both** `.hsp` and
+  `.sbe` sources) — it skips the emptiness check; the occupant is **not
+  deleted**. The destination is an explicit `--pos`, else the recorded slot
+  label, else the last observed `device.posi`. That observed posi can be
+  stale (the device may have been reorganized since) — when in doubt,
+  especially with `--force`, pass `--pos` explicitly.
 - `helixgen device slots reorder <tone> --to <N> [--setlist S]` — move a tone
   within a setlist's order (default `user`). **Local only**; run `device sync
   <setlist>` to apply it to the device.
