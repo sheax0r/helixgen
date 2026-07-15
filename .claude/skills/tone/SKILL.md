@@ -19,7 +19,7 @@ When NOT to use: editing an existing `.hsp` (load and modify directly outside th
 
 ## Prerequisites
 
-- A helixgen MCP server is reachable. The plugin's bundled `.mcp.json` spawns it via `python -m mcp_server` over stdio, which requires the `helixgen` Python package to be importable in that Python env (see the `setup` skill's verify-installed step).
+- A helixgen MCP server is reachable. The plugin's `.mcp.json` spawns it over stdio via `uv run --with 'helixgen[mcp,device] @ git+https://github.com/sheax0r/helixgen-core' -m mcp_server` — uv auto-installs the engine package into an ephemeral env (see the `setup` skill's server-startup checks).
 - The server's library must be populated. Verify quickly with `list_blocks(category="amp")` — empty result means no blocks ingested and the server's deployer needs to fix that before tone work is possible.
 
 ## MCP tool surface
@@ -117,7 +117,7 @@ Skipping this is the #1 way to waste a generation cycle. Param names are case-se
 
 ### 5. Build the spec dict
 
-Construct the spec inline as a Python/JSON dict — no temp files involved. The schema is the same as the helixgen CLI spec.json (base shape + optional-field index in CLAUDE.md "recipe shape"; full per-field reference in `docs/recipe-reference.md`).
+Construct the spec inline as a Python/JSON dict — no temp files involved. The schema is the same as the helixgen CLI spec.json — full per-field reference (base shape + every optional section) in `docs/recipe-reference.md`.
 
 Minimal shape:
 

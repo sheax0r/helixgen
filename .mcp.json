@@ -3,13 +3,11 @@
     "helixgen": {
       "command": "uv",
       "args": ["run", "--no-project",
-               "--with", "mcp>=1.0,<2.0", "--with", "click>=8.1",
-               "--with", "pyzmq>=25", "--with", "msgpack>=1", "--with", "paramiko>=3.4",
+               "--with", "helixgen[mcp,device] @ git+https://github.com/sheax0r/helixgen-core",
                "-m", "mcp_server"],
       "env": {
         "MCP_TRANSPORT": "stdio",
-        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}:${CLAUDE_PLUGIN_ROOT}/src",
-        "HELIXGEN_LIBRARY": "${CLAUDE_PLUGIN_ROOT}/mcp_server/data/library"
+        "HELIXGEN_LIBRARY": "${CLAUDE_PLUGIN_ROOT}/data/library"
       }
     }
   }

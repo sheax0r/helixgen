@@ -15,16 +15,17 @@ helixgen is a Claude Code plugin. Requires **Python 3.11+**.
 /plugin install helixgen@helixgen
 ```
 
-The plugin bundles the generator code *and* the block library, so it works out of the box. The only thing it needs from your environment is [`uv`](https://docs.astral.sh/uv/) on your `PATH` — the MCP server uses it to auto-provision `mcp` + `click` into an isolated, ephemeral env on first launch, so nothing touches your system Python:
+The plugin bundles the block library and installs the engine — the
+[`helixgen-core`](https://github.com/sheax0r/helixgen-core) package — automatically, so it works out of the box. The only thing it needs from your environment is [`uv`](https://docs.astral.sh/uv/) on your `PATH` — the MCP server uses it to auto-provision the engine and its dependencies into an isolated, ephemeral env on first launch (network access to GitHub required that first time), so nothing touches your system Python:
 
 ```bash
 brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-That's the whole setup — there's no separate `helixgen` package to install. The plugin contributes the `/tone` and `setup` skills plus an MCP server, which loads its bundled code and library from the plugin directory.
+That's the whole setup — nothing to `pip install` yourself. The plugin contributes the `/tone`, `setup`, and `device` skills plus an MCP server.
 
-**Using the Python CLI directly** (no plugin)? See [`docs/CLI.md`](docs/CLI.md) — a standalone install starts with an empty library, so seed it first with `helixgen bootstrap`.
+**Using the Python CLI directly** (no plugin)? That's [`helixgen-core`](https://github.com/sheax0r/helixgen-core) — see its [`docs/CLI.md`](docs/CLI.md) — a standalone install starts with an empty library, so seed it first with `helixgen bootstrap`.
 
 ## Use it
 
@@ -48,11 +49,11 @@ In Claude Code, ask the skill to register an IR — it can call the MCP `registe
 
 **Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be loaded onto the device via the Helix Stadium app's **Librarian → Cab IRs → Import**. helixgen only handles the preset side; importing IRs onto the device is the Stadium app's job. If a slot displays "No Model" on the device after loading a preset, that IR wasn't imported.
 
-See [`docs/ir-hash-algorithm.md`](docs/ir-hash-algorithm.md) for the hash algorithm and the field-validated reference implementation.
+See [`ir-hash-algorithm.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/ir-hash-algorithm.md) for the hash algorithm and the field-validated reference implementation.
 
 ## Loading presets onto your device
 
-helixgen produces files — it does **not** talk to the hardware directly. To get a generated preset onto your Stadium / Helix you go through Line 6's official desktop app.
+On a **Stadium** connected to your LAN, the `/device` skill installs presets directly over the network (see the next section) — no desktop app needed. The manual route below works for any Helix, or when the device isn't network-reachable.
 
 The `/tone` skill writes to `/tmp/<slug>.hsp` by default. Move it somewhere durable (e.g. `~/Documents/Helix Presets/`) before you reboot if you want to keep it.
 
@@ -95,13 +96,13 @@ helixgen device pull-ir "cab.wav" out.wav  # download an IR by on-device filenam
 ```
 
 IR transfer uses the editor's own SFTP identity (located from your installed Helix
-app, never bundled) — see [`docs/helix-sftp-access.md`](docs/helix-sftp-access.md).
+app, never bundled) — see [`helix-sftp-access.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/helix-sftp-access.md).
 Needs the `paramiko` from the `[device]` extra.
 
-`device install` is the **`/tone` → playable-on-your-amp** path: it maps a
-helixgen-authored `.hsp`'s blocks onto a device template's block slots and
-installs a new, playable preset — no editor, no file import. (v2.2, experimental:
-single serial chain; pass `--template <cid>` to pick the skeleton preset.)
+`device install` is the **`/tone` → playable-on-your-amp** path: it transcodes
+a helixgen-authored `.hsp` directly into device content and installs a new,
+playable preset — no editor, no file import, no template (full fidelity:
+dual-amp, parallel splits, snapshots, footswitch/EXP assignments).
 
 The same operations are exposed as `device_*` MCP tools. Only 48 kHz-family
 Stadium hardware is supported; this is **Stadium-only** (not legacy Helix), and
@@ -113,12 +114,11 @@ helixgen ships a Python CLI for direct generation, library inspection, IR manage
 
 See [`docs/CLI.md`](docs/CLI.md) for the full surface: install, spec format, all subcommands, IR registration, library location.
 
-For the underlying Helix Stadium format and hardware model — DSP/path layout, the 8-snapshot model, footswitch/expression-pedal layout, IR hashing, trails — see [`docs/helix-format-reference.md`](docs/helix-format-reference.md).
+For the underlying Helix Stadium format and hardware model — DSP/path layout, the 8-snapshot model, footswitch/expression-pedal layout, IR hashing, trails — see [`helix-format-reference.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/helix-format-reference.md).
 
 ## Limitations (v1)
 
 - **Device validation:** `.hsp` output has been load-tested on a Helix **Stadium XL** and works. The non-XL **Helix Stadium** uses the same `.hsp` format and should work but is **untested** — the chassis baked into your library carries the device_id of whichever Stadium variant first exported a preset into it, so a chassis built from XL exports might or might not load cleanly on a non-XL Stadium. `.hlx` output is code-complete and round-trips through the parser and a real HX Edit export fixture, but has **never been loaded on a legacy Helix** (Floor / LT / Rack / Native) — treat it as plausibly-working-but-unverified until someone confirms.
-- Single serial chain per DSP; no parallel A/B routing yet (see `docs/features/parallel-paths.md`).
 - Wire values only — no display-value (0–10) translation.
 - Output is not byte-identical to HX Edit's exports; it aims to load correctly.
 
@@ -136,8 +136,10 @@ If you are a representative of Line 6 / Yamaha and have concerns about this proj
 
 ## Tests
 
-Run from a source checkout with the package on `PYTHONPATH`:
+Skill-doc checks (needs only pytest):
 
 ```bash
-PYTHONPATH=$PWD/src python -m pytest
+python3 -m pytest
 ```
+
+The engine test suite lives in [helixgen-core](https://github.com/sheax0r/helixgen-core).

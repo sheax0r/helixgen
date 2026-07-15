@@ -34,9 +34,9 @@ Not every "modify" request is a full tone-design pass. If the user wants a
 a block, swap a model, add/remove a block — that's the surgical-edit path, not
 the `tone` skill: CLI `set-param`/`enable`/`disable`/`add-block`/
 `remove-block`/`swap-model`/`view`, or the MCP `patch_preset`/
-`view_preset` tools. See CLAUDE.md's **"Surgical edits"** section for the
-full verb list, disambiguation flags (`--path`/`--lane`/`--pos`,
-`--snapshot`), and worked examples. Still worth a quick device-model check
+`view_preset` tools. See the **"Commands"** section of `docs/CLI.md` for the
+full verb list and the disambiguation flags (`--path`/`--lane`/`--pos`,
+`--snapshot`). Still worth a quick device-model check
 (step 1 below) if this is the first exchange of the session; skip the rest of
 setup (IR library location, IR preferences) unless the edit itself touches an
 IR block.
@@ -47,9 +47,10 @@ In order, every session:
 
 ### -1. Verify `uv` is on PATH
 
-The helixgen MCP server launches via `uv run --with mcp --with click`, which
-auto-provisions its Python deps in an ephemeral env — but `uv` itself must be
-installed. If the `mcp__helixgen__*` tools aren't showing up, this is the
+The helixgen MCP server launches via `uv run --with 'helixgen[mcp,device] @
+git+https://github.com/sheax0r/helixgen-core'`, which auto-provisions the
+engine package and its deps in an ephemeral env (needs network access to
+GitHub the first time) — but `uv` itself must be installed. If the `mcp__helixgen__*` tools aren't showing up, this is the
 first thing to check (before assuming a helixgen install problem in step 0).
 
 Run `which uv` (or `command -v uv`) via Bash. If it resolves, proceed — no
@@ -59,20 +60,20 @@ need to mention it to the user. If missing, tell them in one line:
 > install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`,
 > then restart Claude Code so the MCP server can start."
 
-### 0. Verify helixgen is installed
+### 0. Verify the helixgen MCP server started
 
 Check whether the `mcp__helixgen__*` tools appear in the agent's tool list.
-If the MCP server didn't register tools, the helixgen package isn't
-importable in the MCP server's Python env. Tell the user, in one line:
+If `uv` is present (step -1) but the tools are missing, the engine install
+at server startup likely failed. The two known causes, in order:
 
-> "helixgen isn't installed in the MCP server's Python env. Run
-> `pip install git+https://github.com/sheax0r/helixgen.git@stable`
-> to install it (or let me run it for you after granting Bash permission)."
+1. **No network to GitHub on first launch** — `uv` fetches the
+   `helixgen-core` package from GitHub the first time (cached afterwards).
+   Tell the user to check connectivity and `/restart`.
+2. **Stale uv cache after an engine update** — a broken cached resolution
+   can be cleared with `uv cache clean helixgen`, then `/restart`.
 
-If they grant permission, run the pip install via Bash. The MCP server
-needs to restart before the tools appear — tell them to `/restart` (or
-quit and reopen Claude Code). Don't auto-install silently — `pip install`
-is a system-affecting action and the user should see what's happening.
+Do NOT suggest `pip install` — the server runs in uv's ephemeral env, so
+packages installed into the ambient Python are never seen by it.
 
 ### 0.5. Load user preferences
 
