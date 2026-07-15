@@ -981,26 +981,40 @@ behavior wins" for each reconciliation.
   malformed hash. Original divergence: `_hex_hash` lowercased with no length
   check; `_addcontent_hash` enforced `len==32` but preserved case.
 
-- **#54 Structural-plan residuals — steps S7–S10 of the #28 refactor.** The
-  lower-value / higher-risk tail of the structural plan
-  (`docs/superpowers/specs/2026-07-15-structural-review-findings.md`, Phase 2),
-  each behavior-preserving and needing **no user input** — a next session can
-  execute directly:
-  - **S7** — fold the ~65 repeated lazy `from helixgen.device import HelixClient,
-    HelixError, …` statements in `cli_device.py` into one place. Deferred from
-    #28 because a module-level import would move the optional-`device`-extra
-    ImportError from command-time to import-time (observable); needs a lazy
-    accessor, not a naive hoist.
-  - **S8** — rename `hss.slot_label` → `hss_slot_label` (readability trap: it
-    shares a name with the unrelated `client.slot_label`). Touches `hss.py` +
-    `test_hss.py` only.
-  - **S9** — decompose the oversized functions in findings F5
-    (`transcode._new_midi_ctrl` 190 lines, `mutate.wire_footswitch` 146,
-    `transcode._hrns_for`/`synthesize_sfg`, `generate._to_hsp_bnn`,
-    `cli_device.device_setlist_import_hss`). Judgment rewrites — each needs its
-    own golden/behavior pin.
-  - **S10** — `mcp_server` (`tools.py` 1591 + `server.py` 1054) result-shape
-    consolidation; belongs in its own review pass.
+- **#54 Structural-plan residuals — steps S7–S10 of the #28 refactor.**
+  **✅ SHIPPED (2026-07-15, structural pass 2).** All four steps executed
+  behavior-preservingly (full suite + 211-export acceptance green after each;
+  recursive click command-tree dump byte-identical to `main`):
+  - **S7 — done.** Folded the ~65 repeated lazy `from helixgen.device import
+    HelixClient, HelixError` / `SetlistManifest` statements in `cli_device.py`
+    into two lazy accessors `_client()` / `_manifest()`. The optional-extra
+    ImportError surface is fixed by construction (imports stay call-time inside
+    the accessor). Pinned by new `tests/test_device_extra_import_surface.py`
+    (poisons `sys.modules['zmq'/'msgpack']`: help paths + non-device commands
+    exit 0; device verbs still error with the friendly `pip install
+    'helixgen[device]'` message).
+  - **S8 — done.** `hss.slot_label` → `hss_slot_label` (+ `test_slot_label_empty`
+    → `test_hss_slot_label_empty`).
+  - **S9 — done.** Decomposed the F5 oversized functions (the findings' per-
+    function line counts were mislabeled by innermost nested def — real targets
+    re-identified by AST body length): `synthesize_sfg` 125→62 (3 placement
+    strategies + shared output-group tail), `_to_hsp_bnn` 120→85, `wire_
+    footswitch` 144→96, `device_setlist_import_hss` 105→81, and
+    `_synth_cg_from_recipe` 340→290 (extracted the two clean tail phases
+    `_synth_commands` + `_emit_snapshots`). **Deliberately left (not a re-file —
+    a net-negative rewrite):** `_synth_cg_from_recipe`'s controller-building core
+    (nested closures `_new_trg`/`_src_for`/`_new_ctrl`/`_new_midi_ctrl` over
+    shared mutable `srcs`/`ctrl`/`trgs`/`next_*` state) is intact — extracting it
+    would require converting the closure state into an explicit state object, not
+    a behavior-preserving-cheap change.
+  - **S10 — done (safe scope).** Consolidated the `device_*` MCP handlers'
+    connect + error-shaping boilerplate into a `_device_client(ip)` context
+    manager (24 handlers routed through it; the 2 with inner HelixError handling
+    and the subscriber/sync/globaleq paths left). `server.py` needs no change —
+    its per-tool docstrings are the intentional agent-facing schema, not
+    duplicated result-shaping. Deeper per-handler *result-dict* restructuring (if
+    ever wanted) remains a genuinely-separate review pass — F6's own "belongs in
+    its own review" caveat — and is not tracked as an active residual.
 
 ## Notes / principles
 - **Local-file-first:** every device-write feature should also work offline
