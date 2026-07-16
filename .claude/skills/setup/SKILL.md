@@ -256,7 +256,7 @@ Profile shape:
 {
   "schema": 1,
   "name": "Gibson Les Paul Junior",
-  "short_name": "LP Jr",
+  "short_name": "Les Paul Jr",
   "type": "guitar",
   "active": false,
   "pickups": "one bridge P-90 (single-coil soapbar)",
@@ -287,7 +287,7 @@ what it's tonally for (→ `character_md`), the genres it suits, and its physica
 controls — every knob, switch, pickup selector (with its positions), and
 push-pull. Write the answers to `library/guitars/<slug>.json`. If a
 `user_guitars.md` memory exists, seed one profile per guitar from it (the
-user's confirmed guitars: **LP Jr** — P-90 bridge, vol + tone only;
+user's confirmed guitars: **Les Paul Jr** — P-90 bridge, vol + tone only;
 **ESP LTD EC-1000** — active EMG HH, 3-way selector; **Strandberg Boden
 Essential 6** — HSS, 5-way; **Ibanez Prestige** — HSH, 5-way), still confirming
 the control inventory with the user.

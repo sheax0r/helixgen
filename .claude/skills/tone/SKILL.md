@@ -70,7 +70,7 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen generate <recipe.json> -o <out.hsp>` | LEGACY ad-hoc output: writes there, auto-registers, naming flags IGNORED, no metadata JSON | writes the `.hsp`; warnings on stderr |
 | `helixgen library doc <name> (--from-file <md> \| -) [--variant <guitar-slug>]` | author/update the tone's `description_md` (or a variant's `notes_md`) — replaces the old companion `.md` sidecar | updates metadata in place |
 | `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
-| `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolves by slug/name/short_name) | text or JSON |
+| `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolved as a TONE first — logical slug / metadata filename / variant preset_name — else a guitar profile by slug/name/short_name) | text or JSON |
 | `helixgen list-irs [--json]` | locally registered user IRs | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
@@ -531,7 +531,7 @@ anymore — it's the tone metadata's `description_md`, authored with
 helixgen library doc "<name>" --from-file /tmp/<slug>.description.md   # or: … - (reads stdin)
 ```
 
-(`<name>` resolves the logical tone by artist+song, descriptor, or slug.)
+(`<name>` resolves as the logical slug (`test-artist-test-song`), the metadata filename (`<slug>.json`), or a full variant **preset name** — which includes the guitar, e.g. `Test Artist - Test Song - Scratch Tele`. A bare `Artist - Song` without the guitar segment won't match; use the slug or the full preset name.)
 Compose the markdown (to a scratch file or via stdin), covering — it's
 effectively the step-8 report, persisted so the tone stands alone without the
 chat:
