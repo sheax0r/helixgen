@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI verbs (including the reference-based `device sync <setlist>` / `device sync --all`). Also covers on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "clean up my IRs", "delete/duplicate a setlist".
+description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI verbs (including the reference-based `device sync <setlist>` / `device sync --all`). Also covers finding the device on the LAN (`device discover`), level-matching loudness across snapshots or a setlist (`device normalize`), and on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "find my Helix's IP", "level-match my snapshots", "clean up my IRs", "delete/duplicate a setlist".
 ---
 
 # device
@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.22.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.24.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -25,8 +25,14 @@ plain `~/.local/bin/helixgen` is the usual fallback).
 
 Per-invocation environment (prefix each Bash call — exports don't persist):
 
-- `HELIXGEN_HELIX_IP=<device-ip>` (or `--ip`) — how every `device` verb finds
-  the Stadium.
+- **Device address — usually nothing to set (0.24.0).** Every `device` verb
+  resolves the Stadium's IP through one chain: `--ip` > `$HELIXGEN_HELIX_IP` >
+  the record persisted by `helixgen device discover`
+  (`~/.helixgen/devices/<serial>.json`). There is **no built-in default IP**
+  any more: with none of the three available, the verb **fails fast with an
+  instructive error naming `device discover`** — it never stalls on a wrong
+  guessed address. See **Finding the device** below; `HELIXGEN_HELIX_IP` is
+  an override for special cases, not the primary path.
 - `HELIXGEN_LIBRARY` — needed by verbs that touch the block library
   (`install`/`sync` transcode `.hsp` content). Same resolution as the other
   skills (see the `setup` skill's "Invoking helixgen"): honor a pre-set env
@@ -69,6 +75,39 @@ cwd checkout, so source can mislead about the live version):
 This is the *resolver pattern* (backlog #14): one authoritative surface per fact,
 consulted first, so you never re-derive behavior from source.
 
+## Finding the device: `device discover` (0.24.0)
+
+```bash
+helixgen device discover [--timeout N] [--json]
+```
+
+One-shot discovery: mDNS first (the Stadium advertises
+`_stadiumserver._tcp.local.` and answers a one-shot multicast query itself),
+then a bounded TCP connect-probe of this machine's **own /24 only** as a
+fallback for multicast-blocked networks. Every candidate is confirmed with
+the read-only `/ProductInfoGet` handshake before being trusted; confirmed
+devices are **persisted** (ip, serial, model, firmware) into
+`~/.helixgen/devices/<serial>.json`. Read-only on the device — no lock taken,
+nothing on the hardware changes.
+
+- **Run it once, then work direct-to-IP.** After one successful discover,
+  every device verb resolves the address from the record automatically. This
+  is deliberate: the Stadium desktop app's *discovery* layer is known flaky
+  while *direct-to-IP* sessions are stable, so helixgen discovers once,
+  persists, and never re-discovers mid-session.
+- **Re-run it when the device moves** — a new network or a fresh DHCP lease
+  makes the persisted record stale (symptom: device verbs suddenly time out
+  or can't connect at the recorded address). `device discover` again is the
+  fix.
+- **Multiple devices: most-recent-wins.** All found devices are listed and
+  persisted; the resolver deterministically picks the **most recently
+  discovered** (`ip_updated_at` desc, then serial desc) and warns when
+  several records disagree. Pass `--ip` on any verb to target another
+  device explicitly.
+- **Found nothing?** Ask the user for the IP and pass `--ip <addr>` (or
+  prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots above the record
+  in the resolution chain.
+
 ## The device model: a preset POOL + reference SETLISTS
 
 The Stadium does not store a preset "inside" a setlist. It keeps a single
@@ -88,10 +127,13 @@ tone is a record (content `.hsp` + name + management **intent**): a desired
 vocabulary runs to bank 128, per `device add --slot`, not just bank 8),
 ordered **setlist memberships**, and provenance `source`. A specific Helix's
 **observed** placement is deliberately NOT in the manifest (manifest v3,
-0.22.0) — it lives per device serial at `~/.helixgen/devices/<serial>.json`,
-rebuilt wholesale by every `device sync`, so losing that file costs nothing
-(and the first sync after a v2→v3 migration harmlessly re-pushes placement
-for every managed tone). **"On the device" ⟺ the tone has a slot.** There is
+0.22.0) — it lives per device serial at `~/.helixgen/devices/<serial>.json`.
+Placement observations there are rebuilt wholesale by every `device sync`
+(the first sync after a v2→v3 migration harmlessly re-pushes placement for
+every managed tone), and since 0.24.0 the same file also carries the
+**persisted discover record** (ip/model/firmware — discovery fields
+round-trip through sync rebuilds), so losing the file costs only the device
+address: re-run `helixgen device discover` and sync again. **"On the device" ⟺ the tone has a slot.** There is
 **no separate slot ledger** — this one manifest is the single management-intent
 record for "which of my tones goes where." Every generated tone
 **auto-registers** here (off-device by default); `device add`/`unsync` set the
@@ -111,7 +153,9 @@ root override `$HELIXGEN_LOCKS`), so concurrent helixgen processes on this
 machine never collide on the device. Read-only verbs take nothing; you don't
 lock anything by hand for a single verb — it's automatic. Scopes are granular
 and non-conflicting with each other: `editbuffer` (live-ops on the ACTIVE
-tone: `load`/`snapshot`/`bypass`/`model`/`set-param`), `library`
+tone: `load`/`snapshot`/`bypass`/`model`/`set-param` — plus `normalize`,
+which recalls snapshots / loads presets while measuring and so holds this
+scope **even in its dry-run**), `library`
 (pool/setlist/content writes, incl. `install` and `setlist import-hss`),
 `irs` (device IR writes: `push-ir`/`delete-ir`/`rename-ir`/`ir-prune --yes`),
 `globals` (`settings set`/`globaleq set`), `all` (exclusive). Two verbs take
@@ -135,7 +179,7 @@ scope(s) across calls instead of re-contending per verb:
 ```bash
 helixgen device lock --scope library --scope irs --label "setlist sync: Gigs" --ttl 900
 # prints HELIXGEN_LOCK_TOKEN=<token> — carry it on every covered verb:
-HELIXGEN_LOCK_TOKEN=<token> HELIXGEN_HELIX_IP=<ip> helixgen device sync Gigs --json
+HELIXGEN_LOCK_TOKEN=<token> helixgen device sync Gigs --json   # IP resolves from the discover record
 # ... more verbs, same prefix ...
 HELIXGEN_LOCK_TOKEN=<token> helixgen device unlock   # release at the end — token REQUIRED here too
 ```
@@ -511,6 +555,64 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
+### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0)
+
+```bash
+helixgen device measure [--seconds N] [--min-playing N] [--json]     # read-only
+helixgen device normalize <preset.hsp> [--json]                      # snapshot scope, DRY-RUN
+helixgen device normalize --setlist <name> [--json]                  # setlist scope, DRY-RUN
+helixgen device normalize <preset.hsp> --yes                         # write trims to the LOCAL .hsp
+```
+
+`device measure` (read-only) reduces playing-gated telemetry to robust dB
+stats while the player plays — the input-invariant **chain gain** is the
+number to compare across snapshots/presets. `device normalize` is the closed
+loop built on it: it recalls each target (each NAMED snapshot of a local
+`.hsp`, or each tone of a manifest setlist), prompts the player to play per
+target, and computes the dB trim that equalizes each target's **total
+loudness** (measured chain gain + the output-block level already in force)
+against the anchor — the first target that measured ok — or an absolute
+`--target-db`. Trimming totals makes re-runs idempotent (in-band zero trims,
+no compounding). The essentials:
+
+- **DRY-RUN by default — always run and show the dry-run report first.**
+  Measuring happens either way, but without `--yes` trims are only reported.
+  Treat `--yes` as a separate, deliberate step after the user has seen the
+  proposed trims.
+- **`--yes` writes the LOCAL `.hsp` file(s) only — never the device copy.**
+  Trims land as output-block `level` moves in the local source of truth:
+  per-snapshot overrides in snapshot scope, a whole-preset uniform shift
+  (base + any per-snapshot array, preserving the preset's internal balance)
+  in setlist scope. **The device follows on the next `device sync <setlist>`
+  / `device install`** — a normalize run without a follow-up sync changes
+  nothing audible on the hardware.
+- **Snapshot scope requires the ACTIVE device tone to BE that preset** —
+  sync/install it and leave it active first. The active preset's name is
+  verified before anything is measured; a mismatch aborts (an unverifiable
+  name only warns). Setlist scope loads each tone by its observed CID and
+  verifies the name — a mismatch means a stale observation and that tone is
+  SKIPPED.
+- **Skipped targets** (too little playing, no local `.hsp`, no observed
+  placement, name mismatch) get a warning and the run **exits 1** to flag
+  the partial result — re-run for the stragglers; already-written files
+  re-measure in band.
+- **Don't re-measure to "confirm" a trim.** The meter taps sit UPSTREAM of
+  the output-block gain, so a written trim is invisible to `device measure`
+  by design — the loop trusts the dB math (the output `level` is dB-native,
+  so each trim is exact). A confirmation re-measure would falsely report
+  "no change".
+- It holds the `editbuffer` lock even in dry-run (it recalls snapshots /
+  loads presets while measuring), and it changes the device's ACTIVE tone
+  selection during the run (restored best-effort afterwards).
+
+**Manual per-snapshot counterpart.** Hand-balancing without the closed loop
+is the local edit verb, not a device verb: `helixgen set-param <preset.hsp>
+output level --snapshot <name-or-index> -- -3` (0.23.0; `--snapshot` also
+works on library-block params and on `enable`/`disable`). Same rule applies:
+it edits the local `.hsp`; the device follows on the next sync/install. Once
+a param carries per-snapshot overrides, a later plain base edit of it is
+inaudible on-device (`set-param` warns) — keep editing per-snapshot.
+
 ### Git-commit local artifact changes
 
 Most of this skill only talks to the device, but two paths write **local**
@@ -631,12 +733,14 @@ Tightly:
 
 | Error / symptom | What it means | Do |
 |---|---|---|
+| a device verb fails fast with an error naming `device discover` (no `--ip`, no `$HELIXGEN_HELIX_IP`, no persisted record) | no device address is known — there is **no built-in default IP** (0.24.0); this is an immediate instructive failure, never a stall | run `helixgen device discover` once (persists the record); if it finds nothing, ask the user for the IP and pass `--ip` |
+| device verbs time out / can't connect at the recorded address after working before | the persisted discover record went stale (new network or DHCP lease) | re-run `helixgen device discover`, then retry the verb |
 | setlist not found on device (`create it with \`helixgen device setlist create ...\``) | the named setlist isn't on the device yet | run `device setlist create <name>`, then re-sync |
 | `could not resolve helixgen model 'X'` | a block model doesn't bridge to the device | that tone isn't installable as-is; report it |
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.22.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.24.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
@@ -660,3 +764,6 @@ Tightly:
 | Ignoring the `errors[]` in the sync result | That list *is* the remaining work — read it, fix each, re-sync |
 | `device install` without `--auto-irs` when the tone references IRs | The CLI flag is opt-in (unlike the old MCP default) — pass `--auto-irs`, or the cab is silent until the IR reaches the device |
 | Expecting `device install` to reconcile a whole setlist | It installs/records **one** tone but doesn't rebuild a setlist's full reference order the way `device sync <setlist>` does — use sync for batch/whole-setlist work |
+| Hunting for the device's IP by hand (router UI, arp scans) or assuming a default address exists | Run `helixgen device discover` once — it persists the record and every verb resolves it; there is no built-in default IP (0.24.0), and a missing address fails fast pointing at discover |
+| Treating `device normalize` as a device write, or skipping the sync after `--yes` | Normalize writes trims into the **local `.hsp` only** — the device copy is untouched until the next `device sync <setlist>` / `device install`; and it's dry-run by default — show the user the dry-run report before `--yes` |
+| Re-running `device measure` to confirm a normalize trim landed | The meter taps sit upstream of the output-block gain, so the trim is invisible to `measure` by design — a confirmation re-measure falsely reads "no change"; trust the dB math |

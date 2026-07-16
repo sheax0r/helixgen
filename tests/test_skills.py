@@ -240,11 +240,15 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.22.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.24.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
-    """Every pin-carrying surface must state the core pin, and all must agree."""
+    """Every pin-carrying surface must state the core pin, and all must agree.
+
+    Also covers extra-widened forms (helixgen[device,analyze]==X.Y.Z) — any
+    stated extras combination must pin the same core version.
+    """
     pins = set()
     for path in [
         SKILLS_ROOT / "setup" / "SKILL.md",
@@ -253,9 +257,12 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
         REPO_ROOT / "CLAUDE.md",
         REPO_ROOT / "README.md",
     ]:
-        found = re.findall(r"helixgen\[device\]==([0-9][0-9.]*)", path.read_text())
+        text = path.read_text()
+        found = re.findall(r"helixgen\[device\]==([0-9][0-9.]*)", text)
         assert found, f"{path}: no engine pin (helixgen[device]==X.Y.Z) stated"
         pins.update(found)
+        # any extras combination anywhere on the surface must pin the same core
+        pins.update(re.findall(r"helixgen\[[a-z,]+\]==([0-9][0-9.]*)", text))
     assert pins == {ENGINE_PIN}, (
         f"engine pin must be exactly {ENGINE_PIN} on every surface: {sorted(pins)}"
     )
@@ -305,6 +312,109 @@ def test_plugin_and_marketplace_versions_agree() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     market = json.loads((REPO_ROOT / ".claude-plugin" / "marketplace.json").read_text())
     assert plugin["version"] == market["plugins"][0]["version"]
+
+
+# --- core 0.23.0 / 0.24.0 vocabulary (discover-first IP, loudness phase 2) ----
+
+# The removed baked-in default device IP must never reappear as a default
+# story in skills/prose (docs/*.md are byte-synced from core and exempt).
+STALE_DEFAULT_IP_PATTERNS = [
+    # the literal old default (the maintainer's own DHCP lease)
+    re.compile(r"192\.168\.4\.84"),
+    # any "defaults to <some IP>" phrasing — there is no default IP in 0.24.0
+    re.compile(r"(built-?in|default)\s+(default\s+)?(IP\s+)?`?192\.168", re.IGNORECASE),
+    re.compile(r"defaults?\s+to\s+`?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", re.IGNORECASE),
+    # a default-IP story without a literal ("the built-in default IP is used")
+    re.compile(r"built-?in\s+default\s+(device\s+)?IP\s+(is|of|`)", re.IGNORECASE),
+]
+
+
+@pytest.mark.parametrize(
+    "path",
+    _skill_files() + [REPO_ROOT / "CLAUDE.md", REPO_ROOT / "README.md"],
+    ids=lambda p: f"{p.parent.name}/{p.name}" if p.name == "SKILL.md" else p.name,
+)
+def test_no_stale_default_ip_story(path: Path) -> None:
+    """0.24.0 removed the baked-in default device IP — nothing may imply one."""
+    text = path.read_text()
+    hits = [pat.pattern for pat in STALE_DEFAULT_IP_PATTERNS if pat.search(text)]
+    assert not hits, f"{path}: stale default-IP vocabulary (0.24.0 removed it): {hits}"
+
+
+def test_setup_skill_is_discover_first() -> None:
+    """Setup finds the device via `device discover`, not by hand (0.24.0)."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    assert "helixgen device discover" in text
+    # the persisted record location
+    assert "devices/<serial>.json" in text
+    # the resolution chain, stated in order: --ip > env > persisted record
+    assert re.search(
+        r"`--ip`\s*>\s*`\$HELIXGEN_HELIX_IP`\s*>", text
+    ), "setup: resolution chain (--ip > $HELIXGEN_HELIX_IP > record) not stated"
+    # no default IP + fail-fast (missing address never stalls)
+    assert re.search(r"no built-?in default IP", text, re.IGNORECASE)
+    assert re.search(r"fail[s]? fast", text, re.IGNORECASE)
+    assert "never stalls" in text
+    # the env var is an override, not the primary path
+    assert re.search(r"HELIXGEN_HELIX_IP.{0,200}override", text, re.DOTALL)
+    # ask-the-user is the fallback only when discovery finds nothing
+    assert re.search(r"found nothing.{0,200}ask the user", text, re.DOTALL | re.IGNORECASE)
+    # stale-record recovery
+    assert re.search(r"Re-run `device discover`", text)
+
+
+def test_device_skill_documents_ip_resolution() -> None:
+    """Device skill: resolution chain, fail-fast, multi-device, stale record."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "helixgen device discover" in text
+    assert "devices/<serial>.json" in text
+    assert re.search(r"`--ip`\s*>\s*`\$HELIXGEN_HELIX_IP`\s*>", text), (
+        "device: resolution chain (--ip > $HELIXGEN_HELIX_IP > record) not stated"
+    )
+    assert re.search(r"no built-?in default IP", text, re.IGNORECASE)
+    assert re.search(r"fail[s]? fast", text, re.IGNORECASE)
+    # multi-device: most recently discovered wins; --ip targets another
+    assert re.search(r"most.recent(ly)?\s+discovered", text, re.IGNORECASE)
+    # re-discover on network / DHCP lease change
+    assert re.search(r"(new network|DHCP lease).{0,200}(stale|discover)", text,
+                     re.DOTALL | re.IGNORECASE)
+
+
+def test_device_skill_documents_normalize() -> None:
+    """`device normalize` (0.23.0): dry-run default, local-.hsp-only, sync-to-apply."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "device normalize" in text
+    assert "device measure" in text
+    # dry-run by default; --yes is the separate write step
+    assert re.search(r"DRY-RUN by default", text)
+    assert "--yes" in text
+    # --yes writes the LOCAL .hsp only — never the device copy
+    assert re.search(r"LOCAL `?\.hsp`?", text), "normalize: local-.hsp-only not stated"
+    assert re.search(r"never the device copy|device copy is NOT written", text)
+    # the device follows via sync/install
+    assert re.search(r"--yes.{0,2000}device sync", text, re.DOTALL), (
+        "normalize: sync-to-apply not stated"
+    )
+    # total-loudness equalization + idempotent re-runs
+    assert re.search(r"total\s*loudness", text, re.IGNORECASE)
+    assert "idempotent" in text
+    # holds the editbuffer scope even in dry-run
+    assert re.search(r"normalize.{0,400}even in.{0,20}dry-run", text,
+                     re.DOTALL | re.IGNORECASE)
+
+
+def test_tone_skill_documents_snapshot_edits_and_analyze() -> None:
+    """0.23.0 tone-iteration surfaces: set-param --snapshot + analyze-audio."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    # per-snapshot surgical edits (flag form and patch-op form)
+    assert "--snapshot" in text
+    assert re.search(r'"snapshot"\s*:', text), "tone: patch-op snapshot field not shown"
+    # analyze-audio: exists, and the [analyze] extra is NOT in the default install
+    assert "analyze-audio" in text
+    assert "[analyze]" in text
+    assert "helixgen[device,analyze]==" in text, (
+        "tone: how to add the analyze extra (uv tool install --force) not shown"
+    )
 
 
 def test_tone_skill_documents_patch_loop() -> None:
