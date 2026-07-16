@@ -16,10 +16,12 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.20.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.21.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
-`"$(uv tool dir --bin)/helixgen"` by absolute path.
+`"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
+keeps uv from emitting ANSI inside the substitution under `FORCE_COLOR`;
+plain `~/.local/bin/helixgen` is the usual fallback).
 
 Per-invocation environment (prefix each Bash call — exports don't persist):
 
@@ -34,6 +36,12 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
 - `HELIXGEN_IRS="<dir>"` — only when the user has a custom IR directory on
   record and you're running an IR-registering fix (`register-irs`,
   `ir-scan`); otherwise the engine defaults to `~/.helixgen/irs/`.
+- IR verbs also write the **IR-hash cache** at `~/.helixgen/cache/irhash.json`
+  — **regardless of `HELIXGEN_IRS`** (that env var doesn't relocate it). For
+  a fully isolated session (tests/sandboxes), also prefix
+  `HELIXGEN_IRHASH_CACHE=<file>` (the single cache file) or
+  `HELIXGEN_CACHE=<dir>` (the cache directory). Normal sessions can ignore
+  this.
 
 ### Where the answers live (consult these FIRST, never the source)
 
@@ -69,7 +77,9 @@ untouched.
 helixgen mirrors this with one local manifest, `~/.helixgen/setlists.json`
 (override `$HELIXGEN_SETLISTS`) — the **tone library**. Each tone is a record
 (content `.hsp` + name + management state): a desired **user slot** (`null` =
-off device, `"auto"`, or `"1A".."8D"`), ordered **setlist memberships**, and
+off device, `"auto"`, or `"1A".."128D"` — the slot vocabulary runs to bank
+128, per `device add --slot`, not just `8D`), ordered **setlist
+memberships**, and
 observed device placement. **"On the device" ⟺ the tone has a slot.** There is
 **no separate slot ledger** — this one manifest is the single source of truth for
 "which of my tones goes where." Every generated tone **auto-registers** here
@@ -282,6 +292,8 @@ helixgen device setlist export-hss Gigs out.hss               # export a DEVICE 
 ### IR maintenance (delete / rename / prune) + preset info
 
 ```bash
+helixgen device list-irs [--json]                    # IRs ON the device; --json rows include `file`
+helixgen device pull-ir <file-basename> <out.wav>    # download an IR by its on-device file basename
 helixgen device delete-ir <name-or-hash> --yes       # registry entry + backing .wav
 helixgen device rename-ir <name-or-hash> <new-name>  # display name only; hash keeps resolving
 helixgen device ir-prune                             # DRY-RUN report: referenced / protected / orphans
@@ -289,6 +301,11 @@ helixgen device ir-prune --yes [--force] [--ignore-warnings] [--only <name-or-ha
 helixgen device set-info <cid>... --color green --notes "..."   # batch color + notes
 ```
 
+- **`pull-ir` takes the on-device `.wav` file basename, not the display
+  name** — discover it via `device list-irs --json`, whose rows include
+  `file` (0.21.0). `rename-ir` changes the *display* name only, so a renamed
+  IR still downloads under its original upload basename (and its hash keeps
+  resolving in presets).
 - **`ir-prune` is dry-run by default.** Always run the dry-run first and show
   the user the `orphans` / `protected` lists — and any `warnings` (local
   tones whose recorded `.hsp` couldn't be read) — before executing.
@@ -362,7 +379,52 @@ CLI aborts the install if an IR upload hard-fails (it never installs a preset
 whose IR couldn't be pushed).
 
 Reserve the other `device` verbs for reads / interactive single ops
-(`device list`, `device read`, `device load`, `device set-param`).
+(`device list`, `device read`, `device load`, and the live ops below).
+
+### Targeting a setlist by name (`--setlist`, 0.21.0)
+
+Every preset verb that takes `--setlist` — `device list` / `backup` /
+`create` / `save` / `push` / `install` / `delete` / `slots restore` — accepts
+`user` (the preset **pool**, the default), `factory` (read-only), or a **real
+device setlist display name, case-insensitive** (e.g. `--setlist Gigs`) — the
+same names `device reorder` / `device sync` already took. With a named
+setlist, read verbs operate on that setlist's **references**, and write verbs
+put the preset content in the pool and add a reference at `--pos`. (There is
+no special `throwaway` token — target a real setlist by its name.)
+
+### Live ops on the ACTIVE tone (blocks / params / bypass / model / set-param)
+
+For interactive, immediately-audible tweaks to whatever tone is live on the
+device. These edit the **live edit buffer** — audible at once, volatile (not
+written to the preset until saved):
+
+```bash
+helixgen device blocks [--json]                  # edit buffer's blocks + their (path, block) coordinates
+helixgen device params <path> <block> [--json]   # one block's params: pid, name, CURRENT raw value, type, range
+helixgen device bypass <path> <block> <on|off>   # bypass/enable a block live
+helixgen device model <path> <block> <model>     # swap a block's model live (same category only)
+helixgen device set-param <path> <block> <pid> <value>   # set one param live (value in RAW units)
+```
+
+- **Block coordinates are the DSP grid slot exactly as `device blocks` prints
+  them** — pass them to `bypass`/`model`/`set-param`/`params` **unchanged**.
+  The grid is 0–27 and **not necessarily contiguous** (output blocks sit at
+  slots 13/27), so never derive a coordinate from a block's list position —
+  the pre-0.21.0 computed-index translation rule is dead (see the CLI.md
+  live-ops erratum). An op at
+  a slot holding no block is *silently* ineffective (the device still
+  acks/echoes) — the echo is not proof; read back with `device params` or
+  watch `device meters`.
+- **Discover pids with `device params <path> <block>` — never guess.** It
+  lists each param's numeric pid, name, current value, type, and range.
+- **Param values are in RAW units** — dB, Hz, 0–1 knob positions, enum ints,
+  exactly as `device params` reports them — **not** normalized 0–1.
+- **Live ops hit whatever preset the player has ACTIVE.** Before mutating,
+  read `helixgen device active [--json]` — the device's active preset (cid +
+  name + pool slot; it tracks the player's own panel selection too). When
+  the work is done (or if the session loads other presets via
+  `device load`/install/sync), restore the player's selection with
+  `device load <cid>` using the cid you noted.
 
 ### Git-commit local artifact changes
 
@@ -448,10 +510,13 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
 
 ### 5. Back up / restore
 
-- **Back up a whole setlist:** `helixgen device backup` pulls a setlist to local
+- **Back up the pool or a named setlist:** `helixgen device backup
+  [--setlist <user|factory|NAME>]` pulls the pool (`user`, default) — or the
+  presets a named device setlist references, in setlist order — to local
   `.sbe` files + `manifest.json` (then works offline via `device local-list`).
 - **Put a recorded tone back:** `helixgen device slots restore <name-or-slot>` —
-  re-authors an `.hsp`-sourced entry or re-pushes an `.sbe`-sourced one. Tones
+  re-authors an `.hsp`-sourced entry or re-pushes an `.sbe`-sourced one
+  (`--setlist` takes `user`/`factory`/a device setlist name here too). Tones
   recorded from `save` (edit buffer) or `create` (on-device copy) have no local
   source and can't be restored this way — back them up first. A re-authored
   `.hsp` is a local file change — see **Git-commit local artifact changes**
@@ -479,7 +544,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.20.0'`), or invoke `"$(uv tool dir --bin)/helixgen"` by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.21.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 
 ## Common Mistakes
 

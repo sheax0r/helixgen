@@ -20,10 +20,13 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.20.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.21.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
-  tool binary — invoke `"$(uv tool dir --bin)/helixgen"` by absolute path).
+  tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
+  absolute path; `NO_COLOR=1` keeps uv from emitting ANSI codes inside the
+  substitution under `FORCE_COLOR`, or use the plain
+  `~/.local/bin/helixgen` fallback).
 - **Every invocation that touches the block library needs `HELIXGEN_LIBRARY`**
   unless the user has their own populated `~/.helixgen/library/` or the env
   var is already set. Prefix each call with the plugin's bundled library:
@@ -38,6 +41,14 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
   directory. The prefix must be repeated on every Bash call — exports
   don't persist between calls. Resolution order and details: the `setup`
   skill's "Invoking helixgen" section.)
+- **IR env vars, when they apply:** IR-touching verbs (`list-irs`,
+  `register-irs`, `generate` with IR blocks) read `HELIXGEN_IRS="<dir>"` if
+  the user has a custom IR directory on record (else `~/.helixgen/irs/`).
+  Note the **IR-hash cache** lives separately at
+  `~/.helixgen/cache/irhash.json` and is written by IR verbs **regardless of
+  `HELIXGEN_IRS`** — for a fully isolated session also set
+  `HELIXGEN_IRHASH_CACHE` (single cache file) or `HELIXGEN_CACHE` (cache
+  directory), same prefix-per-call mechanism.
 - The library must be populated. Verify quickly with
   `helixgen list-blocks --category amp` — an empty/`no blocks` result means
   the library env isn't reaching the CLI (or the library is empty); note the

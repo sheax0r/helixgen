@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.20.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.21.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -79,6 +79,14 @@ directory on record (step 2 / `$HELIXGEN_IRS`), prefix IR-touching verbs
 `HELIXGEN_IRS="<dir>"` too — otherwise they default to `~/.helixgen/irs/`.
 It's harmless to carry all applicable prefixes uniformly.
 
+One cache to know about: IR verbs also write the **IR-hash cache** at
+`~/.helixgen/cache/irhash.json` — and they do so **regardless of
+`HELIXGEN_IRS`** (the IR-directory env does not relocate it). If a session
+needs full isolation (tests, sandboxes), also set `HELIXGEN_IRHASH_CACHE`
+(path to the single cache file) or `HELIXGEN_CACHE` (the cache *directory*)
+alongside the other env prefixes. Inspect/maintain it with
+`helixgen ir-cache --stats|--clear|--prune`. Normal sessions can ignore it.
+
 ## Editing an existing preset (direct edits)
 
 Not every "modify" request is a full tone-design pass. If the user wants a
@@ -116,26 +124,30 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.20.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.21.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.20.0'
+  uv tool install 'helixgen[device]==0.21.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
-  on PATH — invoke it by absolute path (`"$(uv tool dir --bin)/helixgen"`,
-  usually `~/.local/bin/helixgen`) and suggest the user run
-  `uv tool update-shell` once.
+  on PATH — invoke it by absolute path (`"$(NO_COLOR=1 uv tool dir
+  --bin)/helixgen"`, usually `~/.local/bin/helixgen`) and suggest the user
+  run `uv tool update-shell` once.
 - **Traceback (`ModuleNotFoundError: No module named 'helixgen'`) or a
   version other than the pin** → a **stale `helixgen` elsewhere on PATH is
   shadowing the uv tool** (e.g. a broken editable install in a base
   interpreter). Do NOT try to fix that ambient Python environment — it is
   not the engine. Invoke the uv-installed binary by absolute path instead:
-  `"$(uv tool dir --bin)/helixgen"` — and use that path for the rest of the
-  session.
+  `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` — and use that path for the
+  rest of the session. The `NO_COLOR=1` is load-bearing: when the session
+  has `FORCE_COLOR` set (Claude Code often does), `uv tool dir --bin` emits
+  ANSI escape codes *inside* the command substitution and the resulting path
+  is garbage. If the substitution misbehaves anyway, fall back to the plain
+  default path `~/.local/bin/helixgen`.
 - **Upgrading** (when a newer plugin release pins a newer core):
   `uv tool install --force 'helixgen[device]==X.Y.Z'`.
 

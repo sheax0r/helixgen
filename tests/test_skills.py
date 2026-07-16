@@ -151,6 +151,75 @@ def test_skill_carries_library_env_mechanism(skill_path: Path) -> None:
     )
 
 
+# --- core 0.21.0 vocabulary (grid-slot live-ops, named setlists) -------------
+
+# Dead-vocabulary patterns that must never appear in skills or prose docs.
+# (docs/*.md are byte-synced from helixgen-core and exempt — core is
+# authoritative there, including its own erratum-history prose.)
+STALE_021_PATTERNS = [
+    # the dead computed-index rule for live-ops block coordinates
+    re.compile(r"\(\s*(?:blks_)?key\s*[-−]\s*1\s*\)\s*/\s*2"),
+    re.compile(r"blks_key"),
+    # the old closed --setlist choice (throwaway token never worked)
+    re.compile(r"user\|factory\|throwaway"),
+    re.compile(r"--setlist\s+throwaway\b"),
+    # the old 8-bank slot ceiling ("1A".."8D" — real vocabulary runs to 128D;
+    # the lookbehind keeps the correct "1A".."128D" from matching)
+    re.compile(r"1A.{0,6}(?<!12)8D"),
+]
+
+
+@pytest.mark.parametrize(
+    "path",
+    _skill_files() + [REPO_ROOT / "CLAUDE.md", REPO_ROOT / "README.md"],
+    ids=lambda p: f"{p.parent.name}/{p.name}" if p.name == "SKILL.md" else p.name,
+)
+def test_no_stale_021_vocabulary(path: Path) -> None:
+    text = path.read_text()
+    hits = [pat.pattern for pat in STALE_021_PATTERNS if pat.search(text)]
+    assert not hits, f"{path}: stale pre-0.21.0 vocabulary: {hits}"
+
+
+def test_device_skill_documents_grid_slot_liveops() -> None:
+    """Live-ops addressing is the DSP grid slot as printed by `device blocks`."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "grid slot" in text
+    assert "device blocks" in text
+    # the new 0.21.0 discovery/read verbs
+    assert "device params" in text
+    assert "device active" in text
+    # param values are raw units, never normalized
+    assert "RAW units" in text
+    # slot vocabulary runs to bank 128
+    assert "128D" in text
+    # named-setlist targeting on the preset verbs
+    assert "--setlist" in text
+
+
+@pytest.mark.parametrize("skill_path", _skill_files(), ids=lambda p: p.parent.name)
+def test_skill_documents_irhash_cache_isolation(skill_path: Path) -> None:
+    """Env-prefix isolation guidance must cover the IR-hash cache (backlog #68f)."""
+    text = skill_path.read_text()
+    assert "HELIXGEN_IRHASH_CACHE" in text, (
+        f"{skill_path}: HELIXGEN_IRHASH_CACHE (IR-hash cache file) not documented"
+    )
+    assert "HELIXGEN_CACHE" in text, (
+        f"{skill_path}: HELIXGEN_CACHE (cache dir) not documented"
+    )
+
+
+def test_setup_skill_stale_shadow_recovery_is_color_safe() -> None:
+    """`uv tool dir --bin` inside a substitution needs NO_COLOR (backlog #68a)."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    assert "NO_COLOR=1 uv tool dir" in text
+    assert "~/.local/bin/helixgen" in text
+    # the unguarded substitution form must not survive anywhere
+    for path in _skill_files() + [REPO_ROOT / "CLAUDE.md", REPO_ROOT / "README.md"]:
+        assert '"$(uv tool dir' not in path.read_text(), (
+            f"{path}: unguarded $(uv tool dir ...) substitution (FORCE_COLOR-unsafe)"
+        )
+
+
 def test_no_mcp_json_in_repo() -> None:
     assert not (REPO_ROOT / ".mcp.json").exists(), (
         ".mcp.json must not exist — the plugin is CLI-first (no MCP server)"

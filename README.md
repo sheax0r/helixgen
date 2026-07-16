@@ -22,7 +22,7 @@ brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.20.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
+The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.21.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
 
 **Using the Python CLI directly** (no plugin)? Same binary — see [`docs/CLI.md`](docs/CLI.md). A standalone install starts with an empty library at `~/.helixgen/library/`, so seed it first with `helixgen bootstrap` (the plugin's skills instead point `HELIXGEN_LIBRARY` at the bundled `data/library`).
 
@@ -78,7 +78,8 @@ msgpack, paramiko). Point at your device:
 ```bash
 export HELIXGEN_HELIX_IP=192.168.4.84    # your Stadium's IP (or pass --ip)
 
-helixgen device list                     # presets in the USER setlist
+helixgen device list                     # presets in the pool (--setlist also takes device setlist names)
+helixgen device active                   # the preset currently active on the device
 helixgen device read 904                 # a preset's metadata
 helixgen device create --from 904 --pos 7   # copy a preset into a slot
 helixgen device rename 930 "My Tone"
