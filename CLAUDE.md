@@ -8,42 +8,61 @@ surfaces** — the engine lives in
 
 **Repo family (all under `sheax0r`):**
 [`helixgen-core`](https://github.com/sheax0r/helixgen-core) is the Python
-package `helixgen` — libs, CLI, MCP server, tests, and the authoritative
-docs + backlog; **this repo** is the plugin/marketplace (skills, `.mcp.json`,
-bundled block-library data);
-[`helixgen-tui`](https://github.com/sheax0r/helixgen-tui) is the terminal
-UI. Engine changes always land in helixgen-core — never patch engine
-behavior from here.
+package `helixgen` — libs, the CLI (the **only** engine surface since core
+0.20.0 — the MCP server is removed), tests, and the authoritative docs +
+backlog; **this repo** is the plugin/marketplace (skills, bundled
+block-library data); [`helixgen-tui`](https://github.com/sheax0r/helixgen-tui)
+is the terminal UI. Engine changes always land in helixgen-core — never patch
+engine behavior from here.
 
-## How the plugin loads the engine
+## How the plugin loads the engine (CLI-first, since 4.0.0)
 
-`.mcp.json` launches the MCP server with
-`uv run --with 'helixgen[mcp,device]==X.Y.Z' -m mcp_server`
-— `uv` installs the core package (and its `mcp`/`device` extras) from PyPI
-into an ephemeral env at server start. The pin is an exact PyPI version
-(core is on PyPI as of v0.19.1 — core backlog #57/#58); bump it here, with a
-plugin release, per engine release.
-`HELIXGEN_LIBRARY` points at this repo's `data/library` — the bundled block
-library that makes the plugin work out of the box.
+There is no MCP server and no `.mcp.json`. The skills drive the `helixgen`
+**CLI**, provisioned as an isolated tool:
+
+```bash
+uv tool install 'helixgen[device]==0.20.0'
+```
+
+The `setup` skill's step 0 performs/verifies this (`helixgen --version`),
+handles the stale-shadow failure mode (a broken `helixgen` earlier on PATH —
+invoke `"$(uv tool dir --bin)/helixgen"` instead of touching the ambient
+Python), and upgrades with `uv tool install --force 'helixgen[device]==X.Y.Z'`.
+The CLI is self-documenting: skills start capability discovery at
+`helixgen --help` / `helixgen device --help`, and each verb's `--help` is its
+behavioral contract.
+
+**The engine version pin lives in the skills** (`setup` step 0; echoed in
+`tone`/`device` and README). Bumping the engine means updating the pinned
+version there and cutting a plugin release.
+
+**Block library:** the engine reads `$HELIXGEN_LIBRARY`. The skills resolve
+it per session — an already-set env var wins, then a populated
+`~/.helixgen/library/`, else the plugin's bundled library at
+`${CLAUDE_PLUGIN_ROOT}/data/library` — and prefix **every** `helixgen`
+invocation with it (shell exports don't persist across an agent's Bash
+calls). `${CLAUDE_PLUGIN_ROOT}` is expanded by Claude Code anywhere in plugin
+skill content, so installed skills carry the absolute path; the skills also
+document the dev-checkout fallback (derive the plugin root from the skill
+file's location).
 
 ## Project layout
 
-- `.claude/skills/` — the three skills: `setup` (device/prefs onboarding),
-  `tone` (author a `.hsp` from a tone request), `device` (push/sync authored
-  tones onto the hardware)
+- `.claude/skills/` — the three skills: `setup` (CLI provisioning +
+  device/prefs onboarding), `tone` (author a `.hsp` from a tone request),
+  `device` (push/sync authored tones onto the hardware)
 - `.claude-plugin/` — `plugin.json` + `marketplace.json`; bumping the version
   here on `main` triggers a release (see Releasing)
-- `.mcp.json` — spawns the MCP server (see above)
 - `data/library/` — the bundled block library (`HELIXGEN_LIBRARY`)
 - `docs/` — the runtime references the skills consult: `CLI.md`,
   `recipe-reference.md`, `helix-protocol.md` (synced FROM helixgen-core —
   core is authoritative), plus `demo.gif`
-- `tests/` — skill-doc frontmatter checks (`python3 -m pytest`, needs only
-  pytest)
+- `tests/` — skill-doc frontmatter + content checks (`python3 -m pytest`,
+  needs only pytest)
 
-**The plugin backlog lives at `docs/BACKLOG.md` in helixgen-core** (entries
-#57–#59 cover the repo split); this repo has no separate backlog file yet —
-file plugin-only work there until one exists.
+**The plugin backlog lives at `BACKLOG.md` in the coordination workspace**
+(the repos' shared backlog; entries #57–#59 cover the repo split) — file
+plugin-only work there.
 
 ## Development workflow
 
@@ -56,14 +75,14 @@ file plugin-only work there until one exists.
   least one independent review subagent prompted to *break* the change.
   Confirmed findings are fixed or explicitly deferred to the backlog.
 - **Agent-facing surfaces ship in sync — across repos.** Skills describe
-  CLI/MCP behavior implemented in helixgen-core. A core behavior change that
+  CLI behavior implemented in helixgen-core. A core behavior change that
   skills describe needs a companion PR here updating `.claude/skills/*` and
   the synced `docs/` copies (`CLI.md`, `recipe-reference.md`,
   `helix-protocol.md`); land the two PRs together and cross-reference them.
-- **Skills operate through tools, not source.** Skills must let the agent
-  work purely via CLI/MCP; behavioral contracts live in MCP tool
-  descriptions (in helixgen-core's `mcp_server/`) and the synced docs.
-  The running MCP server is resolved by `uv` from helixgen-core — reading
+- **Skills operate through the CLI, not source.** Skills must let the agent
+  work purely via the `helixgen` CLI; behavioral contracts live in the CLI's
+  per-verb `--help` (pinned by core's `tests/test_cli_parity.py`) and the
+  synced docs. The running engine is the uv-tool-installed package — reading
   any local checkout's source can mislead about the running version.
 - **Never commit paid IR packs or personal device exports.**
 
@@ -87,9 +106,7 @@ To cut a release:
 
 Do **not** manually `git branch -f stable …`, push `stable`, or push a
 `helixgen--v*` tag — the workflow owns those refs. Users get the release via
-`/plugin` update. Since the engine is a `uv` dependency, a plugin release is
-only needed for plugin-surface changes (skills, `.mcp.json`, block-library
-data, docs) — and to bump the engine version pin. Because the pin is an
-exact PyPI version, shipping an engine fix to plugin users means bumping the
-pin in `.mcp.json` and cutting a plugin release; no `uv cache clean` on the
-user's machine is involved.
+`/plugin` update. A plugin release is needed for plugin-surface changes
+(skills, block-library data, docs) — and to bump the engine version pin the
+skills carry. Core releases first (PyPI `helixgen`, tag `vX.Y.Z`), then this
+repo bumps the pin in the skills + README and cuts its own release.
