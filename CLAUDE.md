@@ -21,13 +21,16 @@ There is no MCP server and no `.mcp.json`. The skills drive the `helixgen`
 **CLI**, provisioned as an isolated tool:
 
 ```bash
-uv tool install 'helixgen[device]==0.20.0'
+uv tool install 'helixgen[device]==0.21.0'
 ```
 
 The `setup` skill's step 0 performs/verifies this (`helixgen --version`),
 handles the stale-shadow failure mode (a broken `helixgen` earlier on PATH —
-invoke `"$(uv tool dir --bin)/helixgen"` instead of touching the ambient
-Python), and upgrades with `uv tool install --force 'helixgen[device]==X.Y.Z'`.
+invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` — the `NO_COLOR=1` matters:
+with `FORCE_COLOR` set, uv emits ANSI codes inside the substitution — or fall
+back to the plain `~/.local/bin/helixgen` path, instead of touching the
+ambient Python), and upgrades with
+`uv tool install --force 'helixgen[device]==X.Y.Z'`.
 The CLI is self-documenting: skills start capability discovery at
 `helixgen --help` / `helixgen device --help`, and each verb's `--help` is its
 behavioral contract.
