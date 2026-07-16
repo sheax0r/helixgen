@@ -43,8 +43,10 @@ it per session — an already-set env var wins, then a populated
 invocation with it (shell exports don't persist across an agent's Bash
 calls). `${CLAUDE_PLUGIN_ROOT}` is expanded by Claude Code anywhere in plugin
 skill content, so installed skills carry the absolute path; the skills also
-document the dev-checkout fallback (derive the plugin root from the skill
-file's location).
+document the dev-checkout fallback (walk up from the skill's directory to the
+ancestor containing `.claude-plugin/plugin.json`) and a sanity check (an
+empty `list-blocks` result exits 0 — a silent sign the env didn't reach the
+CLI).
 
 ## Project layout
 

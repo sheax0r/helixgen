@@ -33,14 +33,16 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
   ```
 
   (`${CLAUDE_PLUGIN_ROOT}` is expanded by Claude Code when this skill loads;
-  if the literal token appears, the plugin root is three directories up from
-  this skill file. The prefix must be repeated on every Bash call — exports
+  if the literal token appears, the plugin root is the ancestor directory
+  containing `.claude-plugin/plugin.json` — walk up from this skill's own
+  directory. The prefix must be repeated on every Bash call — exports
   don't persist between calls. Resolution order and details: the `setup`
   skill's "Invoking helixgen" section.)
 - The library must be populated. Verify quickly with
-  `helixgen list-blocks --category amp` — empty output means the library
-  env isn't reaching the CLI (or the library is empty); fix that before
-  tone work is possible.
+  `helixgen list-blocks --category amp` — an empty/`no blocks` result means
+  the library env isn't reaching the CLI (or the library is empty); note the
+  exit code is still 0, so read the output, and fix this before any tone
+  work.
 
 ## The CLI surface
 
@@ -228,7 +230,7 @@ The Helix gives raw modeling and trusts you to voice it. A Spark/JC-120/etc. sou
 - **Cab `Low Cut`** at **80–100 Hz** to clear out flub (60 Hz for bass / 7-string).
 - **Mic choice** (cab `Mic` param): the default is usually `57 Dynamic` on-axis at the cap — engineered to slice through a live mix, not to sound pleasant solo. For "amp in the room" smoothness, prefer a ribbon (`121 Ribbon`, `160 Ribbon`) or any cab variant whose display name calls out a ribbon mic or an off-axis position.
 - **Optional Parametric EQ** cutting **2–4 dB around 3–4 kHz** (medium Q) if Hi Cut alone doesn't kill the "ice pick" zone. A small cut around 800 Hz–1 kHz helps with boxiness.
-- **Optional front-of-chain comp** (LA Studio Comp, light setting — only ~1–2 dB of gain reduction, **before** the amp) gives the "polished, baked-in" feel modeled presets often lack. Skip if the user wants pure raw dynamics.
+- **Optional front-of-chain comp** (an LA-style studio comp — find the exact display name via `list-blocks --category dynamics`; light setting, only ~1–2 dB of gain reduction, **before** the amp) gives the "polished, baked-in" feel modeled presets often lack. Skip if the user wants pure raw dynamics.
 
 If the cab the user picked has no Hi/Low Cut params (rare on Stadium), do the cuts with a Simple EQ block placed right after the cab.
 

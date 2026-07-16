@@ -46,7 +46,7 @@ In Claude Code, ask the skill to register an IR — it runs `helixgen register-i
 
 **Prerequisite for direct IR hashing:** computing an IR's hash from a WAV (`register-irs <wav>`, `ir-scan`) needs **libsndfile** (`brew install libsndfile` on macOS; `apt install libsndfile1` on Debian/Ubuntu). Only 48 kHz sources are supported for direct hashing.
 
-**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be loaded onto the device via the Helix Stadium app's **Librarian → Cab IRs → Import**. helixgen only handles the preset side; importing IRs onto the device is the Stadium app's job. If a slot displays "No Model" on the device after loading a preset, that IR wasn't imported.
+**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be on the device. Over the LAN, helixgen uploads it for you — `helixgen device sync` and `device install --auto-irs` push each referenced IR automatically (and `device push-ir` does one by hand); if you load presets via HX Edit/USB instead, import the WAV via the Stadium app's **Librarian → Cab IRs → Import**. If a slot displays "No Model" on the device after loading a preset, that IR isn't on the device yet.
 
 See [`ir-hash-algorithm.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/ir-hash-algorithm.md) for the hash algorithm and the field-validated reference implementation.
 

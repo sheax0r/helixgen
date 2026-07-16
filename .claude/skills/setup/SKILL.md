@@ -58,15 +58,26 @@ this order:
    Claude Code expands `${CLAUDE_PLUGIN_ROOT}` to the plugin's install
    directory when this skill loads. If you see the *literal unexpanded*
    token (e.g. this skill was loaded from a repo checkout instead of an
-   installed plugin), the plugin root is three directories up from this
-   skill file (`<plugin-root>/.claude/skills/setup/SKILL.md`).
+   installed plugin), resolve the plugin root yourself: it is the ancestor
+   directory containing `.claude-plugin/plugin.json` — walk up from this
+   skill's own directory (the skill lives at
+   `<plugin-root>/.claude/skills/setup/`).
+
+**Sanity-check the resolution once:** run `helixgen list-blocks` with your
+resolved env. If it prints an empty/`no blocks` result, the library env did
+**not** reach the CLI (the exit code is still 0 — this failure is silent) —
+stop and re-resolve the path rather than proceeding to tone work.
 
 **The prefix must be on every invocation** that touches the library
 (`generate`, `list-blocks`, `show-block`, `patch`, the single-op edit verbs,
 `view`, `ingest`) — exported shell state does not persist between Bash
-calls, so use the `ENV=value command` prefix form each time. Device-network
-verbs also need `HELIXGEN_HELIX_IP=<device-ip>` (or `--ip`); it's harmless
-to carry both prefixes uniformly.
+calls, so use the `ENV=value command` prefix form each time. Two more env
+vars ride along the same way when they apply: device-network verbs need
+`HELIXGEN_HELIX_IP=<device-ip>` (or `--ip`), and if the user has a custom IR
+directory on record (step 2 / `$HELIXGEN_IRS`), prefix IR-touching verbs
+(`register-irs`, `ir-scan`, `list-irs`, `generate` with IR blocks) with
+`HELIXGEN_IRS="<dir>"` too — otherwise they default to `~/.helixgen/irs/`.
+It's harmless to carry all applicable prefixes uniformly.
 
 ## Editing an existing preset (direct edits)
 
@@ -365,5 +376,8 @@ Tell the user, in one sentence:
 > 'No Model'."
 
 …then list the IR basenames the preset references so the user can verify.
+(This applies to the HX Edit/USB loading path — if the preset instead goes
+onto the device over the LAN via the `device` skill, `device sync` /
+`device install --auto-irs` upload the referenced IRs automatically.)
 Use `open -R "<path-to-hsp>"` to reveal the generated preset in Finder
 (per the `feedback_reveal_file_in_finder.md` rule).

@@ -106,11 +106,39 @@ STALE_MCP_TOKENS = [
 ]
 
 
+# Underscore-form identifiers that only existed as MCP tool names (the CLI
+# verbs are hyphenated) — caught anywhere, even in prose without parens.
+STALE_MCP_REGEX = re.compile(
+    r"\b(list_blocks|show_block|list_irs|controller_mapping|generate_preset|"
+    r"patch_preset|view_preset|register_irs?|compute_irhash|discover_irs)\b"
+)
+
+
+def _stale_hits(text: str) -> list[str]:
+    hits = [tok for tok in STALE_MCP_TOKENS if tok in text]
+    hits += sorted(set(STALE_MCP_REGEX.findall(text)) - set(hits))
+    return hits
+
+
 @pytest.mark.parametrize("skill_path", _skill_files(), ids=lambda p: p.parent.name)
 def test_skill_has_no_stale_mcp_tool_references(skill_path: Path) -> None:
-    text = skill_path.read_text()
-    hits = [tok for tok in STALE_MCP_TOKENS if tok in text]
+    hits = _stale_hits(skill_path.read_text())
     assert not hits, f"{skill_path}: stale MCP-era references: {hits}"
+
+
+@pytest.mark.parametrize(
+    "doc_path",
+    [REPO_ROOT / "CLAUDE.md", REPO_ROOT / "README.md"],
+    ids=lambda p: p.name,
+)
+def test_prose_docs_have_no_stale_mcp_tool_references(doc_path: Path) -> None:
+    # Prose docs may reference `.mcp.json`/`mcp_server` historically ("there
+    # is no .mcp.json"), but never the removed tool identifiers.
+    prose_tokens = [t for t in STALE_MCP_TOKENS if t not in (".mcp.json", "mcp_server")]
+    text = doc_path.read_text()
+    hits = [tok for tok in prose_tokens if tok in text]
+    hits += sorted(set(STALE_MCP_REGEX.findall(text)) - set(hits))
+    assert not hits, f"{doc_path}: stale MCP-era references: {hits}"
 
 
 @pytest.mark.parametrize("skill_path", _skill_files(), ids=lambda p: p.parent.name)
@@ -139,7 +167,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
-    """All surfaces that state the core pin must agree on the version."""
+    """Every pin-carrying surface must state the core pin, and all must agree."""
     pins = set()
     for path in [
         SKILLS_ROOT / "setup" / "SKILL.md",
@@ -148,7 +176,9 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
         REPO_ROOT / "CLAUDE.md",
         REPO_ROOT / "README.md",
     ]:
-        pins.update(re.findall(r"helixgen\[device\]==([0-9][0-9.]*)", path.read_text()))
+        found = re.findall(r"helixgen\[device\]==([0-9][0-9.]*)", path.read_text())
+        assert found, f"{path}: no engine pin (helixgen[device]==X.Y.Z) stated"
+        pins.update(found)
     assert len(pins) == 1, f"engine pin disagrees across surfaces: {sorted(pins)}"
 
 

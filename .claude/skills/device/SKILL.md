@@ -31,6 +31,9 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   var, else a populated `~/.helixgen/library/`, else the plugin's bundled
   `HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library"`. Carrying both
   prefixes on every call is harmless and keeps invocations uniform.
+- `HELIXGEN_IRS="<dir>"` — only when the user has a custom IR directory on
+  record and you're running an IR-registering fix (`register-irs`,
+  `ir-scan`); otherwise the engine defaults to `~/.helixgen/irs/`.
 
 ### Where the answers live (consult these FIRST, never the source)
 
