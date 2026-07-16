@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.22.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.25.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -66,7 +66,11 @@ descriptions used to play). The verbs this skill drives:
 |---|---|---|
 | `helixgen list-blocks [--category <cat>] [--json]` | survey the library (categories: amp/cab/drive/delay/reverb/modulation/filter/eq/dynamics/pitch/volume/send) | text grouped by category, one `<display_name>  [<model_id>]` per line; `--json` = array of `{display_name, model_id, category}` |
 | `helixgen show-block "<name-or-id>" [--json]` | exact param names/types/defaults/ranges for one block | text or `{display_name, model_id, category, aliases, params}` |
-| `helixgen generate <recipe.json> -o <out.hsp>` | author the preset from a recipe | writes the `.hsp`; warnings on stderr |
+| `helixgen generate <recipe.json> [--artist A --song S \| --descriptor D] [--guitar G]` | author a tone into the library (default flow): writes `library/tones/<variant-slug>.hsp` + per-tone metadata JSON, keyed by identity + target guitar | writes the `.hsp` + metadata; warnings on stderr |
+| `helixgen generate <recipe.json> -o <out.hsp>` | LEGACY ad-hoc output: writes there, auto-registers, naming flags IGNORED, no metadata JSON | writes the `.hsp`; warnings on stderr |
+| `helixgen library doc <name> (--from-file <md> \| -) [--variant <guitar-slug>]` | author/update the tone's `description_md` (or a variant's `notes_md`) — replaces the old companion `.md` sidecar | updates metadata in place |
+| `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
+| `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolves by slug/name/short_name) | text or JSON |
 | `helixgen list-irs [--json]` | locally registered user IRs | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
@@ -212,26 +216,38 @@ After generating, tweak these without re-authoring via a `helixgen patch`
 (e.g. `{"op": "set_param", "block": "input", "param": "threshold",
 "value": -60.0}`).
 
-#### Name the preset for its target guitar
+#### Name the tone — identity flags, not the recipe title
 
-Presets are named for the guitar they're voiced for. Append the **target
-guitar** (resolved in step 6) to **both** the recipe `"name"` (the display title)
-**and** the save slug (step 7a filename), in the format `"<Tone Name> —
-<Guitar>"` for the title and a sanitized equivalent for the `.hsp`/`.md`
-filename — e.g. title `"White Limo Lead — Les Paul Jr"`, slug
-`white-limo-lead-les-paul-jr`. Use a concise, recognizable guitar label — the
-name as the user/prefs refer to it (`"Les Paul Jr"`, `"EC-1000"`,
-`"Strandberg"`, `"Ibanez Prestige"`), not the full catalog name.
+The tone's identity and display name come from **`generate`'s naming flags**,
+not from a hand-formatted recipe `"name"`. Name it one of two ways:
 
-**Omit the guitar** (no suffix, plain tone name) **only** when the tone is
-explicitly *not* targeted at a specific guitar — e.g. the user asked for a
-guitar-agnostic or generic patch. In that case note in the report and the `.md`
-that it's not guitar-specific.
+- **Song identity** — `--artist "<Artist>" --song "<Song>"` (paired). Display
+  name is synthesized as `"$Artist - $Song - $Guitar"`.
+- **Descriptor** — `--descriptor "<Descriptor>"` (mutually exclusive with
+  `--artist`/`--song`). Display name is `"$Descriptor - $Guitar"`. With **no**
+  naming flag at all, the recipe's bare `"name"` becomes the descriptor.
 
-(Guitar resolution happens in step 6; you can build the recipe in step 5 with a
-placeholder name and stamp the final `"<Tone> — <Guitar>"` title once the guitar
-is settled — just make sure the generated preset and both files carry the
-guitar-suffixed name.)
+The **guitar segment** is the target guitar's profile `short_name` (resolved in
+step 6, passed as `--guitar <label>`). The `.hsp` filename and metadata slugs
+use the **same** schema, slugged lowercase-with-dashes — e.g.
+`--artist "Foo Fighters" --song "White Limo" --guitar "Les Paul Jr"` yields
+display `"Foo Fighters - White Limo - Les Paul Jr"` and file
+`foo-fighters-white-limo-les-paul-jr.hsp`.
+
+**Omit the guitar segment** (no `--guitar`) **only** when the tone is
+explicitly *not* targeted at a specific guitar — a guitar-agnostic/generic
+patch; the variant is then keyed `"generic"`. Note in the report and the
+`description_md` that it's not guitar-specific.
+
+**Logical tone vs variant.** One artist+song (or one descriptor) = one
+**logical tone** = one metadata JSON at `library/tones/<logical-slug>.json`,
+grouping one or more **variants** — each a real `.hsp` targeting a single
+guitar, keyed by that guitar's profile slug (or `"generic"`). To add another
+variant of an existing tone, re-run `generate --guitar <other-guitar>` against
+the **same** artist/song/descriptor (see step 6's variant offer).
+
+(Guitar resolution happens in step 6; build the recipe in step 5 without
+worrying about the title — the naming flags stamp identity at `generate` time.)
 
 #### Anti-fizz baseline — bake these into nearly every preset
 
@@ -390,9 +406,18 @@ its base amp params.
 
 For the report (next step), the user's hands-on guitar settings are part of the tone — pickup choice and rolled-back knobs shape the sound as much as the amp settings do.
 
+**Guitars are first-class profiles** at `library/guitars/<slug>.json` (they
+replace the old `preferences.instruments`). Read a profile with
+`helixgen library show <guitar> --json` — it resolves by slug, name, or
+`short_name`. A profile carries `character_md` (tonal character — what the
+guitar is for), `pickups`, `construction`, and `controls[]` (the control
+inventory). **Adapt block params to the resolved profile** — bright
+single-coils want less amp treble-pull than dark humbuckers; a variant's
+`guitar_settings` keys should reference the profile's real `controls[]` names.
+
 Resolve the target guitar in this order (first hit wins). The resolved guitar
-is **the target guitar** used to name the preset (title + filename + description
-— see step 5 naming and step 7a):
+is **the target guitar** passed to `generate --guitar <label>` (step 7),
+naming the tone and keying its variant:
 
 **(a) A user-named guitar always wins.** If the user named a specific guitar,
 use it. If research (1b) or the tone target suggests it's a poor fit, give
@@ -401,20 +426,29 @@ will fight this vintage-crunch voicing — if you have it handy, the LP Jr's P-9
 nails it more directly" — then proceed with the guitar they asked for.
 
 **(b) Else, use `default_guitar` from preferences.** If no guitar was named and
-`~/.helixgen/preferences.json` has a `default_guitar` set, use it — state it
-briefly ("using your default guitar, the <X>"). Still give the one-nudge from
-(a) if it's a poor fit for the tone.
+`~/.helixgen/preferences.json` has a `default_guitar` set, use it — it names a
+guitar **profile** (by slug or name/`short_name`); state it briefly ("using
+your default guitar, the <X>"). Still give the one-nudge from (a) if it's a
+poor fit for the tone.
 
 **(c) Else, ask which guitar to use — and offer to save it.** When no guitar was
 named and `default_guitar` is unset, **ask the user which guitar to use.** Offer
-a best-fit suggestion from their owned lineup (read `instruments` from
-preferences.json if present; otherwise the user's guitar memory — Les Paul Jr,
-ESP LTD EC-1000, Strandberg Boden Essential 6, Ibanez Prestige) using the
-pickup-class table below, and **offer to save their choice as `default_guitar`
-in preferences.json** (confirm-first, per the setup skill's write-back rule) so
-you won't have to ask next time. Only fall through to the generic tone-goal
-table (further down) plus a single clarifying question when the lineup is
-entirely unknown — no preferences file and no memory.
+a best-fit suggestion from their guitar **profiles** (`helixgen library show`
+each; fall back to the user's guitar memory — Les Paul Jr, ESP LTD EC-1000,
+Strandberg Boden Essential 6, Ibanez Prestige — if no profiles exist yet) using
+the pickup-class table below, and **offer to save their choice as
+`default_guitar` in preferences.json** (confirm-first, per the setup skill's
+write-back rule) so you won't have to ask next time. Only fall through to the
+generic tone-goal table (further down) plus a single clarifying question when
+the lineup is entirely unknown — no profiles, no preferences file, and no
+memory.
+
+**Offer per-guitar variants — only when 2+ guitars are plausible.** When the
+user owns/names **two or more** guitar profiles that could plausibly carry this
+tone, **offer** (via a structured question) to author per-guitar variants —
+each a `generate --guitar <other>` against the **same** identity (step 5's
+logical-tone/variant model). With a **single** guitar in play, do **not** ask
+(backlog #22) — just proceed with it.
 
 Match tone character to pickup class (this is the best-fit suggestion in (c),
 and the nudge check in (a)/(b)):
@@ -453,24 +487,54 @@ If nothing is known about the user's lineup (no preferences file, no memory, no 
 
 **Snapshots stay on one instrument.** For a snapshot preset (5.5), the recommendation names a single guitar — the player isn't swapping guitars mid-song — and expresses per-scene differences as control moves on that one guitar (e.g. "split (Strandberg pos 4) + volume 7 for the clean verse snapshot, full bridge (pos 1) + volume 10 for the lead snapshot").
 
-### 7. Generate
+### 7. Generate into the library
 
-Write the recipe JSON to a scratch file, then:
+Write the recipe JSON to a scratch file, then run `generate` with the **naming
+flags** from step 5 (no `-o` — this is the default library flow):
 
 ```bash
-HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/<slug>.recipe.json -o "<dir>/<slug>.hsp"
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/<slug>.recipe.json \
+  --artist "Foo Fighters" --song "White Limo" --guitar "Les Paul Jr"
 ```
 
-(pick `<dir>/<slug>` per the **Save location** note below; the library prefix
-per the Prerequisites resolution). It writes the `.hsp` directly (creating
-parent dirs); **warnings appear on stderr** — read them and surface them to
-the user. The written tone auto-registers in the local tone library.
+(Or `--descriptor "<Descriptor>"` instead of `--artist`/`--song`; drop
+`--guitar` only for a guitar-agnostic tone. The library prefix is per the
+Prerequisites resolution.) With no `-o`, `generate` writes the `.hsp` into the
+tone library at `library/tones/<variant-slug>.hsp` **and** authors the per-tone
+metadata JSON at `library/tones/<logical-slug>.json`. **Warnings appear on
+stderr** — read them and surface them to the user.
+
+- **Slug collisions error, never overwrite.** If the target `.hsp` already
+  exists, `generate` errors with a rename suggestion — don't force past it;
+  either you're re-authoring (adjust identity) or you meant a new variant
+  (change `--guitar`).
+- **`--guitar` resolution:** the label resolves to a guitar profile
+  (slug/name/`short_name`, case-insensitive). If profiles exist but none
+  matches, it errors listing the known guitars; ambiguous → errors asking you
+  to disambiguate by exact slug. If **no** profiles exist yet (fresh /
+  pre-`library migrate`), it falls back to a literal `slugify(label)` with a
+  stderr notice — authoring still works.
+- **Ad-hoc `-o` (legacy):** an explicit `-o <out.hsp>` preserves the old
+  behavior exactly — writes there, auto-registers, **ignores** the naming
+  flags, and writes **no** metadata JSON. Use it only for throwaway/scratch
+  output; the library flow above is the default for real tones.
 
 If the validator errors with `Unknown param(s) [...]`, re-run `show-block` on the offending block, fix the recipe, retry. Never guess the corrected name.
 
-#### 7a. Write a companion markdown description — REQUIRED
+#### 7a. Author the description into the tone metadata — REQUIRED
 
-Whenever you save a `.hsp`, also write a sibling markdown file at the same path with the same slug (`<dir>/<slug>.md` next to `<dir>/<slug>.hsp`). This is the durable, human-readable record of the tone so it stands alone without the chat. It's effectively the step-8 report, persisted. Include:
+The durable, human-readable record of the tone is **not** a `.md` sidecar
+anymore — it's the tone metadata's `description_md`, authored with
+`helixgen library doc`. Write it after `generate`:
+
+```bash
+helixgen library doc "<name>" --from-file /tmp/<slug>.description.md   # or: … - (reads stdin)
+```
+
+(`<name>` resolves the logical tone by artist+song, descriptor, or slug.)
+Compose the markdown (to a scratch file or via stdin), covering — it's
+effectively the step-8 report, persisted so the tone stands alone without the
+chat:
 
 - **Title + target** — the tone name, the guitar it's voiced for, and what it's aiming at (artist/song/section/genre/feel). State the target guitar clearly near the top (omit it only when the tone is explicitly not guitar-specific — then say so)
 - **Reference notes & sources** — the key findings from step 1b research, with the source links (omit if research was skipped because the target was generic)
@@ -483,22 +547,24 @@ Whenever you save a `.hsp`, also write a sibling markdown file at the same path 
 - **Recommended instrument** — a `## Recommended instrument` section (see step 6): **Pick**, **Why**, **Controls** (selector / volume / tone / coil-split if applicable / pick attack), **Second choice** (only on a genuine toss-up), **Note** (any lineup caveat, e.g. active-vs-passive TBD)
 - **Tweaks** — the one concrete tweak from step 8, plus any obvious alternates
 
-Keep it tight and scannable — it's reference material, not a transcript. If you regenerate/iterate on the preset (step 9), update this `.md` in place alongside the `.hsp`.
+Keep it tight and scannable — it's reference material, not a transcript. **Per-variant notes** (anything specific to one guitar's `.hsp`) go to that
+variant's `notes_md` instead: `helixgen library doc "<name>" --variant
+<guitar-slug> (--from-file <md> | -)`. If you regenerate/iterate on the preset
+(step 9), re-run `library doc` to update the description in place.
 
-> **Save location:** default to writing both files wherever the user's convention puts presets. If a project/user preference (memory or a stated rule) names a presets directory, write the `.hsp` **and** `.md` there; otherwise `/tmp/<slug>.{hsp,md}`. The `<slug>` includes the target guitar (sanitized `"<Tone Name> — <Guitar>"`, e.g. `white-limo-lead-les-paul-jr.{hsp,md}`) — omit the guitar from the slug only when the tone is explicitly not guitar-specific. Reveal the `.hsp` in Finder per step 8.
+Read it back any time with `helixgen describe "<tone>"` (identity + variants
+table + `description_md` verbatim) or `helixgen library show "<name>" [--json]`
+(compact/JSON metadata).
 
-#### 7b. Git-commit the saved files (if the output dir is git-managed)
+#### 7b. Do NOT git-commit library paths yourself
 
-After writing the `.hsp` and its companion `.md` (7a) — or after a `helixgen patch` edit in step 9 — commit them:
-
-1. **Detect per-directory**: `git -C <output-dir> rev-parse --is-inside-work-tree`. If it errors or prints `false`, this directory isn't a git work tree — skip silently, no commit.
-2. **Honor `git_commit_tones`** from `preferences.json` (default `"auto"`): `"auto"` commits whenever step 1 says yes; `"true"` always tries (still needs step 1 to succeed); `"false"` never commits — skip silently.
-3. **Stage only the files you just wrote** — `git -C <output-dir> add -- <slug>.hsp <slug>.md` (or just the one file that changed on an edit), never `add -A`/`add .`. **Check `git -C <output-dir> status` first**: if the repo already has unrelated changes staged (anywhere in the index, not just these paths), warn the user and skip rather than folding them into your commit — a plain `git commit` commits the whole index, not just what you just staged.
-4. **Commit locally, never push** — `git -C <output-dir> commit -m "<message>"` with a short, descriptive message naming the tone and what changed, e.g. `tone: add White Limo Lead — Les Paul Jr` for a new preset, or `tone: brighten cab, drop reverb mix on White Limo Lead` for a patch edit.
-
-Keep every git command scoped with `-C <output-dir>` (as in step 1) — your shell's cwd is usually **not** the output dir, so an unscoped `git add`/`commit` targets the wrong repo.
-
-Mention in the report (step 8 / step 9) whether a commit was made.
+Core **auto-commits** library changes to the `~/.helixgen` git repo after every
+library-mutating verb (the no-`-o` `generate`, `library doc`, …), advisory and
+gated by the `git_commit_tones` preference. **The skill must not git-add or
+git-commit library files itself** — that behavior now lives in the engine.
+(You may still commit a **non-library** directory you explicitly wrote into,
+e.g. a project presets folder reached via an ad-hoc `-o` path — but the default
+library flow is hands-off.)
 
 ### 8. Report back
 
@@ -508,14 +574,14 @@ Tell the user, in this order:
 3. **Levels** (from 5.7) — one line on the *intended* relative balance, e.g. `rhythm anchor; lead +~2 dB; clean bumped to match (fine-tune by ear)`. If normalization was skipped by preference, say `Levels: normalization off per preferences`.
 4. **Instrument** — `<guitar> — <one-clause why>` (skip the "why" if the user named the guitar themselves), then `Selector: <position> · Volume: <0–10> · Tone: <0–10>` in that guitar's real switch language, plus a one-clause note for any non-obvious move (roll-off, coil-split, pick attack)
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
-6. **The files** — the `.hsp` saved locally (plus its companion `<slug>.md` description from step 7a). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path>/<slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop.
+6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop.
 7. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
 
 ### 9. Iterate on feedback (when the user loads it and says it's not quite right)
 
-After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. Re-run the git-commit step (7b) on the edited `.hsp` afterward.
+After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. If the change is worth recording, refresh the tone's `description_md` with `helixgen library doc` (7a). Don't git-commit library paths yourself — core auto-commits (7b).
 
 Rules of thumb for translating ear-language to param moves:
 - **"Too compressed"** on a lead → back amp `Drive` off ~0.10, raise `Master`; or back drive pedal `Gain` off ~0.10
@@ -554,8 +620,11 @@ Rules of thumb for translating ear-language to param moves:
 | Shipping a preset with no live control | By default wire toggle-able blocks to footswitches and sweep-able blocks to EXP (5.6) — don't ship silent presets unless the user asked for hands-off |
 | Using `Position` as the wah/expression sweep param | The real param is `Pedal` (float 0..1) on blocks like `Teardrop 310 Mono`; wah/expression blocks have no `Position` param (that name is the IR-cab mic knob) — always confirm with `show-block` (5.6) |
 | Building an artist/song tone from memory | Research the real rig from the web first (step 1b) — signature tones hinge on non-obvious details; cite sources |
-| Saving the `.hsp` without a description | Always write the companion `<slug>.md` (step 7a) next to the preset so the tone is documented standalone |
-| Naming a preset without its target guitar | Append the target guitar to the title AND the `.hsp`/`.md` filename (`<Tone> — <Guitar>`, step 5 naming); omit it only when the tone is explicitly guitar-agnostic |
+| Generating a tone without a description | Author the tone metadata's `description_md` with `helixgen library doc` (step 7a) — there is no `.md` sidecar anymore; the write-up lives in the tone metadata |
+| Writing a companion `.md` next to the `.hsp` | Gone — descriptions live in `description_md` via `library doc` (per-variant notes → `notes_md`); read back with `helixgen describe` |
+| Naming a tone without its target guitar | Pass `--guitar <label>` so the display name/slug carry the guitar (`"$Artist - $Song - $Guitar"` / `"$Descriptor - $Guitar"`, step 5); omit it only when the tone is explicitly guitar-agnostic |
+| Hand-formatting the old `"<Tone> — <Guitar>"` title in the recipe | Identity comes from `generate`'s `--artist`/`--song` or `--descriptor` + `--guitar` flags, not the recipe `"name"` (step 5 naming) |
+| Git-committing the generated `.hsp`/library files yourself | Core auto-commits library changes (gated by `git_commit_tones`); the skill must not add/commit library paths (step 7b) |
 
 ## Adjusting an existing tone (surgical edits)
 
