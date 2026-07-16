@@ -1,13 +1,13 @@
 ---
 name: tone
-description: Use when the user asks for a guitar/bass tone targeted at a specific artist, song, genre, or feel (e.g. "lead in White Limo by Foo Fighters", "warm jazz clean", "thrash rhythm"). Drives the helixgen MCP server (auto-spawned via the plugin's bundled `.mcp.json`) to design and generate a Helix Stadium `.hsp` preset.
+description: Use when the user asks for a guitar/bass tone targeted at a specific artist, song, genre, or feel (e.g. "lead in White Limo by Foo Fighters", "warm jazz clean", "thrash rhythm"). Drives the helixgen CLI (provisioned by the `setup` skill as an isolated uv tool) to design and generate a Helix Stadium `.hsp` preset.
 ---
 
 # Tone
 
 ## Overview
 
-Turn a tone description into a `.hsp` Helix Stadium preset that's ready to load on the device. Drive the helixgen MCP server: survey blocks, pick a chain, verify exact param names, build a spec dict, call `generate_preset`, deliver the file.
+Turn a tone description into a `.hsp` Helix Stadium preset that's ready to load on the device. Drive the `helixgen` CLI: survey blocks, pick a chain, verify exact param names, build a recipe JSON, run `helixgen generate`, deliver the file.
 
 ## When to Use
 
@@ -15,21 +15,51 @@ Turn a tone description into a `.hsp` Helix Stadium preset that's ready to load 
 - User wants a starting point to A/B against a reference
 - User mentions a guitar/bass and a role (rhythm, lead, clean, pad, solo boost)
 
-When NOT to use: editing an existing `.hsp` (load and modify directly outside this skill); ingesting new blocks (CLI's `helixgen ingest`); answering "what blocks do I have?" — just call `list_blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / slots / backup), which picks up where this skill's saved `.hsp` leaves off.
+When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off.
 
 ## Prerequisites
 
-- A helixgen MCP server is reachable. The plugin's `.mcp.json` spawns it over stdio via `uv run --with 'helixgen[mcp,device]==<version>' -m mcp_server` — uv auto-installs the pinned engine package from PyPI into an ephemeral env (see the `setup` skill's server-startup checks).
-- The server's library must be populated. Verify quickly with `list_blocks(category="amp")` — empty result means no blocks ingested and the server's deployer needs to fix that before tone work is possible.
+- The `helixgen` CLI is installed (the `setup` skill provisions it:
+  `uv tool install 'helixgen[device]==0.20.0'` — isolated env, `helixgen`
+  binary on PATH). If `helixgen --version` fails or prints a traceback, go
+  run the setup skill's step 0 (a stale install may be shadowing the uv
+  tool binary — invoke `"$(uv tool dir --bin)/helixgen"` by absolute path).
+- **Every invocation that touches the block library needs `HELIXGEN_LIBRARY`**
+  unless the user has their own populated `~/.helixgen/library/` or the env
+  var is already set. Prefix each call with the plugin's bundled library:
 
-## MCP tool surface
+  ```bash
+  HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --category amp
+  ```
 
-| Tool | Args | Returns |
+  (`${CLAUDE_PLUGIN_ROOT}` is expanded by Claude Code when this skill loads;
+  if the literal token appears, the plugin root is the ancestor directory
+  containing `.claude-plugin/plugin.json` — walk up from this skill's own
+  directory. The prefix must be repeated on every Bash call — exports
+  don't persist between calls. Resolution order and details: the `setup`
+  skill's "Invoking helixgen" section.)
+- The library must be populated. Verify quickly with
+  `helixgen list-blocks --category amp` — an empty/`no blocks` result means
+  the library env isn't reaching the CLI (or the library is empty); note the
+  exit code is still 0, so read the output, and fix this before any tone
+  work.
+
+## The CLI surface
+
+**Discover capabilities from the CLI itself, first:** run `helixgen --help`
+(verb groups + the mental models), then the specific verb's `--help` — that
+help text is the full behavioral contract (the role the old MCP tool
+descriptions used to play). The verbs this skill drives:
+
+| Verb | Use | Output |
 |---|---|---|
-| `list_blocks` | `category?` (amp/cab/drive/delay/reverb/modulation/filter/eq/dynamics/pitch/volume/send) | text, grouped by category, one `<display_name>  [<model_id>]` per line |
-| `show_block` | `name_or_id` (display name, model id, or alias) | text: header, category, aliases, params with types/defaults/ranges |
-| `generate_preset` | `model`, `recipe` (inline JSON dict — full helixgen schema), `out_path` | `{path, warnings}` — the `.hsp` is written to `out_path` |
-| `list_irs` | — | text, one `<hash>  <wav-path>` per registered IR; empty on the public deploy |
+| `helixgen list-blocks [--category <cat>] [--json]` | survey the library (categories: amp/cab/drive/delay/reverb/modulation/filter/eq/dynamics/pitch/volume/send) | text grouped by category, one `<display_name>  [<model_id>]` per line; `--json` = array of `{display_name, model_id, category}` |
+| `helixgen show-block "<name-or-id>" [--json]` | exact param names/types/defaults/ranges for one block | text or `{display_name, model_id, category, aliases, params}` |
+| `helixgen generate <recipe.json> -o <out.hsp>` | author the preset from a recipe | writes the `.hsp`; warnings on stderr |
+| `helixgen list-irs [--json]` | locally registered user IRs | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
+| `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
+| `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
+| `helixgen controllers [--json]` | assignable-controller vocabulary (FS/EXP) with English names + positions | text lines or JSON array |
 
 ## Workflow
 
@@ -90,7 +120,7 @@ State your call briefly so the user can redirect before you commit:
 
 ### 3. Pick blocks from the library
 
-For each slot, call `list_blocks(category=<cat>)` and scan the output for display names that read closest to the reference gear. Categories are amp / cab / drive / delay / reverb / modulation / filter / eq / dynamics / pitch / volume / send.
+For each slot, run `helixgen list-blocks --category <cat>` and scan the output for display names that read closest to the reference gear. Categories are amp / cab / drive / delay / reverb / modulation / filter / eq / dynamics / pitch / volume / send.
 
 Cab pick matters a lot for "is this fizzy or musical":
 
@@ -98,7 +128,7 @@ Cab pick matters a lot for "is this fizzy or musical":
 - Cab variants with a **ribbon mic** in the name (`R121`, `R84`, `121 Ribbon`, `160 Ribbon`) or with `Off-Axis` / `Edge` in the position are much smoother than the default `SM57 On-Axis Cap` rendering. Prefer them for anything that should sound polished.
 - The fine-grained Hi Cut / Low Cut / mic moves live in step 5 — picking the right cab here saves you from fighting it later.
 
-**Check for user IRs (preference-gated).** Call `list_irs()`. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
+**Check for user IRs (preference-gated).** Run `helixgen list-irs --json`. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
 
 - Parse the wav filenames in the output — commercial IR packs encode cab + mic + position (e.g. `YA VX30 212 BLU Mix 01.wav` → Vox AC30-style 2x12 Blue, mix-position).
 - If a match exists, use an IR block instead of a stock cab:
@@ -111,13 +141,13 @@ Cab pick matters a lot for "is this fizzy or musical":
 
 ### 4. Get exact param names — REQUIRED step
 
-For each chosen block, call `show_block(name_or_id="<display name>")`.
+For each chosen block, run `helixgen show-block "<display name>"`.
 
-Skipping this is the #1 way to waste a generation cycle. Param names are case-sensitive (`Treble` vs `Tone`), tone-stack labels vary by amp, and the generator rejects unknown keys with a list of valid ones. If `generate_preset` later returns an error containing `Unknown param(s)`, the tool description tells you the recovery: call `show_block` on the offending block, fix the spec, retry.
+Skipping this is the #1 way to waste a generation cycle. Param names are case-sensitive (`Treble` vs `Tone`), tone-stack labels vary by amp, and the generator rejects unknown keys with a list of valid ones. If `helixgen generate` later errors with `Unknown param(s)`, the recovery (spelled out in `generate --help` too) is: `show-block` the offending block, fix the recipe, retry.
 
-### 5. Build the spec dict
+### 5. Build the recipe
 
-Construct the spec inline as a Python/JSON dict — no temp files involved. The schema is the same as the helixgen CLI spec.json — full per-field reference (base shape + every optional section) in `docs/recipe-reference.md`.
+Construct the recipe as a JSON dict and write it to a scratch file (e.g. `/tmp/<slug>.recipe.json`) — the recipe is **input-only** (never written back; the `.hsp` is the sole source of truth, no sidecar). The schema is the helixgen recipe format — full per-field reference (base shape + every optional section) in `docs/recipe-reference.md`.
 
 Minimal shape:
 
@@ -141,7 +171,7 @@ Minimal shape:
 
 #### Signal-flow params (input / output / split / merge) — use when the tone calls for them
 
-The spec also models the signal-flow layer (full field reference:
+The recipe also models the signal-flow layer (full field reference:
 `docs/recipe-reference.md`). Reach for these when the tone needs them — don't add them
 ritually:
 
@@ -166,15 +196,15 @@ ritually:
   `"Level"` defaults to the device's +3 dB; set `"Level": 0.0` for unity.
 - **Trails** — `"trails": true` is valid on delay, reverb, AND FX-Loop blocks.
 
-After generating, tweak these without re-authoring via `patch_preset`
-`set_param` on the pseudo-blocks `input` / `output` / `split` / `join`
+After generating, tweak these without re-authoring via a `helixgen patch`
+`set_param` op on the pseudo-blocks `input` / `output` / `split` / `join`
 (e.g. `{"op": "set_param", "block": "input", "param": "threshold",
 "value": -60.0}`).
 
 #### Name the preset for its target guitar
 
 Presets are named for the guitar they're voiced for. Append the **target
-guitar** (resolved in step 6) to **both** the spec `"name"` (the display title)
+guitar** (resolved in step 6) to **both** the recipe `"name"` (the display title)
 **and** the save slug (step 7a filename), in the format `"<Tone Name> —
 <Guitar>"` for the title and a sanitized equivalent for the `.hsp`/`.md`
 filename — e.g. title `"White Limo Lead — Les Paul Jr"`, slug
@@ -187,20 +217,20 @@ explicitly *not* targeted at a specific guitar — e.g. the user asked for a
 guitar-agnostic or generic patch. In that case note in the report and the `.md`
 that it's not guitar-specific.
 
-(Guitar resolution happens in step 6; you can build the spec in step 5 with a
+(Guitar resolution happens in step 6; you can build the recipe in step 5 with a
 placeholder name and stamp the final `"<Tone> — <Guitar>"` title once the guitar
 is settled — just make sure the generated preset and both files carry the
 guitar-suffixed name.)
 
 #### Anti-fizz baseline — bake these into nearly every preset
 
-The Helix gives raw modeling and trusts you to voice it. A Spark/JC-120/etc. sounds "nice" out of the box because it's doing fixed cab voicing, EQ-curve baking, and mild compression for you. Without those, default Helix presets sound fizzy and thin compared to a real amp pushing real air. The cab block is where you fix this — verify exact param names with `show_block` (older cabs may use `Hi Cut` / `Lo Cut`; newer ones `High Cut` / `Low Cut`).
+The Helix gives raw modeling and trusts you to voice it. A Spark/JC-120/etc. sounds "nice" out of the box because it's doing fixed cab voicing, EQ-curve baking, and mild compression for you. Without those, default Helix presets sound fizzy and thin compared to a real amp pushing real air. The cab block is where you fix this — verify exact param names with `show-block` (older cabs may use `Hi Cut` / `Lo Cut`; newer ones `High Cut` / `Low Cut`).
 
 - **Cab `Hi Cut`** at **6500–7000 Hz** for amped tones; 7500–8000 Hz for sparkling cleans. Real V30s/Greenbacks have nothing above ~6 kHz; modeled cabs let fizz through to 10 kHz+. This single move kills ~70% of "modeller harshness."
 - **Cab `Low Cut`** at **80–100 Hz** to clear out flub (60 Hz for bass / 7-string).
 - **Mic choice** (cab `Mic` param): the default is usually `57 Dynamic` on-axis at the cap — engineered to slice through a live mix, not to sound pleasant solo. For "amp in the room" smoothness, prefer a ribbon (`121 Ribbon`, `160 Ribbon`) or any cab variant whose display name calls out a ribbon mic or an off-axis position.
 - **Optional Parametric EQ** cutting **2–4 dB around 3–4 kHz** (medium Q) if Hi Cut alone doesn't kill the "ice pick" zone. A small cut around 800 Hz–1 kHz helps with boxiness.
-- **Optional front-of-chain comp** (LA Studio Comp, light setting — only ~1–2 dB of gain reduction, **before** the amp) gives the "polished, baked-in" feel modeled presets often lack. Skip if the user wants pure raw dynamics.
+- **Optional front-of-chain comp** (an LA-style studio comp — find the exact display name via `list-blocks --category dynamics`; light setting, only ~1–2 dB of gain reduction, **before** the amp) gives the "polished, baked-in" feel modeled presets often lack. Skip if the user wants pure raw dynamics.
 
 If the cab the user picked has no Hi/Low Cut params (rare on Stadium), do the cuts with a Simple EQ block placed right after the cab.
 
@@ -222,7 +252,7 @@ If the cab the user picked has no Hi/Low Cut params (rare on Stadium), do the cu
 | Reverb `Mix` | 0.08–0.15 (up to 0.20 for sterile DI-feel rescues) | Stadium plates sit louder than they look |
 | Comp before amp (optional) | ~1–2 dB gain reduction | Polished/Spark-like feel; skip for raw dynamics |
 
-Amp-EQ tweaks for the user's specific guitar (apply to whichever amp params actually exist — check `show_block` first):
+Amp-EQ tweaks for the user's specific guitar (apply to whichever amp params actually exist — check `show-block` first):
 
 | Guitar | Pickups | Typical adjustments |
 |--------|---------|---------------------|
@@ -244,7 +274,7 @@ Stadium presets support 8 snapshots — named scenes that override block bypass 
 
 **A solo boost is its own snapshot, not a footswitch.** It recalls a full lead voice — gain, EQ, delay, and reverb all moving together — which is exactly what a snapshot is for. Reserve footswitches (5.6) for single in-scene toggles.
 
-Spec extension (top-level `snapshots` array, up to 8 entries):
+Recipe extension (top-level `snapshots` array, up to 8 entries):
 
 ```json
 "snapshots": [
@@ -262,7 +292,7 @@ Rules:
 - `params: {block: {p: v}}` overrides param values in that snapshot.
 - Snapshot 1 (index 0) is the one that loads on hardware boot.
 - Block names in `disable` / `params` must already exist in the path's `blocks`.
-- Param names in `params` are validated like base params — run `show_block` if unsure.
+- Param names in `params` are validated like base params — run `show-block` if unsure.
 
 Common patterns:
 - **Rhythm/Lead**: lead = higher amp `Drive` + `Master`, +0.10 reverb `Mix`, +0.15 delay `Mix`
@@ -288,7 +318,7 @@ By default, wire the chain for live use: give every toggle-able effect a footswi
 - A switch can also toggle a **param** between two values instead of a bypass — add `"param"` + numeric `"min"`/`"max"` (raw param units) to the entry (e.g. FS kicks amp `Drive` 0.45→0.7). Use it when the user asks for a single-knob stomp (a multi-param change is a snapshot, 5.5).
 
 **Expression pedals — wah/whammy → EXP1, volume → EXP2:**
-- Detect a pedal-controllable block by calling `show_block` and checking for a **`Pedal`** float param (0..1) — that's the real sweep param for every wah, `Pitch Wham`, and volume pedal in the library (e.g. `Teardrop 310 Mono`). Wah/expression blocks have **no `Position` param** (don't confuse it with the mic-`Position` knob on IR-cab `With Pan` blocks) — always confirm with `show_block` before writing the spec. Poly-pitch/int-`Interval` blocks are out of EXP v1 scope.
+- Detect a pedal-controllable block by running `show-block` and checking for a **`Pedal`** float param (0..1) — that's the real sweep param for every wah, `Pitch Wham`, and volume pedal in the library (e.g. `Teardrop 310 Mono`). Wah/expression blocks have **no `Position` param** (don't confuse it with the mic-`Position` knob on IR-cab `With Pan` blocks) — always confirm with `show-block` before writing the recipe. Poly-pitch/int-`Interval` blocks are out of EXP v1 scope.
 - Route a wah or whammy's `Pedal` to **EXP1**; route a volume block's `Pedal` to **EXP2**. If only a volume pedal is present (no wah/whammy), put it on EXP1 instead. Full `min: 0.0, max: 1.0` sweep by default.
 - **Wah ships bypassed, engaged by the toe switch** — set `"enabled": false` on the wah block and assign its bypass to `"switch": "EXP1Toe"` (the real expression-pedal toe switch — push the pedal fully forward to click it on, then sweep with EXP1). This is the standard Helix wah behavior. Do **not** spend a regular `FS` slot on the wah, and do not count it against the FS budget. Unless research says the reference keeps the wah always inline.
 - If the user already claimed a pedal (e.g. "EXP2 sweeps amp Master"), that wins; auto-routing only fills what's left, and skips a target it can't place — telling the user — rather than overriding the user's mapping.
@@ -314,10 +344,10 @@ both default on:
 - `volume_normalize_snapshots: false` → skip forces 2–3 (between-snapshot
   leveling). If both are false, skip this step and say so in the report.
 
-**The knob:** `show_block` the amp and use its channel-volume param (`ChVol`, or
+**The knob:** `show-block` the amp and use its channel-volume param (`ChVol`, or
 the amp's `Level` — the name varies, so confirm). Do **not** use `Master` (it
 also changes power-amp sag/feel). Only if the amp has no channel-volume param,
-add one end-of-chain volume block (from `list_blocks(category="volume")`) and
+add one end-of-chain volume block (from `list-blocks --category volume`) and
 automate that. In a layered two-amp preset, level whichever amp is active in
 each snapshot via that amp's own channel volume.
 
@@ -325,7 +355,7 @@ Apply three forces, in order:
 
 1. **Anchor** (force 1, `volume_normalize_baseline`): set the reference part
    (usually rhythm) to a standard channel-volume anchor, default `~0.5` (leaves
-   headroom, no clipping; adjust if `show_block` shows an unusual taper). Every
+   headroom, no clipping; adjust if `show-block` shows an unusual taper). Every
    preset anchoring its main part to the same value keeps presets at a
    consistent baseline. If research says the source should sit hotter/softer
    relative to its material, offset the anchor.
@@ -414,9 +444,18 @@ If nothing is known about the user's lineup (no preferences file, no memory, no 
 
 ### 7. Generate
 
-Call `generate_preset(model, recipe=<the dict you built in step 5>, out_path="<dir>/<slug>.hsp")` (`model` is the device model string, e.g. `"stadium_xl"`; pick `out_path` per the **Save location** note below). It writes the `.hsp` directly to `out_path` (creating parent dirs) and returns `{"path": ..., "warnings": [...]}` — no base64, no manual file extraction. Surface any `warnings` to the user.
+Write the recipe JSON to a scratch file, then:
 
-If the validator errors with `Unknown param(s) [...]`, re-run `show_block` on the offending block, fix the spec, retry. Never guess the corrected name.
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/<slug>.recipe.json -o "<dir>/<slug>.hsp"
+```
+
+(pick `<dir>/<slug>` per the **Save location** note below; the library prefix
+per the Prerequisites resolution). It writes the `.hsp` directly (creating
+parent dirs); **warnings appear on stderr** — read them and surface them to
+the user. The written tone auto-registers in the local tone library.
+
+If the validator errors with `Unknown param(s) [...]`, re-run `show-block` on the offending block, fix the recipe, retry. Never guess the corrected name.
 
 #### 7a. Write a companion markdown description — REQUIRED
 
@@ -426,10 +465,10 @@ Whenever you save a `.hsp`, also write a sibling markdown file at the same path 
 - **Reference notes & sources** — the key findings from step 1b research, with the source links (omit if research was skipped because the target was generic)
 - **The chain** — one line per block: position, model, and the 2–3 settings that matter
 - **IRs referenced** — basenames, so the user knows what must be loaded on the device
-- **Snapshots** — one line each (only if the spec has them)
+- **Snapshots** — one line each (only if the recipe has them)
 - **Levels** — the intended relative balance line from step 8 (or that normalization was off per preferences)
-- **Footswitches** — one line per assigned switch, rendered in **English name + position**, not a bare identifier (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …). Get the English string from the `controller_mapping` MCP tool (or `helixgen controllers`) / `controllers.english_for_controller`. Only if the spec has them.
-- **Expression** — one line per pedal mapping, also in English (`Expression Pedal 1 (onboard pedal, EXP 1) → Teardrop 310 Mono Pedal`, …), only if the spec has them
+- **Footswitches** — one line per assigned switch, rendered in **English name + position**, not a bare identifier (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …). Get the English string from `helixgen controllers` (`--json` for the machine shape). Only if the recipe has them.
+- **Expression** — one line per pedal mapping, also in English (`Expression Pedal 1 (onboard pedal, EXP 1) → Teardrop 310 Mono Pedal`, …), only if the recipe has them
 - **Recommended instrument** — a `## Recommended instrument` section (see step 6): **Pick**, **Why**, **Controls** (selector / volume / tone / coil-split if applicable / pick attack), **Second choice** (only on a genuine toss-up), **Note** (any lineup caveat, e.g. active-vs-passive TBD)
 - **Tweaks** — the one concrete tweak from step 8, plus any obvious alternates
 
@@ -439,12 +478,12 @@ Keep it tight and scannable — it's reference material, not a transcript. If yo
 
 #### 7b. Git-commit the saved files (if the output dir is git-managed)
 
-After writing the `.hsp` and its companion `.md` (7a) — or after a `patch_preset` edit in step 9 — commit them:
+After writing the `.hsp` and its companion `.md` (7a) — or after a `helixgen patch` edit in step 9 — commit them:
 
 1. **Detect per-directory**: `git -C <output-dir> rev-parse --is-inside-work-tree`. If it errors or prints `false`, this directory isn't a git work tree — skip silently, no commit.
 2. **Honor `git_commit_tones`** from `preferences.json` (default `"auto"`): `"auto"` commits whenever step 1 says yes; `"true"` always tries (still needs step 1 to succeed); `"false"` never commits — skip silently.
 3. **Stage only the files you just wrote** — `git -C <output-dir> add -- <slug>.hsp <slug>.md` (or just the one file that changed on an edit), never `add -A`/`add .`. **Check `git -C <output-dir> status` first**: if the repo already has unrelated changes staged (anywhere in the index, not just these paths), warn the user and skip rather than folding them into your commit — a plain `git commit` commits the whole index, not just what you just staged.
-4. **Commit locally, never push** — `git -C <output-dir> commit -m "<message>"` with a short, descriptive message naming the tone and what changed, e.g. `tone: add White Limo Lead — Les Paul Jr` for a new preset, or `tone: brighten cab, drop reverb mix on White Limo Lead` for a `patch_preset` edit.
+4. **Commit locally, never push** — `git -C <output-dir> commit -m "<message>"` with a short, descriptive message naming the tone and what changed, e.g. `tone: add White Limo Lead — Les Paul Jr` for a new preset, or `tone: brighten cab, drop reverb mix on White Limo Lead` for a patch edit.
 
 Keep every git command scoped with `-C <output-dir>` (as in step 1) — your shell's cwd is usually **not** the output dir, so an unscoped `git add`/`commit` targets the wrong repo.
 
@@ -454,18 +493,18 @@ Mention in the report (step 8 / step 9) whether a commit was made.
 
 Tell the user, in this order:
 1. **The chain** — one short line per block (position, model, the 2–3 settings that matter for this tone)
-2. **Snapshots** (only if the spec has them) — one line per snapshot summarizing what differs from base, e.g. `Lead: amp Drive 0.85, delay Mix 0.30; Clean: drive bypassed, amp Drive 0.30`
+2. **Snapshots** (only if the recipe has them) — one line per snapshot summarizing what differs from base, e.g. `Lead: amp Drive 0.85, delay Mix 0.30; Clean: drive bypassed, amp Drive 0.30`
 3. **Levels** (from 5.7) — one line on the *intended* relative balance, e.g. `rhythm anchor; lead +~2 dB; clean bumped to match (fine-tune by ear)`. If normalization was skipped by preference, say `Levels: normalization off per preferences`.
 4. **Instrument** — `<guitar> — <one-clause why>` (skip the "why" if the user named the guitar themselves), then `Selector: <position> · Volume: <0–10> · Tone: <0–10>` in that guitar's real switch language, plus a one-clause note for any non-obvious move (roll-off, coil-split, pick attack)
-5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `controllers.english_for_controller` / the `controller_mapping` tool for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed `controller_mapping(stadium_xl)`) to get the canonical identifier before wiring it, and validate the result against the canonical set.
-6. **The files** — the `.hsp` saved locally (plus its companion `<slug>.md` description from step 7a). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path>/<slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — but read that skill's template-precondition warning first; a live install is more involved than a file drop.
+5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
+6. **The files** — the `.hsp` saved locally (plus its companion `<slug>.md` description from step 7a). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path>/<slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop.
 7. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
 
 ### 9. Iterate on feedback (when the user loads it and says it's not quite right)
 
-After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `patch_preset` call (see **Adjusting an existing tone** above; do NOT regenerate from the spec dict), and tell the user what changed in one line so they can A/B. Re-run the git-commit step (7b) on the edited `.hsp` afterward.
+After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. Re-run the git-commit step (7b) on the edited `.hsp` afterward.
 
 Rules of thumb for translating ear-language to param moves:
 - **"Too compressed"** on a lead → back amp `Drive` off ~0.10, raise `Master`; or back drive pedal `Gain` off ~0.10
@@ -477,14 +516,15 @@ Rules of thumb for translating ear-language to param moves:
 - **"Lead doesn't sing / cut"** → raise `Mid` 0.05–0.10 in the lead snapshot, raise delay `Mix` 0.05
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
-- **"Swap X for something Y"** → call `list_blocks(category=<cat>)`, scan for candidates, `show_block` the chosen one, then `swap_model` (same category) via a `patch_preset` op
+- **"Swap X for something Y"** → run `list-blocks --category <cat>`, scan for candidates, `show-block` the chosen one, then a `swap_model` op in a `helixgen patch` call
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| Guessing param names | Always call `show_block` before writing params for a block |
-| Recommending a block not in the user's library | Always verify with `list_blocks(category=<cat>)` first |
+| Guessing param names | Always run `show-block` before writing params for a block |
+| Recommending a block not in the user's library | Always verify with `list-blocks --category <cat>` first |
+| Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
 | Cab with no `Hi Cut` / `Low Cut` set | Default modeled cabs let fizz through to 10 kHz+; set Hi Cut 6500–7000 and Low Cut 80–100 on nearly every preset (see step 5 anti-fizz baseline) |
@@ -501,7 +541,7 @@ Rules of thumb for translating ear-language to param moves:
 | Forcing one preset per role when snapshots fit | If the user wants "rhythm and lead" or "verse/chorus/solo" on one amp family, build ONE preset with snapshots, not multiple files |
 | Snapshot referencing a block name that isn't in the path | `disable` / `params` only see blocks the path actually places; add the block to the path first (even if it'll be bypassed in some snapshots) |
 | Shipping a preset with no live control | By default wire toggle-able blocks to footswitches and sweep-able blocks to EXP (5.6) — don't ship silent presets unless the user asked for hands-off |
-| Using `Position` as the wah/expression sweep param | The real param is `Pedal` (float 0..1) on blocks like `Teardrop 310 Mono`; wah/expression blocks have no `Position` param (that name is the IR-cab mic knob) — always confirm with `show_block` (5.6) |
+| Using `Position` as the wah/expression sweep param | The real param is `Pedal` (float 0..1) on blocks like `Teardrop 310 Mono`; wah/expression blocks have no `Position` param (that name is the IR-cab mic knob) — always confirm with `show-block` (5.6) |
 | Building an artist/song tone from memory | Research the real rig from the web first (step 1b) — signature tones hinge on non-obvious details; cite sources |
 | Saving the `.hsp` without a description | Always write the companion `<slug>.md` (step 7a) next to the preset so the tone is documented standalone |
 | Naming a preset without its target guitar | Append the target guitar to the title AND the `.hsp`/`.md` filename (`<Tone> — <Guitar>`, step 5 naming); omit it only when the tone is explicitly guitar-agnostic |
@@ -511,27 +551,37 @@ Rules of thumb for translating ear-language to param moves:
 When the user asks to *tweak* a tone you already generated (e.g. "brighter
 cab", "swap to a Plexi", "more delay", "kill the reverb"), do NOT regenerate
 from a fresh description. The `.hsp` is the source of truth — edit it in place
-with a single `patch_preset` call. There is **no** decompile→edit-spec→
+with a single `helixgen patch` call. There is **no** decompile→edit-recipe→
 regenerate round-trip.
 
 1. You already have the `.hsp` file's path (the one you saved, or an orphan the
-   user imported) — no recovery or base64 step needed.
-2. Call `patch_preset(model, hsp_path="<dir>/<slug>.hsp", operations=[...])` with
-   the smallest set of ops that expresses the change (batch multiple changes into
-   one call):
+   user imported) — no recovery step needed.
+2. Run `helixgen patch "<dir>/<slug>.hsp" - --json` with the smallest set of
+   ops that expresses the change, passed as a JSON list on stdin (batch
+   multiple changes into one call — `patch` applies all ops in memory and
+   writes the file once; an invalid op anywhere leaves the file untouched):
+
+   ```bash
+   HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen patch "<dir>/<slug>.hsp" - --json <<'EOF'
+   [{"op": "set_param", "block": "Mic Ir_4x12 Greenback 25 With Pan", "param": "HighCut", "value": 7500},
+    {"op": "set_enabled", "block": "Plate Stereo", "enabled": false}]
+   EOF
+   ```
+
    - "brighter" → `set_param` on the cab `HighCut` (raise it).
    - "swap to a Plexi" → `swap_model` (old → new amp; same category required).
    - "kill the reverb" → `set_enabled` with `enabled: false` on the reverb block.
    - "add a delay" → `add_block` with the delay block, `after` the amp/cab.
-3. `patch_preset` edits the file **in place** and returns `{"path": ...,
-   "warnings": [...]}` — the user just re-imports the same file. To inspect the
-   result in recipe shape, call `view_preset(model, hsp_path)` (read-only) on the
-   same path.
-4. Surface any `warnings` from `patch_preset` (e.g. dropped params on a swap)
-   to the user.
 
-Prefer one `patch_preset` call with multiple `operations` over several edits.
-The `.hsp` file is the thing you mutate — the recipe/spec dict is author-input
+   Run `helixgen patch --help` for the full ops schema.
+3. `patch` edits the file **in place** — the user just re-imports the same
+   file. To inspect the result in recipe shape, run `helixgen view
+   "<dir>/<slug>.hsp"` (read-only, JSON output) on the same path.
+4. Surface any warnings (stderr, or the `--json` result's `warnings` — e.g.
+   dropped params on a swap) to the user.
+
+Prefer one `patch` call with multiple ops over several single-op verbs.
+The `.hsp` file is the thing you mutate — the recipe is author-input
 only and is not read back as truth.
 
 ### Addressing duplicate blocks
@@ -539,11 +589,11 @@ only and is not read back as truth.
 When a preset has two blocks with the same name (e.g. two IR "With Pan" blocks,
 one per lane, or a volume block per split lane), reference the specific one by
 its coordinate: add `"pos": N` (and `"lane": 0|1`, `"path": 0|1`) to the
-`patch_preset` operation or the snapshot/footswitch/expression reference. A bare
+patch operation or the snapshot/footswitch/expression reference. A bare
 name only works when it is unique in the preset.
 
-If `patch_preset` or `view_preset` refuses a preset (more than two parallel
+If `patch` or `view` refuses a preset (more than two parallel
 splits, or an unknown routing block), tell the user it's an unsupported routing
-shape rather than editing it blindly. If `patch_preset` warns that an IR hash
+shape rather than editing it blindly. If `patch` warns that an IR hash
 was passed through unregistered, mention the user must `register-irs` that WAV
 to edit it locally.

@@ -15,17 +15,16 @@ helixgen is a Claude Code plugin. Requires **Python 3.11+**.
 /plugin install helixgen@helixgen
 ```
 
-The plugin bundles the block library and installs the engine — the
-[`helixgen-core`](https://github.com/sheax0r/helixgen-core) package — automatically, so it works out of the box. The only thing it needs from your environment is [`uv`](https://docs.astral.sh/uv/) on your `PATH` — the MCP server uses it to auto-provision the engine and its dependencies from PyPI into an isolated, ephemeral env on first launch (network access required that first time), so nothing touches your system Python:
+The plugin bundles the block library and contributes the `/tone`, `setup`, and `device` skills, which drive the engine — the [`helixgen-core`](https://github.com/sheax0r/helixgen-core) package's `helixgen` **CLI** (as of 4.0.0 there is no MCP server; the CLI is the only engine surface). The only thing the plugin needs from your environment is [`uv`](https://docs.astral.sh/uv/) on your `PATH`:
 
 ```bash
 brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-That's the whole setup — nothing to `pip install` yourself. The plugin contributes the `/tone`, `setup`, and `device` skills plus an MCP server.
+The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.20.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
 
-**Using the Python CLI directly** (no plugin)? That's [`helixgen-core`](https://github.com/sheax0r/helixgen-core) — see its [`docs/CLI.md`](docs/CLI.md) — a standalone install starts with an empty library, so seed it first with `helixgen bootstrap`.
+**Using the Python CLI directly** (no plugin)? Same binary — see [`docs/CLI.md`](docs/CLI.md). A standalone install starts with an empty library at `~/.helixgen/library/`, so seed it first with `helixgen bootstrap` (the plugin's skills instead point `HELIXGEN_LIBRARY` at the bundled `data/library`).
 
 ## Use it
 
@@ -43,11 +42,11 @@ What the skill does: designs the chain, generates the `.hsp`, and reports back w
 
 Stadium identifies user IRs by a content-derived hash, not by filename or slot. helixgen reproduces that 32-character `irhash` bit-identically — no device round-trip — so you can register an IR library once and then reference IRs by `.wav` basename in any preset the `/tone` skill writes (`With Pan` blocks and the rest of the `HX2_ImpulseResponse*` family).
 
-In Claude Code, ask the skill to register an IR — it can call the MCP `register_ir` tool (one file) or `register_irs` (a whole directory, in one round-trip) without needing Bash permission. Memory will remember your IR directory after the first time.
+In Claude Code, ask the skill to register an IR — it runs `helixgen register-irs <wav>` (one file) or `helixgen ir-scan <dir>` (a whole directory, recursively, in one run). Memory will remember your IR directory after the first time.
 
 **Prerequisite for direct IR hashing:** computing an IR's hash from a WAV (`register-irs <wav>`, `ir-scan`) needs **libsndfile** (`brew install libsndfile` on macOS; `apt install libsndfile1` on Debian/Ubuntu). Only 48 kHz sources are supported for direct hashing.
 
-**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be loaded onto the device via the Helix Stadium app's **Librarian → Cab IRs → Import**. helixgen only handles the preset side; importing IRs onto the device is the Stadium app's job. If a slot displays "No Model" on the device after loading a preset, that IR wasn't imported.
+**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be on the device. Over the LAN, helixgen uploads it for you — `helixgen device sync` and `device install --auto-irs` push each referenced IR automatically (and `device push-ir` does one by hand); if you load presets via HX Edit/USB instead, import the WAV via the Stadium app's **Librarian → Cab IRs → Import**. If a slot displays "No Model" on the device after loading a preset, that IR isn't on the device yet.
 
 See [`ir-hash-algorithm.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/ir-hash-algorithm.md) for the hash algorithm and the field-validated reference implementation.
 
@@ -71,13 +70,12 @@ If HX Edit refuses to open the file, double-check that the chassis in your libra
 As of **2.0**, helixgen can talk to a **Helix Stadium** directly over your LAN —
 no editor app required. It speaks the Stadium's own control protocol (OSC over
 ZeroMQ; see [`docs/helix-protocol.md`](docs/helix-protocol.md)), so you can list,
-read, create, rename, delete, load, save, and live-tweak presets from the CLI or
-the MCP tools.
+read, create, rename, delete, load, save, and live-tweak presets from the CLI.
 
-Install the optional transport deps and point at your device:
+The plugin's `[device]` extra already includes the transport deps (pyzmq,
+msgpack, paramiko). Point at your device:
 
 ```bash
-pip install 'helixgen[device]'          # adds pyzmq + msgpack
 export HELIXGEN_HELIX_IP=192.168.4.84    # your Stadium's IP (or pass --ip)
 
 helixgen device list                     # presets in the USER setlist
@@ -104,15 +102,15 @@ a helixgen-authored `.hsp` directly into device content and installs a new,
 playable preset — no editor, no file import, no template (full fidelity:
 dual-amp, parallel splits, snapshots, footswitch/EXP assignments).
 
-The same operations are exposed as `device_*` MCP tools. Only 48 kHz-family
+The `/device` skill drives these same verbs. Only 48 kHz-family
 Stadium hardware is supported; this is **Stadium-only** (not legacy Helix), and
 it writes to your device — test against an expendable slot first.
 
 ## CLI
 
-helixgen ships a Python CLI for direct generation, library inspection, IR management, and ingesting your own preset exports to grow the block library. The Claude Code plugin uses the same code under the hood — most users won't need to reach for the CLI directly.
+The `helixgen` CLI is the engine's only surface — the Claude Code plugin's skills drive exactly the same commands you can run by hand: generation, surgical `.hsp` edits (`patch` and the single-op verbs), library inspection, IR management, device control, and ingesting your own preset exports to grow the block library. It's self-documenting: `helixgen --help` orients you, and each verb's `--help` is its full contract.
 
-See [`docs/CLI.md`](docs/CLI.md) for the full surface: install, spec format, all subcommands, IR registration, library location.
+See [`docs/CLI.md`](docs/CLI.md) for the full surface: install, recipe format, all subcommands, IR registration, library location.
 
 For the underlying Helix Stadium format and hardware model — DSP/path layout, the 8-snapshot model, footswitch/expression-pedal layout, IR hashing, trails — see [`helix-format-reference.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/helix-format-reference.md).
 

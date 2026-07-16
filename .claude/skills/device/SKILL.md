@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI and the `device_*` MCP tools (including the reference-based `device sync <setlist>` / `device_sync_setlist` / `device_sync_all`). Also covers on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "clean up my IRs", "delete/duplicate a setlist".
+description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI verbs (including the reference-based `device sync <setlist>` / `device sync --all`). Also covers on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "clean up my IRs", "delete/duplicate a setlist".
 ---
 
 # device
@@ -12,22 +12,45 @@ device setlist**, over the LAN (no editor app). The `setup` and `tone` skills
 stop at writing `.hsp`/`.md` to disk; this skill drives the physical Stadium —
 install one tone, **sync a whole setlist**, and back up / restore.
 
+## Invoking the CLI
+
+The engine is the `helixgen` CLI, installed as an isolated uv tool (the
+`setup` skill's step 0 provisions it: `uv tool install
+'helixgen[device]==0.20.0'`). If `helixgen` isn't found or errors with a
+traceback, run the setup skill's step 0 — do not improvise an install; if a
+stale `helixgen` shadows the uv tool on PATH, invoke
+`"$(uv tool dir --bin)/helixgen"` by absolute path.
+
+Per-invocation environment (prefix each Bash call — exports don't persist):
+
+- `HELIXGEN_HELIX_IP=<device-ip>` (or `--ip`) — how every `device` verb finds
+  the Stadium.
+- `HELIXGEN_LIBRARY` — needed by verbs that touch the block library
+  (`install`/`sync` transcode `.hsp` content). Same resolution as the other
+  skills (see the `setup` skill's "Invoking helixgen"): honor a pre-set env
+  var, else a populated `~/.helixgen/library/`, else the plugin's bundled
+  `HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library"`. Carrying both
+  prefixes on every call is harmless and keeps invocations uniform.
+- `HELIXGEN_IRS="<dir>"` — only when the user has a custom IR directory on
+  record and you're running an IR-registering fix (`register-irs`,
+  `ir-scan`); otherwise the engine defaults to `~/.helixgen/irs/`.
+
 ### Where the answers live (consult these FIRST, never the source)
 
-When you need to know *how a verb behaves*, *what a flag does*, or *what a result
-means*, read it off the **contract surfaces**, in this order — never by reading
-helixgen source (the running MCP is the **bundled** plugin from
-`${CLAUDE_PLUGIN_ROOT}`, not any cwd checkout, so source can mislead about the
-live version):
+When you need to know *how a verb behaves*, *what a flag does*, or *what a
+result means*, read it off the **contract surfaces**, in this order — never by
+reading helixgen source (the engine is the uv-tool-installed package, not any
+cwd checkout, so source can mislead about the live version):
 
-1. **The `device_*` MCP tool descriptions** — the authoritative behavioral
-   contract for each tool (args, side effects, result shape).
-2. **`device setlist list` + the sync/op result dicts** — live device/manifest
-   state and the exact `{ok, pool, references, errors, …}` a run returns.
-3. **`docs/CLI.md` "Device commands"** — the full per-verb reference (every flag,
-   gotcha, and MCP-mirror name); for the model/format invariants see the
-   "Corrected mental models" block in helixgen-core's `docs/BACKLOG.md`
-   (https://github.com/sheax0r/helixgen-core/blob/main/docs/BACKLOG.md).
+1. **`helixgen device --help` and each verb's `--help`** — the authoritative
+   behavioral contract (args, side effects, read-vs-write, result shape).
+   `device --help` carries the device-wide mental models; per-verb `--help`
+   carries everything verb-specific.
+2. **`device setlist list` + the sync/op results (`--json`)** — live
+   device/manifest state and the exact `{ok, pool, references, errors, …}` a
+   run returns.
+3. **`docs/CLI.md` "Device commands"** — the full per-verb reference (every
+   flag, gotcha, and hardware-validation note).
 4. **`docs/helix-protocol.md`** — only for wire-level protocol questions.
 
 This is the *resolver pattern* (backlog #14): one authoritative surface per fact,
@@ -54,7 +77,7 @@ observed device placement. **"On the device" ⟺ the tone has a slot.** There is
 **managed-set mirror** (installs/updates/reorders/deletes only helixgen-managed
 tones, never touches untracked device presets). **Never hand-edit it** — manage
 it through the `register` / `device add` / `device unsync` / `device setlist`
-verbs, the `device_setlist_*` MCP tools, or the `tone` skill.
+verbs, or the `tone` skill.
 
 ## How a tone becomes a device preset: the transcoder (no template)
 
@@ -80,15 +103,15 @@ For "get my tones onto the Helix":
 1. **Make sure each tone is in a setlist** (in the manifest) — `device setlist
    add <setlist> <tone.hsp>` (the `tone` skill may have done this already).
 2. **Make sure the setlist exists on the device.** If it doesn't, create it
-   right there: `helixgen device setlist create <name>` (MCP
-   `device_setlist_create`) — device-side creation shipped (#8); no Stadium
-   app needed. The sync's missing-setlist error names this verb too.
-3. **Sync:** `helixgen device sync <setlist>` (CLI) / `device_sync_setlist`
-   (MCP) for one setlist, or `device sync --all` / `device_sync_all` for the
-   whole manifest. The engine reconciles the **pool first** (install missing /
-   update changed / skip unchanged — idempotent by content hash), then
-   **rebuilds that setlist's references** to match manifest order. The result
-   is the engine dict `{ok, setlists, pool, references, gc, irs, errors}`.
+   right there: `helixgen device setlist create <name>` — device-side creation
+   shipped (#8); no Stadium app needed. The sync's missing-setlist error names
+   this verb too.
+3. **Sync:** `helixgen device sync <setlist> [--json]` for one setlist, or
+   `device sync --all` for the whole manifest. The engine reconciles the
+   **pool first** (install missing / update changed / skip unchanged —
+   idempotent by content hash), then **rebuilds that setlist's references** to
+   match manifest order. The result is the engine dict
+   `{ok, setlists, pool, references, gc, irs, errors}`.
 
 **Not a destructive mirror.** Unlike the retired directory-mirror sync, this
 never wipes a setlist. It adds/updates only the pool presets the sync needs and
@@ -107,13 +130,10 @@ install fine.
 is either done for you or reported by `errors[]`. Concretely:
 
 - **Never read or parse `.hsp` bytes** (no `json.loads` on the file, no
-  magic-stripping script). If you ever need a tone's contents, use `view_preset` —
-  but you do **not** need it before a sync.
-- **Do not `view_preset` every tone up front** to bucket them. Run the sync;
+  magic-stripping script). If you ever need a tone's contents, use
+  `helixgen view` — but you do **not** need it before a sync.
+- **Do not `view` every tone up front** to bucket them. Run the sync;
   `errors[]` is the only bucket that matters (the tones that didn't fit).
-- The **CLI not being on `PATH` is normal** (helixgen ships as a bundled MCP
-  server). That's not a blocker and not a reason to improvise — call
-  `device_sync_setlist` / `device_sync_all` and the other `device_*` MCP tools.
 
 ## When the device gets flaky — re-run, then reboot
 
@@ -141,8 +161,8 @@ protocol — re-run first, reboot second.
 When NOT to use:
 - Designing or editing a tone — that's `tone` / the surgical-edit verbs. Author
   the `.hsp` first, then come here to push it.
-- Read-only device questions ("what's on my Helix?") — just call
-  `device_list_presets` / `device_list_setlists` directly.
+- Read-only device questions ("what's on my Helix?") — just run
+  `helixgen device list` / `device setlists` directly.
 
 ## Red flags — STOP, you are going off the rails
 
@@ -151,13 +171,12 @@ just run it:
 
 - Writing a script that reads/parses `.hsp` files (`open(...).read()`,
   `json.loads`, stripping the `rpshnosj` magic). **Never parse `.hsp` bytes.**
-- Calling `view_preset` on many/all tones to classify them.
+- Running `helixgen view` on many/all tones to classify them.
 - Listing, reading, or loading factory presets "to find a template" or "to check
   coverage" — **there are no templates anymore** (the transcoder is
   template-free); this is pure wasted work.
 - Building Simple/Rich/Quarantine buckets, or a per-tone install plan.
-- Treating "the `helixgen` CLI isn't on PATH" as a problem to solve instead of
-  reaching for the `device_*` MCP tools.
+- Reading helixgen source to predict a verb's behavior instead of its `--help`.
 - Diagnosing a dropped connection instead of just re-running (then rebooting).
 
 All of these mean: **you are predicting failures you should be reading.** Run the
@@ -201,9 +220,7 @@ helixgen device setlist create-local <setlist>     # empty setlist in the manife
   to pre-check membership or read the manifest to add safely.
 - `create-local` (and `add` auto-creating a setlist) only add it to the
   *manifest*. To also create it **on the device**, run `device setlist create
-  <name>` / `device_setlist_create` (#8 shipped) — then `sync` can push to it.
-- MCP mirrors: `device_setlist_list`, `device_setlist_add(model, setlist,
-  hsp_path, pos?)`, `device_setlist_remove(model, setlist, tone_name)`.
+  <name>` (#8 shipped) — then `sync` can push to it.
 
 ### Device-side setlist management (create / rename / delete / duplicate)
 
@@ -214,8 +231,6 @@ helixgen device setlist delete <name> --yes    # references die; pool presets NE
 helixgen device setlist duplicate <src> <dst>  # copies references; auto-creates <dst>
 ```
 
-- MCP mirrors: `device_setlist_create` / `device_setlist_rename` /
-  `device_setlist_delete` / `device_setlist_duplicate`.
 - **Delete never orphans:** removing a setlist kills only its references —
   every pool preset stays, still available to other setlists. Confirm with the
   user before a delete (no undo).
@@ -263,8 +278,6 @@ helixgen device setlist export-hss Gigs out.hss               # export a DEVICE 
   export; two benign envelope differences remain — the gzip DEFLATE stream
   (non-zlib app encoder) and compact vs pretty `.hsp` JSON (helixgen embeds
   compact; both re-import fine).
-- MCP mirrors: `device_import_hss(model, hss_path, setlist?, list_only?,
-  dry_run?)` and `device_export_hss(model, setlist, out_path)`.
 
 ### IR maintenance (delete / rename / prune) + preset info
 
@@ -276,8 +289,6 @@ helixgen device ir-prune --yes [--force] [--ignore-warnings] [--only <name-or-ha
 helixgen device set-info <cid>... --color green --notes "..."   # batch color + notes
 ```
 
-- MCP mirrors: `device_delete_ir`, `device_rename_ir`, `device_ir_prune`
-  (`execute`/`force`/`ignore_warnings`/`only` args), `device_set_info`.
 - **`ir-prune` is dry-run by default.** Always run the dry-run first and show
   the user the `orphans` / `protected` lists — and any `warnings` (local
   tones whose recorded `.hsp` couldn't be read) — before executing.
@@ -302,8 +313,8 @@ helixgen device set-info <cid>... --color green --notes "..."   # batch color + 
 ### Sync a setlist onto the device (pool + references)
 
 ```bash
-helixgen device sync <setlist> [--exclude-irs] [--repush]
-helixgen device sync --all [--gc] [--exclude-irs] [--repush]
+helixgen device sync <setlist> [--exclude-irs] [--repush] [--json]
+helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
 ```
 
 - **Resolves the setlist by name** under `-5`. If the device doesn't have it,
@@ -329,28 +340,29 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush]
 - **Per-tone failures are collected and never abort the run.** Result:
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},
   gc:{deleted}, irs:[…], errors:[…]}`. Read `errors`.
-- MCP mirrors: `device_sync_setlist(model, setlist, exclude_irs?, repush?)`
-  and `device_sync_all(model, gc?, exclude_irs?, repush?)`. Path-based like
-  the rest (no base64).
 
-> The old directory-mirror `device sync [dir]` and the `device_sync_library` MCP
-> tool are **gone**. Sync is now manifest- and setlist-driven; membership is
-> managed with `device setlist`, not by globbing a directory.
+> The old directory-mirror `device sync [dir]` is **gone**. Sync is now
+> manifest- and setlist-driven; membership is managed with `device setlist`,
+> not by globbing a directory.
 
-### Single tone — `device install` (CLI) or `device_install_preset` (MCP)
+### Single tone — `device install`
 
-Use for one-off placement into a chosen pool slot. Both surfaces now record
-the tone library **and** upload referenced IRs by default: the CLI is
-`helixgen device install <hsp> <name> --pos N [--auto-irs]` (pass
-`--auto-irs` to upload); the **MCP** `device_install_preset` uploads
-referenced IRs automatically (`auto_irs` defaults to `True` — pass
-`auto_irs=False` to skip it) and reports the per-IR outcome in the result's
-`irs` field. Both share the same per-tone IR-upload core `device sync` uses,
-so behavior (resolve via `mapping.json`, `push_ir`, verify the registered
-hash) is identical across all three paths.
-Reserve the other `device_*` MCP tools for reads / interactive single ops
-(`device_list_presets`, `device_read_preset`, `device_load_preset`,
-`device_set_param`).
+Use for one-off placement into a chosen pool slot:
+
+```bash
+helixgen device install <hsp> <name> --pos N --auto-irs
+```
+
+It records the tone library too. **Pass `--auto-irs`** (opt-in flag) so the
+tone's referenced IRs are uploaded with it — without it, an IR the device
+doesn't have leaves the cab silent ("No Model"). It shares the same per-tone
+IR-upload core `device sync` uses, so behavior (resolve via `mapping.json`,
+`push_ir`, verify the registered hash) is identical across paths. Note the
+CLI aborts the install if an IR upload hard-fails (it never installs a preset
+whose IR couldn't be pushed).
+
+Reserve the other `device` verbs for reads / interactive single ops
+(`device list`, `device read`, `device load`, `device set-param`).
 
 ### Git-commit local artifact changes
 
@@ -390,16 +402,15 @@ device — it applies just to these two local-write side paths.
 1. **Membership:** for each tone the user wants, `device setlist add <setlist>
    <tone.hsp>` (skip any the `tone` skill already added). `device setlist list`
    shows the current membership.
-2. **Device-side setlist:** helixgen can't create a setlist (#8). If the target
-   setlist isn't already on the Stadium, ask the user to create it by hand in the
-   Stadium app now. (Syncing an existing setlist like a factory `user` setlist
-   needs no creation step.)
+2. **Device-side setlist:** if the target setlist isn't already on the Stadium,
+   create it right from here: `helixgen device setlist create <name>` (#8
+   shipped — no Stadium app needed). Syncing an existing setlist like a
+   factory `user` setlist needs no creation step.
 
 ### 2. Sync
 
 ```bash
-helixgen device sync <setlist>
-# MCP: device_sync_setlist(model, setlist="<setlist>")
+helixgen device sync <setlist> --json
 ```
 
 The engine reconciles the pool (install/update/skip), rebuilds the setlist's
@@ -408,8 +419,7 @@ manifest** — `device setlist add --pos` / the manifest order sets it; a later
 sync will reorder the device right back to that recorded order. For a direct,
 immediate device-side move that bypasses the manifest entirely — e.g. reordering
 an *untracked* preset, or a quick one-off nudge you don't want `sync` to
-remember — use `helixgen device reorder <setlist> <target> --to <N>` (+ MCP
-`device_reorder`) instead.
+remember — use `helixgen device reorder <setlist> <target> --to <N>` instead.
 
 ### 3. Read the result, fix `errors[]`, re-run
 
@@ -464,27 +474,28 @@ Tightly:
 
 | Error / symptom | What it means | Do |
 |---|---|---|
-| setlist not found on device (`create it with \`helixgen device setlist create ...\``) | the named setlist isn't on the device yet | run `device setlist create <name>` (or MCP `device_setlist_create`), then re-sync |
+| setlist not found on device (`create it with \`helixgen device setlist create ...\``) | the named setlist isn't on the device yet | run `device setlist create <name>`, then re-sync |
 | `could not resolve helixgen model 'X'` | a block model doesn't bridge to the device | that tone isn't installable as-is; report it |
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.20.0'`), or invoke `"$(uv tool dir --bin)/helixgen"` by absolute path |
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---|---|
 | Parsing `.hsp` files (`json.loads`, magic-strip) to classify tones | Never parse `.hsp` bytes — just run the sync; `errors[]` is the classification |
-| `view_preset`-ing every tone / listing factory presets **before** the sync | The sync reports failures — run it, analyze `errors[]` after |
+| `view`-ing every tone / listing factory presets **before** the sync | The sync reports failures — run it, analyze `errors[]` after |
 | Looking for a "template" or checking factory-preset "coverage" | There are no templates — install is a faithful, template-free transcode; just sync |
 | Hand-rolling a per-preset install loop | Use `device sync <setlist>` — it reconciles the pool, rebuilds references, and uploads IRs in one call |
 | Telling the user to create a setlist in the Stadium app | Not needed any more — `device setlist create <name>` creates it on the device (#8 shipped) |
-| Hand-editing `~/.helixgen/setlists.json` | Manage it with `register` / `device add` / `device unsync` / `device setlist add/remove` (or the MCP tools / `tone` skill) |
+| Hand-editing `~/.helixgen/setlists.json` | Manage it with `register` / `device add` / `device unsync` / `device setlist add/remove` (or the `tone` skill) |
 | Expecting `device sync` to touch presets helixgen didn't place | It won't — sync is a managed-set mirror keyed by tone name; untracked device presets are never moved, deleted, or overwritten |
 | Pre-checking whether a tone is already in a setlist before adding it | Don't — a tone belongs in as many setlists as you want (shared, referenced once in the pool). `device setlist add` is idempotent within a setlist and only errors on a name/different-file collision. Just add it |
-| Reading helixgen **source** (`SetlistManifest`, `setlists.json` schema, engine internals) to confirm behavior or guard against "version drift" | Don't source-dive. The running MCP is the helixgen-core package `uv` installed at server startup, **not** any checkout in the working directory — so reading cwd source can *mislead* about the actual version/schema. The `device_*` tool descriptions, `device setlist list`, the sync **result dict**, and `docs/CLI.md` are the authoritative contract (see "Where the answers live" above); operate through them |
+| Reading helixgen **source** (`SetlistManifest`, `setlists.json` schema, engine internals) to confirm behavior or guard against "version drift" | Don't source-dive. The engine is the uv-tool-installed helixgen-core package, **not** any checkout in the working directory — so reading cwd source can *mislead* about the actual version/schema. Per-verb `--help`, `device setlist list`, the sync **result dict**, and `docs/CLI.md` are the authoritative contract (see "Where the answers live" above); operate through them |
 | Expecting sync to wipe the setlist like the old mirror | It doesn't — it reconciles pool + references and never orphans; GC only on `--all --gc` |
 | Diagnosing a dropped connection as a coverage failure | It's the flaky network stack — re-run the sync, reboot the Helix if it persists |
 | Ignoring the `errors[]` in the sync result | That list *is* the remaining work — read it, fix each, re-sync |
-| Treating "CLI not on PATH" as a blocker | Expected — helixgen ships as a bundled MCP server; use the `device_*` MCP tools |
-| Expecting the **MCP** `device_install_preset` to reconcile a whole setlist | It installs/records **one** tone (IRs included, `auto_irs` default True) but doesn't rebuild a setlist's full reference order the way `device sync <setlist>` does — use sync for batch/whole-setlist work |
+| `device install` without `--auto-irs` when the tone references IRs | The CLI flag is opt-in (unlike the old MCP default) — pass `--auto-irs`, or the cab is silent until the IR reaches the device |
+| Expecting `device install` to reconcile a whole setlist | It installs/records **one** tone but doesn't rebuild a setlist's full reference order the way `device sync <setlist>` does — use sync for batch/whole-setlist work |
