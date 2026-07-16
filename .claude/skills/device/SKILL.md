@@ -54,6 +54,27 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   a prefix on every covered verb, same prefix-per-call mechanism as
   `HELIXGEN_LIBRARY`.
 
+### Where the answers live (consult these FIRST, never the source)
+
+When you need to know *how a verb behaves*, *what a flag does*, or *what a
+result means*, read it off the **contract surfaces**, in this order — never by
+reading helixgen source (the engine is the uv-tool-installed package, not any
+cwd checkout, so source can mislead about the live version):
+
+1. **`helixgen device --help` and each verb's `--help`** — the authoritative
+   behavioral contract (args, side effects, read-vs-write, result shape).
+   `device --help` carries the device-wide mental models; per-verb `--help`
+   carries everything verb-specific.
+2. **`device setlist list` + the sync/op results (`--json`)** — live
+   device/manifest state and the exact `{ok, pool, references, errors, …}` a
+   run returns.
+3. **`docs/CLI.md` "Device commands"** — the full per-verb reference (every
+   flag, gotcha, and hardware-validation note).
+4. **`docs/helix-protocol.md`** — only for wire-level protocol questions.
+
+This is the *resolver pattern* (backlog #14): one authoritative surface per fact,
+consulted first, so you never re-derive behavior from source.
+
 ## Finding the device: `device discover` (0.24.0)
 
 ```bash
@@ -87,27 +108,6 @@ nothing on the hardware changes.
   prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots above the record
   in the resolution chain.
 
-### Where the answers live (consult these FIRST, never the source)
-
-When you need to know *how a verb behaves*, *what a flag does*, or *what a
-result means*, read it off the **contract surfaces**, in this order — never by
-reading helixgen source (the engine is the uv-tool-installed package, not any
-cwd checkout, so source can mislead about the live version):
-
-1. **`helixgen device --help` and each verb's `--help`** — the authoritative
-   behavioral contract (args, side effects, read-vs-write, result shape).
-   `device --help` carries the device-wide mental models; per-verb `--help`
-   carries everything verb-specific.
-2. **`device setlist list` + the sync/op results (`--json`)** — live
-   device/manifest state and the exact `{ok, pool, references, errors, …}` a
-   run returns.
-3. **`docs/CLI.md` "Device commands"** — the full per-verb reference (every
-   flag, gotcha, and hardware-validation note).
-4. **`docs/helix-protocol.md`** — only for wire-level protocol questions.
-
-This is the *resolver pattern* (backlog #14): one authoritative surface per fact,
-consulted first, so you never re-derive behavior from source.
-
 ## The device model: a preset POOL + reference SETLISTS
 
 The Stadium does not store a preset "inside" a setlist. It keeps a single
@@ -127,10 +127,13 @@ tone is a record (content `.hsp` + name + management **intent**): a desired
 vocabulary runs to bank 128, per `device add --slot`, not just bank 8),
 ordered **setlist memberships**, and provenance `source`. A specific Helix's
 **observed** placement is deliberately NOT in the manifest (manifest v3,
-0.22.0) — it lives per device serial at `~/.helixgen/devices/<serial>.json`,
-rebuilt wholesale by every `device sync`, so losing that file costs nothing
-(and the first sync after a v2→v3 migration harmlessly re-pushes placement
-for every managed tone). **"On the device" ⟺ the tone has a slot.** There is
+0.22.0) — it lives per device serial at `~/.helixgen/devices/<serial>.json`.
+Placement observations there are rebuilt wholesale by every `device sync`
+(the first sync after a v2→v3 migration harmlessly re-pushes placement for
+every managed tone), and since 0.24.0 the same file also carries the
+**persisted discover record** (ip/model/firmware — discovery fields
+round-trip through sync rebuilds), so losing the file costs only the device
+address: re-run `helixgen device discover` and sync again. **"On the device" ⟺ the tone has a slot.** There is
 **no separate slot ledger** — this one manifest is the single management-intent
 record for "which of my tones goes where." Every generated tone
 **auto-registers** here (off-device by default); `device add`/`unsync` set the
@@ -552,7 +555,7 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
-### Loudness: `device measure` + `device normalize` (0.23.0)
+### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0)
 
 ```bash
 helixgen device measure [--seconds N] [--min-playing N] [--json]     # read-only

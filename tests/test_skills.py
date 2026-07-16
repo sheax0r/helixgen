@@ -261,7 +261,8 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
         found = re.findall(r"helixgen\[device\]==([0-9][0-9.]*)", text)
         assert found, f"{path}: no engine pin (helixgen[device]==X.Y.Z) stated"
         pins.update(found)
-        pins.update(re.findall(r"helixgen\[device,[a-z,]+\]==([0-9][0-9.]*)", text))
+        # any extras combination anywhere on the surface must pin the same core
+        pins.update(re.findall(r"helixgen\[[a-z,]+\]==([0-9][0-9.]*)", text))
     assert pins == {ENGINE_PIN}, (
         f"engine pin must be exactly {ENGINE_PIN} on every surface: {sorted(pins)}"
     )
@@ -322,7 +323,9 @@ STALE_DEFAULT_IP_PATTERNS = [
     re.compile(r"192\.168\.4\.84"),
     # any "defaults to <some IP>" phrasing — there is no default IP in 0.24.0
     re.compile(r"(built-?in|default)\s+(default\s+)?(IP\s+)?`?192\.168", re.IGNORECASE),
-    re.compile(r"defaults?\s+to\s+`?192\.168", re.IGNORECASE),
+    re.compile(r"defaults?\s+to\s+`?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", re.IGNORECASE),
+    # a default-IP story without a literal ("the built-in default IP is used")
+    re.compile(r"built-?in\s+default\s+(device\s+)?IP\s+(is|of|`)", re.IGNORECASE),
 ]
 
 
