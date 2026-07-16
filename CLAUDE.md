@@ -18,10 +18,11 @@ behavior from here.
 ## How the plugin loads the engine
 
 `.mcp.json` launches the MCP server with
-`uv run --with 'helixgen[mcp,device] @ git+https://github.com/sheax0r/helixgen-core' -m mcp_server`
-— `uv` installs the core package (and its `mcp`/`device` extras) into an
-ephemeral env at server start. Once core is published to PyPI (core backlog
-#57), the git pin becomes a version pin (`helixgen[mcp,device]==X.Y.Z`).
+`uv run --with 'helixgen[mcp,device]==X.Y.Z' -m mcp_server`
+— `uv` installs the core package (and its `mcp`/`device` extras) from PyPI
+into an ephemeral env at server start. The pin is an exact PyPI version
+(core is on PyPI as of v0.19.1 — core backlog #57/#58); bump it here, with a
+plugin release, per engine release.
 `HELIXGEN_LIBRARY` points at this repo's `data/library` — the bundled block
 library that makes the plugin work out of the box.
 
@@ -88,7 +89,7 @@ Do **not** manually `git branch -f stable …`, push `stable`, or push a
 `helixgen--v*` tag — the workflow owns those refs. Users get the release via
 `/plugin` update. Since the engine is a `uv` dependency, a plugin release is
 only needed for plugin-surface changes (skills, `.mcp.json`, block-library
-data, docs). Caveat while the pin is a floating git URL: `uv` caches the
-resolved commit, so an engine fix may need `uv cache clean helixgen` on the
-user's machine to be picked up — one more reason to move to PyPI version
-pins (core #57) and bump the pin here per engine release.
+data, docs) — and to bump the engine version pin. Because the pin is an
+exact PyPI version, shipping an engine fix to plugin users means bumping the
+pin in `.mcp.json` and cutting a plugin release; no `uv cache clean` on the
+user's machine is involved.

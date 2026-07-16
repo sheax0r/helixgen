@@ -19,7 +19,7 @@ When NOT to use: editing an existing `.hsp` (load and modify directly outside th
 
 ## Prerequisites
 
-- A helixgen MCP server is reachable. The plugin's `.mcp.json` spawns it over stdio via `uv run --with 'helixgen[mcp,device] @ git+https://github.com/sheax0r/helixgen-core' -m mcp_server` — uv auto-installs the engine package into an ephemeral env (see the `setup` skill's server-startup checks).
+- A helixgen MCP server is reachable. The plugin's `.mcp.json` spawns it over stdio via `uv run --with 'helixgen[mcp,device]==<version>' -m mcp_server` — uv auto-installs the pinned engine package from PyPI into an ephemeral env (see the `setup` skill's server-startup checks).
 - The server's library must be populated. Verify quickly with `list_blocks(category="amp")` — empty result means no blocks ingested and the server's deployer needs to fix that before tone work is possible.
 
 ## MCP tool surface
