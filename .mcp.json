@@ -3,7 +3,7 @@
     "helixgen": {
       "command": "uv",
       "args": ["run", "--no-project",
-               "--with", "helixgen[mcp,device] @ git+https://github.com/sheax0r/helixgen-core",
+               "--with", "helixgen[mcp,device]==0.19.1",
                "-m", "mcp_server"],
       "env": {
         "MCP_TRANSPORT": "stdio",

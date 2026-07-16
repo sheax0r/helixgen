@@ -47,10 +47,10 @@ In order, every session:
 
 ### -1. Verify `uv` is on PATH
 
-The helixgen MCP server launches via `uv run --with 'helixgen[mcp,device] @
-git+https://github.com/sheax0r/helixgen-core'`, which auto-provisions the
-engine package and its deps in an ephemeral env (needs network access to
-GitHub the first time) — but `uv` itself must be installed. If the `mcp__helixgen__*` tools aren't showing up, this is the
+The helixgen MCP server launches via `uv run --with
+'helixgen[mcp,device]==<version>'`, which auto-provisions the pinned engine
+package and its deps from PyPI in an ephemeral env (needs network access the
+first time) — but `uv` itself must be installed. If the `mcp__helixgen__*` tools aren't showing up, this is the
 first thing to check (before assuming a helixgen install problem in step 0).
 
 Run `which uv` (or `command -v uv`) via Bash. If it resolves, proceed — no
@@ -64,13 +64,11 @@ need to mention it to the user. If missing, tell them in one line:
 
 Check whether the `mcp__helixgen__*` tools appear in the agent's tool list.
 If `uv` is present (step -1) but the tools are missing, the engine install
-at server startup likely failed. The two known causes, in order:
+at server startup likely failed. The known cause:
 
-1. **No network to GitHub on first launch** — `uv` fetches the
-   `helixgen-core` package from GitHub the first time (cached afterwards).
-   Tell the user to check connectivity and `/restart`.
-2. **Stale uv cache after an engine update** — a broken cached resolution
-   can be cleared with `uv cache clean helixgen`, then `/restart`.
+1. **No network on first launch** — `uv` fetches the pinned `helixgen`
+   package from PyPI the first time (cached afterwards). Tell the user to
+   check connectivity and `/restart`.
 
 Do NOT suggest `pip install` — the server runs in uv's ephemeral env, so
 packages installed into the ambient Python are never seen by it.

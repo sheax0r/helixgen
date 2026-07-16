@@ -16,7 +16,7 @@ helixgen is a Claude Code plugin. Requires **Python 3.11+**.
 ```
 
 The plugin bundles the block library and installs the engine — the
-[`helixgen-core`](https://github.com/sheax0r/helixgen-core) package — automatically, so it works out of the box. The only thing it needs from your environment is [`uv`](https://docs.astral.sh/uv/) on your `PATH` — the MCP server uses it to auto-provision the engine and its dependencies into an isolated, ephemeral env on first launch (network access to GitHub required that first time), so nothing touches your system Python:
+[`helixgen-core`](https://github.com/sheax0r/helixgen-core) package — automatically, so it works out of the box. The only thing it needs from your environment is [`uv`](https://docs.astral.sh/uv/) on your `PATH` — the MCP server uses it to auto-provision the engine and its dependencies from PyPI into an isolated, ephemeral env on first launch (network access required that first time), so nothing touches your system Python:
 
 ```bash
 brew install uv                                        # macOS
