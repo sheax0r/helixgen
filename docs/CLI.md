@@ -155,9 +155,9 @@ Default: `~/.helixgen/library/`. Override with `--library DIR` or the
 
 - `helixgen list-blocks [--category amp|cab|drive|delay|reverb|modulation|filter|eq|dynamics|pitch|volume|send]` — list blocks, optionally filtered.
 - `helixgen show-block "<name>"` — print a block's exact param names, types, defaults, and observed ranges. **Run this before writing a spec** — param names are case-sensitive and the generator rejects unknown ones.
-- `helixgen generate <spec.json> -o <out.hsp>` — generate a preset. The `-o` flag is required. Output extension `.hsp` writes a Stadium-format file; `.hlx` writes pretty JSON for the original Helix.
+- `helixgen generate <spec.json> [-o <out.hsp>]` — generate a preset. `-o` is now **optional**. Default (no `-o`): writes into the tone library at `library/tones/<variant-slug>.hsp` and authors per-tone metadata JSON — name the tone with `--artist`/`--song` (paired) or `--descriptor` (mutually exclusive with artist/song), plus an optional `--guitar` (appended to the display name + slug); with no naming flag, the recipe's bare `name` becomes the descriptor. A slug collision (target `.hsp` already exists) errors with a rename suggestion — never overwrites. Explicit `-o <out.hsp>` preserves the legacy behavior exactly: writes there, auto-registers, naming flags ignored, **no metadata JSON written**. Output extension `.hsp` writes a Stadium-format file; `.hlx` writes pretty JSON for the original Helix.
 - `helixgen patch <preset.hsp> <ops.json|-> [--json]` — apply a JSON **list** of ops (`set_param`, `set_enabled`, `add_block`, `remove_block`, `swap_model`) to the `.hsp` in one atomic invocation: all ops are applied in memory and the file is written once at the end, so an invalid op anywhere in the list leaves the file untouched. `-` reads the ops from stdin. Preferred over repeated single-op verbs for multi-edit sessions.
-- `helixgen set-param <preset> <block> <param> <value> [--path/--lane/--pos]` — surgical edit of one param, in place. Besides library blocks, accepts the signal-flow pseudo-blocks `input` / `output` / `split` / `join` (`merge` alias) — e.g. `helixgen set-param t.hsp input impedance 1M`, `helixgen set-param t.hsp output level -- -3`, `helixgen set-param t.hsp join "A Level" -- -2`. **Negative values need the `--` sentinel** (else the shell-style parser reads `-3` as an option); put any `--path`/`--lane`/`--pos` flags *before* the `--`. See CLAUDE.md "Surgical edits" for the full verb set (`enable`/`disable`/`add-block`/`remove-block`/`swap-model`/`view`).
+- `helixgen set-param <preset> <block> <param> <value> [--snapshot NAME_OR_INDEX] [--path/--lane/--pos]` — surgical edit of one param, in place. Besides library blocks, accepts the signal-flow pseudo-blocks `input` / `output` / `split` / `join` (`merge` alias) — e.g. `helixgen set-param t.hsp input impedance 1M`, `helixgen set-param t.hsp output level -- -3`, `helixgen set-param t.hsp join "A Level" -- -2`. **Negative values need the `--` sentinel** (else the shell-style parser reads `-3` as an option); put any `--path`/`--lane`/`--pos` flags *before* the `--`. **`--snapshot <name-or-0-based-index>`** (names win over a digit index; the same resolver backs `enable`/`disable --snapshot`, which therefore also take an index) writes the value into that ONE snapshot's slot of the param's 8-slot per-snapshot overrides array instead of the base — the param must already carry a base value (untouched slots densify to it; the base re-syncs to the active snapshot), and the preset must define snapshots (`preset.snapshots` meta — otherwise the transcoder would silently drop the array, so `set-param` errors instead). Snapshot overrides on library-block params round-trip through `view`; overrides on the `output` pseudo-block do **not** surface in `view` yet (backlog #76) but are preserved in the `.hsp`; both kinds are realized on the device by `device install`/`sync`. Once a param's per-snapshot array varies, the device applies it on every snapshot — a later plain base edit of that param is inaudible on-device, and `set-param` warns when this happens (use `--snapshot`, or edit all 8 slots). On pseudo-blocks only `output` supports `--snapshot` (per-snapshot level/pan — the `device normalize` actuator). See CLAUDE.md "Surgical edits" for the full verb set (`enable`/`disable`/`add-block`/`remove-block`/`swap-model`/`view`).
 - `helixgen ingest <path>` — ingest a `.hsp`/`.hlx`/`.json` file or recurse a directory; first encountered file sets the chassis.
 - `helixgen bootstrap` — clone sensorium/phelix and ingest its `blocks/` folder.
 - `helixgen register-irs <wav1> <wav2> ...` — compute each WAV's Stadium hash and register. Use `--force` to overwrite existing mappings.
@@ -166,18 +166,143 @@ Default: `~/.helixgen/library/`. Override with `--library DIR` or the
 - `helixgen ir-scan <dir>... [--rescan] [--remove <basename>]` — recursively walk one or more directories for `*.wav`, compute each Stadium hash, and cache.
 - `helixgen list-irs [--json]` — print `<hash>  <wav-path>` for every registered IR.
 - `helixgen controllers [--json]` — the device's assignable controllers (FS/EXP) with English names + positions.
+- `helixgen analyze-audio <capture.wav> [--json]` — offline audio-quality metrics from a WAV capture (backlog #62 phase 3): integrated/momentary/short-term LUFS per ITU-R BS.1770 (K-weighting, 400 ms blocks / 75% overlap, −70 LUFS absolute + −10 LU relative gates), crest factor / peak / true-peak / RMS in dB, a clipping flag, spectral centroid, and FFT band energies over the 5-band guitar vocabulary (low 60–200 Hz, low_mid 200–500, mid 500–1200, high_mid 1200–4000, high 4000–10000 — **provisional edges**, pending reconciliation with the IR catalog's measured-tag pass). Undefined metrics (silence, sub-400 ms files) come back `null` with a `notes` entry, not an error; non-finite samples (NaN/Inf) are zeroed and counted in `notes`, so `--json` is always strictly valid JSON. Needs numpy (`pip install 'helixgen[analyze]'`); accepts any PCM / IEEE-float WAV, any sample rate, mono or stereo. EXPERIMENTAL `--record N -o <out.wav> [--input <device>] [--rate] [--channels]` records the capture first from an audio input (the Stadium's USB return) via sounddevice (`pip install 'helixgen[capture]'` + PortAudio) — untested against real hardware. Complements `device measure` (network meters, loudness only): this tier is the one that can say what a tone *sounds* like, not just how loud it is.
 
-**Machine-readable output:** verbs whose output agents/scripts consume take `--json` (`list-blocks`, `show-block`, `list-irs`, `irhash`, `patch`, `controllers`, and the `device` read verbs); `view` prints JSON by default. `tests/test_cli_parity.py` pins the help-as-contract phrases and `--json` shapes.
+**Machine-readable output:** verbs whose output agents/scripts consume take `--json` (`list-blocks`, `show-block`, `list-irs`, `irhash`, `patch`, `controllers`, `analyze-audio`, and the `device` read verbs); `view` prints JSON by default. `tests/test_cli_parity.py` pins the help-as-contract phrases and `--json` shapes.
+
+
+## Library commands (`helixgen library …`)
+
+Manage the tone metadata library at `library/tones/*.json` (one JSON per
+**logical tone** — an artist+song or a descriptor — grouping one or more
+**variants**, each a real `.hsp` targeting a guitar). Guitar profiles and
+per-IR metadata are later-PR work; see "Tone naming and the library" in
+CLAUDE.md for the naming schema and the logical-tone/variant model. Every
+library-mutating verb (`import`, `migrate`, `doc`, and `generate`'s default
+no-`-o` path) auto-commits the home repo afterward — advisory, gated by the
+`git_commit_tones` preference, same posture as tone auto-registration.
+
+A tone `<name>` is resolved, in this order, as: the logical slug, the
+metadata filename (`<slug>.json`), or any variant's `preset_name`; an unknown
+or ambiguous name exits 1. This resolution order is shared by `library show`,
+`library doc`, and the top-level `describe`.
+
+- `helixgen library list [--tones|--guitars|--irs] [--json]` — list the
+  library's metadata, grouped by section, or narrowed to one with a flag.
+  `--guitars`/`--irs` sections are always empty in this release (no
+  guitar-profile or per-IR metadata library yet — reserved for a later PR);
+  `--json` emits `{"tones": [...], "guitars": [...], "irs": [...]}`.
+- `helixgen library show <name> [--json]` — one tone's metadata: a compact
+  human summary (identity, tags, description presence, each variant's
+  key/preset_name/hsp path), or the exact on-disk JSON with `--json`.
+- `helixgen describe <tone>` — human-oriented write-up: header ("Artist -
+  Song" or the descriptor), a variants table (guitar key, preset_name,
+  guitar_settings), then the full `description_md` verbatim below a blank
+  line. The longer-form counterpart to `library show`'s compact summary.
+- `helixgen library doc <name> (--from-file <path> | -) [--variant <guitar>]`
+  — set a tone's markdown write-up. Content comes from exactly one of
+  `--from-file PATH` or a literal `-` argument (reads stdin) — giving neither
+  or both is an error. Without `--variant`, sets the logical tone's
+  `description_md` (what `describe` prints verbatim); with `--variant
+  GUITAR_SLUG`, sets that variant's `notes_md` instead (exits 1 if the tone
+  has no such variant). Bumps the tone's `updated` date and auto-commits.
+- `helixgen library validate [--json]` — shape + cross-link checks across
+  every tone: each variant's `.hsp` exists, its `preset_name` is registered
+  in the setlist manifest, and its guitar key is known. **The guitar-slug
+  check is inert in this release** — with no `library/guitars/` yet, it
+  falls back to accepting whatever variant keys already appear across the
+  library (instead of validating against real guitar profiles), so tones
+  made with `generate --guitar` aren't falsely flagged; a later PR (guitar
+  profiles) makes this check exact. Each problem line is prefixed with its
+  tone's logical slug. Exits 1 if any problems are found, 0 if clean.
+  `--json` emits `{"problems": [...]}` (empty when clean) with the same
+  exit-code rule.
+- `helixgen library import <file.hsp|dir> [--artist --song | --descriptor]
+  [--guitar] [--keep-source]` — import an external `.hsp` (or every `*.hsp`
+  in a directory) into the library. By default the source is **moved** into
+  `library/tones/` under the resolved naming schema; `--keep-source`
+  **copies** instead. A sibling `.md` (same stem) is folded into
+  `description_md`; a missing `.md` leaves it `null` with a warning. Naming
+  flags use the same identity rules as `generate` (exactly one of
+  `--artist`+`--song` or `--descriptor`; with neither, the `.hsp`'s own
+  `meta.name` becomes the descriptor) — for a **directory** import, per-file
+  identity flags aren't allowed (each file is self-named from its own
+  `meta.name`); `--guitar`/`--keep-source` still apply to all. A target slug
+  that already exists is refused (exit 1) — the existing `.hsp` is never
+  overwritten. A directory import is **atomic on naming collisions** (the
+  whole batch is pre-validated and refused, moving nothing, on any collision)
+  but **not** atomic on per-file errors during the move pass — an
+  unexpected per-file error is recorded and the run continues, the manifest
+  is always saved, and the command exits nonzero if any file failed.
+- `helixgen library migrate [--dry-run | --plan <plan.json>]` — one-shot,
+  idempotent migration of a pre-library `~/.helixgen` into the tone library:
+  moves each manifest tone's `.hsp` into `library/tones/<slug>.hsp` under the
+  new naming schema, folds a sibling `.md` into `description_md`, writes the
+  per-tone metadata JSON, and re-keys the manifest; each mapped IR WAV is
+  **copied** (never moved) into `library/irs/<pack>/` with a scaffolded
+  metadata sidecar and `mapping.json` rewritten to the library copy.
+  Guitar-profile seeding from `preferences.instruments` is deferred to a
+  later PR. `--dry-run` prints the inferred plan as JSON and mutates
+  nothing; `--plan FILE` executes a (possibly agent- or user-edited) plan
+  instead of re-inferring one; with neither flag, plans and runs in one go.
+  A per-tone/IR error is recorded and the run continues; a slug collision
+  (two tones mapping to one destination) is recorded with a rename
+  suggestion and neither tone is moved. Output is a JSON summary of
+  moves/skips/errors/collisions.
 
 
 ## Device commands (`helixgen device …`)
 
 With the `device` extra (`pip install 'helixgen[device]'` → pyzmq+msgpack)
 helixgen talks to a **Stadium** over the LAN directly (OSC-over-ZeroMQ; no
-editor app). Addressing precedence: `--ip` wins, else `$HELIXGEN_HELIX_IP`,
-else the **built-in default `192.168.4.84`** (yes, even with no env set —
-pass `--ip`/set the env var for any other address); `--port` defaults to
+editor app). Addressing precedence (0.24.0, workspace #74): `--ip` wins,
+else `$HELIXGEN_HELIX_IP`, else the device record persisted by
+**`helixgen device discover`** — there is **no built-in default IP**
+anymore (the old baked-in `192.168.x.x` literal was the maintainer's own
+DHCP lease: a guaranteed-wrong default for anyone else that failed as a
+long connect stall). With none of the three available, verbs **fail fast**
+with an instructive error naming `device discover`; `--port` defaults to
 2002. Protocol reference: [`helix-protocol.md`](helix-protocol.md).
+
+#### `device discover` — find + persist the Stadium's address (0.24.0)
+
+```
+helixgen device discover [--timeout N] [--probe/--no-probe] [--json]
+```
+
+Run **once** (and again whenever the device's DHCP lease changes). Two
+mechanisms, both verified on hardware (Stadium XL, fw 1.3.2, 2026-07-16):
+
+1. **mDNS/Bonjour (primary).** The Stadium advertises the DNS-SD service
+   `_stadiumserver._tcp.local.` and answers a one-shot multicast PTR query
+   itself with PTR + SRV + A in a single datagram (instance `p35x1`, target
+   `p35x1.local.`; the SRV port is 2001 — the change-stream port, not the
+   RPC port). Pure stdlib — no zeroconf dependency. `--timeout` is the
+   listen window (default 3 s).
+2. **Local-subnet TCP probe (fallback, `--probe`, default on).** For
+   networks that block multicast: a bounded concurrent TCP connect-probe of
+   the machine's **own /24 only** on RPC port 2002 (the device ignores
+   ICMP). Short per-connect timeouts, bounded concurrency, never probes
+   beyond the local subnet. `--no-probe` disables it.
+
+Every candidate is **confirmed** with the read-only `/ProductInfoGet`
+handshake before being trusted; confirmed devices are persisted (ip, serial,
+model, firmware) into the library-foundations per-device records
+`~/.helixgen/devices/<serial>.json` — the same files sync observations live
+in; discovery fields round-trip through sync rebuilds. Discovery is
+read-only on the device: no lock scope is taken.
+
+**Why discover-once + direct-IP:** community prior art on the Stadium
+desktop app is that its *discovery* layer is flaky while *direct-to-IP*
+sessions are stable. helixgen therefore uses discovery exactly once to find
+the device, persists the result, and keeps every session direct-to-IP.
+
+**Multiple devices:** all found devices are listed and persisted; the
+resolver deterministically picks the most recently discovered
+(`ip_updated_at` desc, then serial desc) and warns when several records
+disagree — pass `--ip` on any verb to target another. `--json` emits the
+confirmed rows (`ip`, `serial`, `model`, `firmware`, `via` = `mdns|probe`,
+`record` path, `default`).
 **Stadium-only**; these verbs **mutate the device** — prefer an empty/expendable
 slot when testing. CLAUDE.md carries the concise verb list + the mental-model
 rules (device-write gating, flaky-network, tone-library); this is the full
@@ -230,7 +355,7 @@ exit, even on failure):
 
 | scope(s) | verbs |
 |---|---|
-| `editbuffer` | `load`, `snapshot`, `bypass`, `model`, `set-param` |
+| `editbuffer` | `load`, `snapshot`, `bypass`, `model`, `set-param`, `normalize` (recalls snapshots / loads presets while measuring — even its dry-run) |
 | `library` | `create`, `save`, `rename`, `delete`, `set-info`, `push`, `restore`, `install` (without `--auto-irs`), `reorder`, `slots restore`, `setlist create/rename/delete/duplicate`, `setlist import-hss` (not `--list`/`--dry-run`) |
 | `library` + `irs` | `sync` (`--exclude-irs` drops the `irs` scope), `install --auto-irs` (it uploads device IRs) |
 | `irs` | `push-ir`, `delete-ir`, `rename-ir`, `ir-prune` (only with `--yes`; dry-run takes nothing) |
@@ -307,7 +432,8 @@ These live-ops verbs mutate the ACTIVE tone (decoded + HW-validated 2026-07-14).
 - `helixgen device reorder <setlist> <target> --to <N>` — **move a preset to a new position within a setlist** (`/ReorderContainerContent [container, [cids], newPos]`, decoded 2026-07-14, HW-validated). `<setlist>` is a setlist display name (resolved the way `device setlist rename/delete/duplicate` resolve setlists) or a literal container cid (`-2` = the pool, whose `cctp==PRESET` entries also resolve by their own names); `<target>` is a preset display name or a literal cid within it. Pass `setlists` as `<setlist>` to instead reorder the top-level setlist list itself (`<target>` is then a setlist name/cid) — the keyword is checked before name resolution, so a real setlist literally named "setlists" must be addressed by its container cid. **Numeric arguments are cid-first**: a purely-digit `<target>`/`<setlist>` is always parsed as a cid, never a display name. If an item is display-named that digit string, the cid reading wins with a stderr/result **warning** when the cid itself resolves in the container, and the command **errors** (pointing at the named item's real cid) when it doesn't. `--to` is bounds-validated against the container's current length before anything is sent. A **total reply timeout** (no `/error`, no `/status`, no update frame) raises instead of silently re-listing as if the move succeeded; a partial reply still falls back to a bookkeeping re-list because a reqid-correlated frame proves the device processed the write. **This is a direct, immediate DEVICE-side write** — distinct from the local-manifest `device slots reorder`, which only edits the tone library's recorded order and takes effect on the device on the next `device sync` (which can then reorder things right back to the manifest's order).
 - `helixgen device tuner [--seconds N] [--json]` — **live network tuner** (no Stadium app, no hardware-tuner engage needed). The Stadium runs an always-on background pitch detector and streams it on 2003 as `/dspEvent {eid_:10,mid_:796}` = a single **fractional-MIDI** float (int = note, frac×100 = cents, `-1` = silence). Prints a live note/cents/Hz readout with an in-tune meter; `--json` emits one reading per line. HW-validated (stream+decode); pitch math golden-tested.
 - `helixgen device meters [--seconds N] [--json]` — **live network level meters** (no Stadium app needed), read-only. Same always-on `/dspEvent` burst as the tuner also carries two grid-level meter arrays, `{eid_:1,mid_:796}` and `{eid_:1,mid_:800}` — each a **128-float** array — which this decodes into a live bar readout; `--json` emits one reading per line (`{mid, peak, values}`). HW-characterized 2026-07-14: the grids are **live per-node audio envelopes** at ~10 Hz per mid (linear amplitude, >1.0 legal) — mid 796 carries the path chain nodes (cells 0–1 = instrument input), mid 800's populated cells are the output-send pairs (= chain-out level); all taps sit **upstream of the output block's `gain`**. Full per-layout cell map still open (backlog #62).
-- `helixgen device measure [--seconds N=20] [--min-playing N=40] [--json]` — **measure how loud the ACTIVE tone is while the player plays**, read-only. Reduces the playing-gated telemetry (real pitch + non-silent input; hum/silence ignored — single-coil hum defeats level-only gating but reads `-1` on the pitch stream) to robust dB stats: instrument input, chain-out (median + p75), and the input-invariant **chain gain** (out/in) — the number to compare across snapshots/presets when level-matching. Tell the player to play steadily; exits 1 (JSON `ok:false` + `reason`) when the window had too little actual playing (~10 gated samples/sec of playing; default needs ~4 s). Loudness-feedback spec phase 1; the closed-loop `device normalize` is backlog #62.
+- `helixgen device measure [--seconds N=20] [--min-playing N=40] [--json]` — **measure how loud the ACTIVE tone is while the player plays**, read-only. Reduces the playing-gated telemetry (real pitch + non-silent input; hum/silence ignored — single-coil hum defeats level-only gating but reads `-1` on the pitch stream) to robust dB stats: instrument input, chain-out (median + p75), and the input-invariant **chain gain** (out/in) — the number to compare across snapshots/presets when level-matching. Tell the player to play steadily; exits 1 (JSON `ok:false` + `reason`) when the window had too little actual playing (~10 gated samples/sec of playing; default needs ~4 s). Loudness-feedback spec phase 1; `device normalize` (below) is the closed loop built on it.
+- `helixgen device normalize [<preset.hsp> | --setlist <name>] [--target-db X] [--seconds N=20] [--min-playing N=40] [--tolerance-db 1.0] [--yes] [--json]` — **level-match snapshots or a whole setlist by measuring while the player plays** (loudness spec phase 2, backlog #62). The closed loop over `device measure`: recalls each target (snapshot scope: each NAMED snapshot of the local `.hsp` — the device's ACTIVE tone must be that preset; its name is **verified** via the active-preset property before anything is measured and a mismatch aborts, an unverifiable name only warns; setlist scope: loads each manifest tone by its observed CID and verifies the loaded preset's name matches the tone — a mismatch means a stale observation and that tone is SKIPPED), prompts the player per target, and computes each target's dB trim so its **total loudness** — the measured median chain gain **plus the output-block level already in force** (the meter taps sit upstream of the output gain, so the measured gain alone never includes an existing trim) — matches the **anchor**'s total (the first target that measured ok) or an absolute `--target-db`. Sizing trims from totals makes the loop **idempotent**: a re-run (same playing) computes in-band zero trims instead of compounding, and hand-balanced output overrides that already equalize are left alone. Deltas within `--tolerance-db` are in band and left alone (don't chase meter noise). **DRY-RUN by default** — measuring happens, trims are only reported; `--yes` writes them into the **local `.hsp` file(s)** (the source of truth) as output-block `level` moves: per-snapshot overrides (snapshot scope) or a whole-preset shift of base + any per-snapshot array (setlist scope; the uniform shift preserves the preset's own scene-to-scene and path-to-path balance). The device copy is NOT written — run `device sync <setlist>` / `device install` afterwards. If a mid-run write fails, the error lists the files already written (a re-run is safe — written files re-measure in band). Targets that can't be measured (too little playing, no local `.hsp`, no observed placement, name mismatch) are SKIPPED with a warning and the run exits 1 to flag the partial result. A setlist run restores the player's previously ACTIVE preset afterwards (best-effort); snapshot scope restores the preset's on-load snapshot. **Phase-0 caveat, by design:** the output block's `level` is dB-native so each trim is exact in one move, but every meter tap sits UPSTREAM of the output gain — the trim is invisible to `device measure`, so the loop trusts the dB math and deliberately does NOT re-measure to confirm. Holds the `editbuffer` lock (it recalls snapshots / loads presets even in dry-run).
 
 ### Global Settings + Global EQ
 
