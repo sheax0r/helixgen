@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.21.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.22.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -40,8 +40,13 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   — **regardless of `HELIXGEN_IRS`** (that env var doesn't relocate it). For
   a fully isolated session (tests/sandboxes), also prefix
   `HELIXGEN_IRHASH_CACHE=<file>` (the single cache file) or
-  `HELIXGEN_CACHE=<dir>` (the cache directory). Normal sessions can ignore
-  this.
+  `HELIXGEN_CACHE=<dir>` (the cache directory) — and `HELIXGEN_LOCKS=<dir>`
+  (the device-lock lease root, see **Device locks** below). Normal sessions
+  can ignore this.
+- `HELIXGEN_LOCK_TOKEN=<token>` — only while holding a **session lease**
+  (see **Device locks** below): carry the token printed by `device lock` as
+  a prefix on every covered verb, same prefix-per-call mechanism as
+  `HELIXGEN_LIBRARY`.
 
 ### Where the answers live (consult these FIRST, never the source)
 
@@ -74,20 +79,98 @@ everywhere it's referenced; removing a tone from one setlist just drops that
 reference — the pool preset (and any other setlist that references it) is
 untouched.
 
-helixgen mirrors this with one local manifest, `~/.helixgen/setlists.json`
-(override `$HELIXGEN_SETLISTS`) — the **tone library**. Each tone is a record
-(content `.hsp` + name + management state): a desired **user slot** (`null` =
-off device, `"auto"`, or `"1A".."128D"` — the slot vocabulary runs to bank
-128, per `device add --slot`, not just `8D`), ordered **setlist
-memberships**, and
-observed device placement. **"On the device" ⟺ the tone has a slot.** There is
-**no separate slot ledger** — this one manifest is the single source of truth for
-"which of my tones goes where." Every generated tone **auto-registers** here
-(off-device by default); `device add`/`unsync` set the slot; `device sync` is a
-**managed-set mirror** (installs/updates/reorders/deletes only helixgen-managed
-tones, never touches untracked device presets). **Never hand-edit it** — manage
-it through the `register` / `device add` / `device unsync` / `device setlist`
-verbs, or the `tone` skill.
+helixgen mirrors this with one local manifest, now at
+`~/.helixgen/setlists/manifest.json` (override `$HELIXGEN_SETLISTS`; a legacy
+v2 manifest at the old top-level location auto-migrates up on first load,
+backup written first — nothing for you to do) — the **tone library**. Each
+tone is a record (content `.hsp` + name + management **intent**): a desired
+**user slot** (`null` = off device, `"auto"`, or `"1A".."128D"` — the slot
+vocabulary runs to bank 128, per `device add --slot`, not just bank 8),
+ordered **setlist memberships**, and provenance `source`. A specific Helix's
+**observed** placement is deliberately NOT in the manifest (manifest v3,
+0.22.0) — it lives per device serial at `~/.helixgen/devices/<serial>.json`,
+rebuilt wholesale by every `device sync`, so losing that file costs nothing
+(and the first sync after a v2→v3 migration harmlessly re-pushes placement
+for every managed tone). **"On the device" ⟺ the tone has a slot.** There is
+**no separate slot ledger** — this one manifest is the single management-intent
+record for "which of my tones goes where." Every generated tone
+**auto-registers** here (off-device by default); `device add`/`unsync` set the
+slot; `device sync` is a **managed-set mirror** (installs/updates/reorders/
+deletes only helixgen-managed tones, never touches untracked device presets).
+**Never hand-edit it** — manage it through the `register` / `device add` /
+`device unsync` / `device setlist` verbs, or the `tone` skill. (The engine
+also auto-git-commits manifest saves inside `~/.helixgen` — its own home git
+repo, gated by the `git_commit_tones` preference; that's engine behavior, not
+something this skill drives.)
+
+## Device locks (0.22.0) — auto-acquired, advisory, machine-local
+
+Every device-**mutating** verb auto-acquires a machine-local advisory lease
+for its duration (lease files at `~/.helixgen/locks/<device-ip>/<scope>.lock`;
+root override `$HELIXGEN_LOCKS`), so concurrent helixgen processes on this
+machine never collide on the device. Read-only verbs take nothing; you don't
+lock anything by hand for a single verb — it's automatic. Scopes are granular
+and non-conflicting with each other: `editbuffer` (live-ops on the ACTIVE
+tone: `load`/`snapshot`/`bypass`/`model`/`set-param`), `library`
+(pool/setlist/content writes, incl. `install` and `setlist import-hss`),
+`irs` (device IR writes: `push-ir`/`delete-ir`/`rename-ir`/`ir-prune --yes`),
+`globals` (`settings set`/`globaleq set`), `all` (exclusive). Two verbs take
+`library`+`irs` together: `sync` (`--exclude-irs` drops `irs`) and
+`install --auto-irs` (it uploads device IRs; plain `install` is `library`
+only). Full verb → scope table: `docs/CLI.md` "Device locks".
+
+**When a verb blocks, then fails naming a holder.** On contention a verb
+waits up to `$HELIXGEN_LOCK_TIMEOUT` seconds (default **30**; `0` = fail
+fast), then exits non-zero **naming the holder** (label, pid, host, age).
+That error means another agent/process on this machine holds the scope. The
+right response is to **wait and retry, or coordinate** with whatever the
+label names — it is not a malfunction, and it is **not** a reason for
+`--no-lock`. Stale leases (expired TTL / dead pid) self-reclaim on the next
+acquire; a live lease is never broken implicitly.
+
+**Session leases for long multi-verb flows.** A full setlist sync session,
+bulk IR housekeeping, or any flow of several mutating verbs should hold its
+scope(s) across calls instead of re-contending per verb:
+
+```bash
+helixgen device lock --scope library --scope irs --label "setlist sync: Gigs" --ttl 900
+# prints HELIXGEN_LOCK_TOKEN=<token> — carry it on every covered verb:
+HELIXGEN_LOCK_TOKEN=<token> HELIXGEN_HELIX_IP=<ip> helixgen device sync Gigs --json
+# ... more verbs, same prefix ...
+HELIXGEN_LOCK_TOKEN=<token> helixgen device unlock   # release at the end — token REQUIRED here too
+```
+
+- **Always pass a descriptive `--label`** — it's what other agents/users see
+  when they hit your lease.
+- **Carry the printed `HELIXGEN_LOCK_TOKEN` as an env prefix on every covered
+  call — including the final `device unlock`.** Same-shell pid passthrough
+  won't help you: each of an agent's Bash calls is a fresh shell/pid, so the
+  exported token is the only reliable ownership proof (same prefix-per-call
+  mechanism as `HELIXGEN_LIBRARY`). A bare `device unlock` from a later shell
+  releases nothing (it reports your lease as foreign and keeps it).
+- **Renewal — not `--ttl` — is what keeps the lease yours.** The
+  lock-issuing shell's pid dies as soon as the call returns, and a dead-pid
+  session lease is reclaimable by contenders after **120 s idle** (measured
+  from its last acquisition/renewal) — `--ttl` caps the lease's lifetime, it
+  does NOT extend that grace. Every token-carrying covered verb renews the
+  lease, so a flow that keeps working stays covered; avoid idle gaps longer
+  than ~2 minutes mid-flow, and after one, re-run the same `device lock`
+  (idempotent renewal of your own scope) before the next mutating verb.
+- **Token-prefixed `device unlock` when the flow ends — including failure
+  paths.** Don't leave a lease to expire on its own when you can release it.
+  Plain `device unlock` (with the token) releases all your leases; `--scope`
+  narrows it.
+- **Inspect with `helixgen device lock --status --json`** — every lease's
+  scope, label, pid, host, age, TTL, live/stale, and whether it's yours.
+  Read-only, always safe.
+
+**Never pass `--no-lock` unless the user explicitly directs it.** It opts
+that verb out of collision protection entirely. Likewise `device unlock
+--force` breaks a live lease someone else is using — coordinate instead.
+
+Limitations (by design): **advisory** — nothing stops a `--no-lock` caller —
+and **machine-local** — direct-protocol clients on other hosts and the
+Stadium desktop editor are NOT covered.
 
 ## How a tone becomes a device preset: the transcoder (no template)
 
@@ -221,7 +304,8 @@ helixgen device setlist remove <setlist> "<tone name>"     # drop membership (ke
 helixgen device setlist create-local <setlist>     # empty setlist in the manifest only
 ```
 
-- These touch only `~/.helixgen/setlists.json` — no device. A tone's identity is
+- These touch only the local manifest (`~/.helixgen/setlists/manifest.json`)
+  — no device, no lock. A tone's identity is
   its **display name** (`meta.name`). **The same tone can be in as many setlists
   as you want** — it's referenced once in the device pool and shared — so adding
   a tone that's already in another setlist is expected, and re-adding within one
@@ -476,6 +560,13 @@ device — it applies just to these two local-write side paths.
 helixgen device sync <setlist> --json
 ```
 
+A single sync locks itself (auto-acquired `library`+`irs` lease — see
+**Device locks**). If this is a longer session — several setlists, sync plus
+IR housekeeping, expected re-runs — take a session lease first (`device lock
+--scope library --scope irs --label "<what>" --ttl 900`), carry the printed
+`HELIXGEN_LOCK_TOKEN` on every verb, and release with a token-prefixed
+`device unlock` when done.
+
 The engine reconciles the pool (install/update/skip), rebuilds the setlist's
 references in manifest order, and uploads each tone's IRs. **Order comes from the
 manifest** — `device setlist add --pos` / the manifest order sets it; a later
@@ -545,7 +636,8 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.21.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.22.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
 
@@ -556,10 +648,13 @@ Tightly:
 | Looking for a "template" or checking factory-preset "coverage" | There are no templates — install is a faithful, template-free transcode; just sync |
 | Hand-rolling a per-preset install loop | Use `device sync <setlist>` — it reconciles the pool, rebuilds references, and uploads IRs in one call |
 | Telling the user to create a setlist in the Stadium app | Not needed any more — `device setlist create <name>` creates it on the device (#8 shipped) |
-| Hand-editing `~/.helixgen/setlists.json` | Manage it with `register` / `device add` / `device unsync` / `device setlist add/remove` (or the `tone` skill) |
+| Hand-editing `~/.helixgen/setlists/manifest.json` | Manage it with `register` / `device add` / `device unsync` / `device setlist add/remove` (or the `tone` skill) |
+| Passing `--no-lock` because a verb reported a lock holder | The holder message means another agent/process is mid-write on the device — wait/retry or coordinate; `--no-lock` is only ever used on the user's explicit direction |
+| Running a long multi-verb device flow (full sync session, bulk IR housekeeping) without a session lease | `device lock --scope <s> --label "<what you're doing>" --ttl <covers the flow>`, carry the printed `HELIXGEN_LOCK_TOKEN` on every verb, `device unlock` at the end |
+| Holding a session lease past the end of the flow (letting it expire on its own) | A token-prefixed `HELIXGEN_LOCK_TOKEN=<token> helixgen device unlock` releases it immediately — run it when the flow ends, including on failure paths (bare `device unlock` from a fresh shell can't prove ownership and keeps the lease) |
 | Expecting `device sync` to touch presets helixgen didn't place | It won't — sync is a managed-set mirror keyed by tone name; untracked device presets are never moved, deleted, or overwritten |
 | Pre-checking whether a tone is already in a setlist before adding it | Don't — a tone belongs in as many setlists as you want (shared, referenced once in the pool). `device setlist add` is idempotent within a setlist and only errors on a name/different-file collision. Just add it |
-| Reading helixgen **source** (`SetlistManifest`, `setlists.json` schema, engine internals) to confirm behavior or guard against "version drift" | Don't source-dive. The engine is the uv-tool-installed helixgen-core package, **not** any checkout in the working directory — so reading cwd source can *mislead* about the actual version/schema. Per-verb `--help`, `device setlist list`, the sync **result dict**, and `docs/CLI.md` are the authoritative contract (see "Where the answers live" above); operate through them |
+| Reading helixgen **source** (`SetlistManifest`, the manifest schema, engine internals) to confirm behavior or guard against "version drift" | Don't source-dive. The engine is the uv-tool-installed helixgen-core package, **not** any checkout in the working directory — so reading cwd source can *mislead* about the actual version/schema. Per-verb `--help`, `device setlist list`, the sync **result dict**, and `docs/CLI.md` are the authoritative contract (see "Where the answers live" above); operate through them |
 | Expecting sync to wipe the setlist like the old mirror | It doesn't — it reconciles pool + references and never orphans; GC only on `--all --gc` |
 | Diagnosing a dropped connection as a coverage failure | It's the flaky network stack — re-run the sync, reboot the Helix if it persists |
 | Ignoring the `errors[]` in the sync result | That list *is* the remaining work — read it, fix each, re-sync |

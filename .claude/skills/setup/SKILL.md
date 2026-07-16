@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.21.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.22.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -84,8 +84,35 @@ One cache to know about: IR verbs also write the **IR-hash cache** at
 `HELIXGEN_IRS`** (the IR-directory env does not relocate it). If a session
 needs full isolation (tests, sandboxes), also set `HELIXGEN_IRHASH_CACHE`
 (path to the single cache file) or `HELIXGEN_CACHE` (the cache *directory*)
-alongside the other env prefixes. Inspect/maintain it with
+alongside the other env prefixes — and `HELIXGEN_LOCKS` (the device-lock
+lease root; see the `device` skill). Inspect/maintain the cache with
 `helixgen ir-cache --stats|--clear|--prune`. Normal sessions can ignore it.
+
+**The helixgen home (`$HELIXGEN_HOME`, 0.22.0).** `$HELIXGEN_HOME` (default
+`~/.helixgen`) is the root of what the engine persists — the block library,
+IRs, the setlists manifest (now at `setlists/manifest.json`), per-device
+observed state (`devices/`), and device-lock leases (`locks/`) all derive
+their default location from it, and the per-area env vars
+(`HELIXGEN_LIBRARY`, `HELIXGEN_IRS`, `HELIXGEN_SETLISTS`, `HELIXGEN_LOCKS`)
+win over the home-derived default when set. **But it is not a one-knob
+isolation switch in 0.22.0:** `preferences.json` and the IR-hash cache still
+resolve to the real `~/.helixgen` regardless of `HELIXGEN_HOME`, so a fully
+isolated session needs `HELIXGEN_PREFS` and `HELIXGEN_IRHASH_CACHE` (or
+`HELIXGEN_CACHE`) set explicitly alongside it, as above. Two engine
+behaviors to not be surprised by: on its first write
+the engine **auto-initializes the home as a git repo** (whenever `git` is on
+PATH; a missing git only warns — nothing fails) with `devices/`, `cache/`,
+`locks/`, and IR audio gitignored, and it **auto-commits manifest saves**
+there, gated by the `git_commit_tones` preference (`"false"` skips the
+commits). That home repo is the engine's — don't hand-manage it; the
+git-commit guidance later in this skill is about the *IR library* directory,
+which is a different, user-owned location.
+
+**Device-mutating verbs auto-lock (0.22.0).** Every verb that writes to the
+Stadium auto-acquires a machine-local advisory lock so concurrent helixgen
+processes don't collide on the device — the `device` skill's "Device locks"
+section (and `docs/CLI.md` "Device locks") is the full model; nothing to do
+here in setup.
 
 ## Editing an existing preset (direct edits)
 
@@ -124,13 +151,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.21.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.22.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.21.0'
+  uv tool install 'helixgen[device]==0.22.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't

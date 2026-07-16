@@ -15,12 +15,12 @@ Turn a tone description into a `.hsp` Helix Stadium preset that's ready to load 
 - User wants a starting point to A/B against a reference
 - User mentions a guitar/bass and a role (rhythm, lead, clean, pad, solo boost)
 
-When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off.
+When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off. (Device-mutating verbs auto-acquire machine-local advisory locks as of core 0.22.0 — the `device` skill's "Device locks" section is the model; nothing in this skill touches the device.)
 
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.21.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.22.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
