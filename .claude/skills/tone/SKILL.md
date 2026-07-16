@@ -594,6 +594,20 @@ Rules of thumb for translating ear-language to param moves:
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
 - **"Swap X for something Y"** → run `list-blocks --category <cat>`, scan for candidates, `show-block` the chosen one, then a `swap_model` op in a `helixgen patch` call
+- **Feedback about ONE snapshot** ("the lead snapshot is too loud", "clean scene needs less drive") → a per-snapshot override, not a base edit: add `"snapshot": "<name-or-0-based-index>"` to the `set_param`/`set_enabled` patch op (or the single-op form `helixgen set-param <hsp> <block> <param> <value> --snapshot <name-or-index>`, 0.23.0). The param must already carry a base value and the preset must define snapshots; overrides reach the device on the next `device install`/`sync`. Once a param varies per-snapshot, a later plain base edit of it is inaudible on-device (`set-param` warns) — keep editing that param per-snapshot.
+
+**Objective numbers from a recording (optional).** If the user has (or makes)
+a WAV capture of the tone and wants measurements instead of ear-language,
+`helixgen analyze-audio <capture.wav> --json` (0.23.0) reports LUFS, crest
+factor, peak/true-peak/RMS, a clipping flag, spectral centroid, and 5-band
+energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
+above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
+`[analyze]` extra, which is NOT in the plugin's default install** (the pin
+stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
+once with `uv tool install --force 'helixgen[device,analyze]==0.25.0'`.
+Don't reach for it unprompted; ear-feedback plus the table above is the
+normal loop. (On-device loudness leveling across snapshots/setlists is the
+`device` skill's `device normalize`.)
 
 ## Common Mistakes
 
@@ -652,6 +666,9 @@ regenerate round-trip.
    - "swap to a Plexi" → `swap_model` (old → new amp; same category required).
    - "kill the reverb" → `set_enabled` with `enabled: false` on the reverb block.
    - "add a delay" → `add_block` with the delay block, `after` the amp/cab.
+   - "…but only in the Lead snapshot" → add `"snapshot": "Lead"` (a name, or
+     a 0-based index) to the `set_param`/`set_enabled` op — a per-snapshot
+     override instead of a base edit (0.23.0; see step 9's per-snapshot rule).
 
    Run `helixgen patch --help` for the full ops schema.
 3. `patch` edits the file **in place** — the user just re-imports the same

@@ -73,10 +73,10 @@ ZeroMQ; see [`docs/helix-protocol.md`](docs/helix-protocol.md)), so you can list
 read, create, rename, delete, load, save, and live-tweak presets from the CLI.
 
 The plugin's `[device]` extra already includes the transport deps (pyzmq,
-msgpack, paramiko). Point at your device:
+msgpack, paramiko). Find your device once — no IP hunting:
 
 ```bash
-export HELIXGEN_HELIX_IP=192.168.4.84    # your Stadium's IP (or pass --ip)
+helixgen device discover                 # finds the Stadium via mDNS (subnet-probe fallback) and persists its address
 
 helixgen device list                     # presets in the pool (--setlist also takes device setlist names)
 helixgen device active                   # the preset currently active on the device
@@ -92,7 +92,15 @@ helixgen device install MyTone.hsp "My Tone" --pos 7   # author a helixgen .hsp 
 helixgen device list-irs                 # impulse responses on the device (name + hash)
 helixgen device push-ir cab.wav          # upload an IR (SFTP; device auto-registers) (EXPERIMENTAL)
 helixgen device pull-ir "cab.wav" out.wav  # download an IR by on-device filename (EXPERIMENTAL)
+helixgen device measure                  # how loud is the ACTIVE tone while you play (read-only)
+helixgen device normalize MyTone.hsp     # level-match its snapshots (dry-run; --yes writes the local .hsp, then re-sync)
 ```
+
+As of core **0.24.0** there is no built-in default device IP: every `device`
+verb resolves `--ip`, then `$HELIXGEN_HELIX_IP`, then the record
+`device discover` persisted — and fails fast with a pointer to
+`device discover` when none is available. Re-run discover if the device
+changes networks or DHCP leases.
 
 IR transfer uses the editor's own SFTP identity (located from your installed Helix
 app, never bundled) — see [`helix-sftp-access.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/helix-sftp-access.md).

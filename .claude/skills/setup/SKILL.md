@@ -72,8 +72,11 @@ stop and re-resolve the path rather than proceeding to tone work.
 (`generate`, `list-blocks`, `show-block`, `patch`, the single-op edit verbs,
 `view`, `ingest`) — exported shell state does not persist between Bash
 calls, so use the `ENV=value command` prefix form each time. Two more env
-vars ride along the same way when they apply: device-network verbs need
-`HELIXGEN_HELIX_IP=<device-ip>` (or `--ip`), and if the user has a custom IR
+vars ride along the same way when they apply: device-network verbs normally
+need **no address env at all** — since core 0.24.0 they resolve the record
+persisted by `helixgen device discover` (step 1.5 below; `--ip` and
+`$HELIXGEN_HELIX_IP` remain overrides, not the primary path). And if the
+user has a custom IR
 directory on record (step 2 / `$HELIXGEN_IRS`), prefix IR-touching verbs
 (`register-irs`, `ir-scan`, `list-irs`, `generate` with IR blocks) with
 `HELIXGEN_IRS="<dir>"` too — otherwise they default to `~/.helixgen/irs/`.
@@ -350,6 +353,44 @@ something that won't load on their device.
 This confirmation matters: the CLI no longer takes a per-call `model`
 argument (the old MCP soft-gate is gone) — this step is the real
 device-confirmation gate.
+
+### 1.5. Locate the device on the network — discover-first (0.24.0)
+
+Only when the session will actually talk to the device over the LAN (the
+`device` skill, or any `helixgen device` verb). Skip entirely for pure
+generation/edit sessions.
+
+**Run discovery once — don't hunt for the IP by hand:**
+
+```bash
+helixgen device discover          # or --json for the machine shape
+```
+
+It finds the Stadium via mDNS (the device advertises
+`_stadiumserver._tcp.local.` and answers a one-shot multicast query), falls
+back to a bounded TCP probe of this machine's own /24 only, confirms every
+candidate with the read-only `/ProductInfoGet` handshake, and **persists**
+ip/serial/model/firmware into `~/.helixgen/devices/<serial>.json`. It is
+read-only on the device (no lock). After one successful discover, **every
+device verb resolves the address automatically** — no env prefix, no flag.
+
+**The resolution chain (0.24.0):** `--ip` > `$HELIXGEN_HELIX_IP` > the
+persisted discover record. There is **no built-in default IP** any more, and
+a missing address never stalls: with none of the three available, device
+verbs **fail fast with an instructive error naming `device discover`** — the
+fix is to run it, not to guess an address.
+
+- **Discovery found the device** → done; the record is persisted. Nothing to
+  export, nothing to remember.
+- **Discovery found nothing** (multicast blocked *and* the probe missed) →
+  only then ask the user for the device's IP, and pass it explicitly:
+  `--ip <addr>` on the verb, or a `HELIXGEN_HELIX_IP=<addr>` prefix.
+  `$HELIXGEN_HELIX_IP` stays documented as an **override** (multiple devices,
+  unusual networks, CI) — not the primary path.
+- **Re-run `device discover`** whenever the device changes networks or picks
+  up a new DHCP lease — the persisted record goes stale with the old address.
+  With several Stadiums found, all are persisted and the most recently
+  discovered wins by default; pass `--ip` to target another.
 
 ### 2. Locate IR library if applicable
 
