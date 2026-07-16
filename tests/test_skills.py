@@ -166,6 +166,11 @@ STALE_021_PATTERNS = [
     # the old 8-bank slot ceiling ("1A".."8D" — real vocabulary runs to 128D;
     # the lookbehind keeps the correct "1A".."128D" from matching)
     re.compile(r"1A.{0,6}(?<!12)8D"),
+    # the pre-manifest-v3 top-level manifest path (0.22.0 moved it to
+    # ~/.helixgen/setlists/manifest.json; core docs are byte-synced and exempt)
+    re.compile(r"\.helixgen/setlists\.json"),
+    # the retired `register --doc` companion-markdown flag (manifest v3)
+    re.compile(r"register\b[^\n]*--doc\b"),
 ]
 
 
@@ -235,6 +240,9 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
+ENGINE_PIN = "0.22.0"  # the core version this plugin release is built against
+
+
 def test_engine_pin_is_consistent_across_surfaces() -> None:
     """Every pin-carrying surface must state the core pin, and all must agree."""
     pins = set()
@@ -248,7 +256,49 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
         found = re.findall(r"helixgen\[device\]==([0-9][0-9.]*)", path.read_text())
         assert found, f"{path}: no engine pin (helixgen[device]==X.Y.Z) stated"
         pins.update(found)
-    assert len(pins) == 1, f"engine pin disagrees across surfaces: {sorted(pins)}"
+    assert pins == {ENGINE_PIN}, (
+        f"engine pin must be exactly {ENGINE_PIN} on every surface: {sorted(pins)}"
+    )
+
+
+# --- core 0.22.0 vocabulary (advisory device locks, manifest v3) --------------
+
+
+def test_device_skill_documents_device_locks() -> None:
+    """The lock model (0.22.0): auto-acquire, contention, session leases."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    # session-lease mechanics: lock with a label, token passthrough, unlock
+    assert "session lease" in text.lower()
+    assert "--label" in text
+    assert "HELIXGEN_LOCK_TOKEN" in text
+    assert "device unlock" in text
+    # contention behavior: timeout env, holder-naming error, wait/retry
+    assert "HELIXGEN_LOCK_TIMEOUT" in text
+    assert "naming the holder" in text.lower() or "naming a lock" in text.lower()
+    # introspection surface
+    assert "lock --status --json" in text
+    # the no-`--no-lock` rule, stated as an explicit-user-direction gate
+    assert "--no-lock" in text
+    assert re.search(r"--no-lock.{0,200}(explicit|user)", text, re.DOTALL | re.IGNORECASE)
+    # scope vocabulary + isolation env
+    for scope in ("editbuffer", "library", "irs", "globals"):
+        assert f"`{scope}`" in text, f"lock scope `{scope}` not named"
+    assert "HELIXGEN_LOCKS" in text
+
+
+def test_device_skill_documents_manifest_v3() -> None:
+    """Manifest v3 (0.22.0): new manifest path + per-device observed state."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "setlists/manifest.json" in text
+    assert "devices/<serial>.json" in text
+
+
+def test_setup_skill_documents_helixgen_home() -> None:
+    """HELIXGEN_HOME (0.22.0): the one-knob root + the auto-git-repo behavior."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    assert "HELIXGEN_HOME" in text
+    assert "git_commit_tones" in text
+    assert "HELIXGEN_LOCKS" in text
 
 
 def test_plugin_and_marketplace_versions_agree() -> None:

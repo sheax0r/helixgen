@@ -22,7 +22,7 @@ brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.21.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
+The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.22.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
 
 **Using the Python CLI directly** (no plugin)? Same binary — see [`docs/CLI.md`](docs/CLI.md). A standalone install starts with an empty library at `~/.helixgen/library/`, so seed it first with `helixgen bootstrap` (the plugin's skills instead point `HELIXGEN_LIBRARY` at the bundled `data/library`).
 
@@ -106,6 +106,12 @@ dual-amp, parallel splits, snapshots, footswitch/EXP assignments).
 The `/device` skill drives these same verbs. Only 48 kHz-family
 Stadium hardware is supported; this is **Stadium-only** (not legacy Helix), and
 it writes to your device — test against an expendable slot first.
+
+As of core **0.22.0**, every device-mutating verb auto-acquires a
+**machine-local advisory lock**, so concurrent helixgen processes (or agents)
+on the same machine never collide on the device; `helixgen device lock` /
+`unlock` / `lock --status` manage session-length leases. See
+[`docs/CLI.md`](docs/CLI.md) "Device locks".
 
 ## CLI
 
