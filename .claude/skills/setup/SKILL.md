@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.24.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.25.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -154,13 +154,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.24.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.25.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.24.0'
+  uv tool install 'helixgen[device]==0.25.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -208,13 +208,14 @@ key with `HELIXGEN_<KEY>` env, e.g. `HELIXGEN_FAVOR_IRS=1`). Precedence per
 key: env var > file value > Claude-memory seed > built-in default.
 
 - **File absent (first run):** scaffold it. Seed `device.model` from
-  `user_device.md` and `instruments` from `user_guitars.md` if those memories
-  exist; otherwise leave `device.model: null` and `instruments: []` (step 1
-  will ask). `guard_paid_irs_in_git` and `reveal_in_finder` seed `true`
+  `user_device.md` if that memory exists; otherwise leave `device.model: null`
+  (step 1 will ask). `guard_paid_irs_in_git` and `reveal_in_finder` seed `true`
   (matching the existing feedback-memory defaults); `favor_irs` seeds `true`
-  only if a "prefer IRs" feedback memory exists, else `false`. Tell the user
-  in one line: "Created `~/.helixgen/preferences.json` — edit it any time to
-  change these defaults (device model, favor_irs, instruments, …)." If
+  only if a "prefer IRs" feedback memory exists, else `false`. The user's
+  guitars are **not** stored here — they live as guitar **profiles** under
+  `library/guitars/` (see **Guitar profiles** below); scaffold those separately.
+  Tell the user in one line: "Created `~/.helixgen/preferences.json` — edit it
+  any time to change these defaults (device model, favor_irs, …)." If
   `reveal_in_finder` resolves true and this is macOS, `open -R` the new file.
 - **File present:** read it and apply each setting for the rest of the
   session. The file is now the authority — memory (`user_device.md`,
@@ -228,53 +229,111 @@ key: env var > file value > Claude-memory seed > built-in default.
   later updates to it can be written silently.
 
 Keys this skill owns: `device.model`, `favor_irs`, `reveal_in_finder`,
-`guard_paid_irs_in_git`, `instruments`, `default_guitar`. (`preset_output_dir`
-and `author` are consumed by the `tone` skill.) `ir_library_dir` is
+`guard_paid_irs_in_git`, `default_guitar`. (`author` is consumed by the `tone`
+skill.) The user's guitars are no longer a preferences key — they are guitar
+**profiles** under `library/guitars/` (see **Guitar profiles** below).
+`instruments` and `preset_output_dir` are **deprecated** (replaced by guitar
+profiles and the `library/tones/` default write location); if a loaded
+`preferences.json` still carries either non-empty key, the engine prints a
+one-line stderr warning pointing at `helixgen library migrate`, which removes
+them — offer to run it (see **Migrating a pre-library home** below). Both keys
+are still parsed for back-compat until migrated. `ir_library_dir` is
 deliberately **not** in this file — the IR directory stays env-only via
 `$HELIXGEN_IRS`; see step 2.
 
-#### Instruments
+#### Guitar profiles
 
-`instruments` is an array recording the user's confirmed guitars/basses,
-seeded on first scaffold from `user_guitars.md` if present. Record shape:
+The user's guitars are stored as **profiles** — one JSON file per guitar at
+`library/guitars/<slug>.json` (schema 1; `slug = slugify(name)`), under the
+helixgen home library, **not** in `preferences.json`. The profile file is the
+on-disk source of truth for a guitar. Scaffolding and editing profiles
+(**including the control inventory**) via structured questions is this skill's
+job — it replaces the old `instruments`-array onboarding. There is **no CLI
+verb to create a profile** — this skill authors the JSON file directly.
+Read/verify existing profiles with `helixgen library show <guitar> --json` and
+`helixgen library list --guitars [--json]`.
+
+Profile shape:
 
 ```json
 {
+  "schema": 1,
   "name": "Gibson Les Paul Junior",
+  "short_name": "Les Paul Jr",
   "type": "guitar",
+  "active": false,
   "pickups": "one bridge P-90 (single-coil soapbar)",
-  "selector": "none",
+  "construction": "mahogany body + neck, wraparound bridge",
+  "character_md": "Breaks up early; raw, midrange-forward — vol + tone only.",
   "genres": ["punk", "garage", "raw rock", "blues"],
-  "notes": "breaks up early; vol + tone only"
+  "controls": [
+    {"name": "Volume", "kind": "knob"},
+    {"name": "Tone", "kind": "knob"}
+  ]
 }
 ```
 
-Fields: `name`, `type` (`"guitar"`|`"bass"`) required; `pickups` (free text),
-`selector` (`"none"`|`"3-way"`|`"5-way"`|string), `active` (bool — active vs
-passive pickups), `genres` (array of style hints used to auto-pick an
-instrument when the user doesn't name one), `notes` (one-liner) all optional.
-This feeds the `tone` skill's instrument recommendations — picking a guitar by
-`genres` when none is named, and phrasing pickup/selector guidance from
-`selector`/`pickups`.
+Fields: `name`, `short_name` (what appears in preset display names / filename
+slugs), `type` (`"guitar"`|`"bass"`), `active` (bool|null — active vs passive
+pickups), `pickups`, `construction`, `character_md` (the tonal character — what
+the guitar is *for*; the `tone` skill reads this to adapt params), `genres[]`
+(style hints used to auto-pick a guitar when none is named), and `controls[]`
+— the **control inventory**: each control is `{name, kind, positions?, notes?}`
+where `kind` ∈ `knob`/`switch`/`push-pull`/`other` (a pickup selector is a
+`switch` whose `positions` list its settings). A tone variant's
+`guitar_settings` keys validate (as warnings) against these control names, so
+capture the physical controls accurately.
 
-Seed the user's four confirmed instruments on first scaffold:
+**Scaffold a profile by asking structured questions**, one guitar at a time:
+its name, a short name for display, type (guitar/bass), pickups, construction,
+what it's tonally for (→ `character_md`), the genres it suits, and its physical
+controls — every knob, switch, pickup selector (with its positions), and
+push-pull. Write the answers to `library/guitars/<slug>.json`. If a
+`user_guitars.md` memory exists, seed one profile per guitar from it (the
+user's confirmed guitars: **Les Paul Jr** — P-90 bridge, vol + tone only;
+**ESP LTD EC-1000** — active EMG HH, 3-way selector; **Strandberg Boden
+Essential 6** — HSS, 5-way; **Ibanez Prestige** — HSH, 5-way), still confirming
+the control inventory with the user.
 
-- **LP Jr** — P-90 (single bridge pickup), no selector (`"none"`).
-- **ESP LTD EC-1000** — active EMG HH, 3-way selector.
-- **Strandberg Boden Essential 6** — HSS, 5-way selector.
-- **Ibanez Prestige** — HSH, 5-way selector.
+**Committing:** do **not** git-commit the profile yourself. Core owns the
+home-repo commits — any library-mutating verb runs `git add -A` on the helixgen
+home, so a directly-written profile is swept into core's next auto-commit. Just
+note briefly that it'll be committed on the next library write, rather than
+committing it here.
 
-`default_guitar` is a string naming which of the user's `instruments` to
-default to when a tone request doesn't name a guitar — it feeds tone-naming
-(the preset title, `.hsp`/`.md` filename, and description are named for the
-target guitar). If it's unset (`null`) and the `tone` skill needs a guitar, the
-tone skill asks the user which guitar to use and offers to save their choice
-here (confirm-first-then-silent, matching the other prefs).
+`default_guitar` (in `preferences.json`) now names a guitar **profile** — its
+slug, `name`, or `short_name` — to default to when a tone request doesn't name
+a guitar (`HELIXGEN_DEFAULT_GUITAR` env override still works). It feeds
+tone-naming (the preset title, `.hsp`/`.md` filename, and description are named
+for the target guitar's `short_name`). If it's unset (`null`) and the `tone`
+skill needs a guitar, the tone skill asks which guitar to use and offers to save
+the choice here (confirm-first-then-silent, matching the other prefs).
 
-There's no `helixgen prefs` CLI yet — the file is plain JSON
-(`json.load`/atomic tmp+rename write), so read or hand-edit it directly. Edit
-it by hand or let this skill write it back per the confirm-first-then-silent
-rule above.
+There's no `helixgen prefs` CLI yet — `preferences.json` is plain JSON
+(`json.load`/atomic tmp+rename write), so read or hand-edit it directly, per the
+confirm-first-then-silent rule above.
+
+#### Migrating a pre-library home
+
+An existing user whose `~/.helixgen` predates the library layout should be
+offered `helixgen library migrate` — a one-shot, idempotent migration into the
+new layout. The stderr warning about deprecated `instruments` /
+`preset_output_dir` keys (above) is the usual trigger. It:
+
+- moves each manifest tone's `.hsp` into `library/tones/<slug>.hsp` under the
+  new naming schema, folds a sibling `.md` into `description_md`, writes
+  per-tone metadata JSON, and re-keys the manifest;
+- **copies** (never moves) each mapped IR WAV into `library/irs/<pack>/` with a
+  scaffolded metadata sidecar, and rewrites `mapping.json`;
+- seeds a guitar profile from each `preferences.instruments` entry;
+- removes the deprecated `instruments` / `preset_output_dir` keys from
+  `preferences.json` and reconciles `default_guitar`.
+
+**Run `helixgen library migrate --dry-run` FIRST** — it prints an editable plan
+(JSON) and mutates nothing; recommend the user review/correct it before
+executing (`--plan <plan.json>` then runs a reviewed plan). EXPLAIN what migrate
+does and get explicit user consent before running the real (non-dry-run)
+migration.
 
 ### 1. Confirm the device model
 
@@ -346,11 +405,22 @@ If the user mentions IRs or `With Pan`/IR cab blocks:
 - **If present**, proceed; don't re-ask. The user can edit the memory if
   they reorganize.
 
+**`register-irs` and `ir-scan` now COPY each WAV into the library by default.**
+Each imported WAV is copied into `library/irs/<pack>/`, a metadata sidecar
+`library/irs/<pack>/<name>.json` is scaffolded, and `mapping.json` (now at
+`library/irs/mapping.json`, auto-bridged from the legacy location) points at the
+copy. `--no-copy` opts out (registers the WAV in place, no sidecar). After a
+copy-import, **enrich each sidecar** — see **Enriching IR metadata (sidecars)**
+below. Paid IR audio stays gitignored (`library/irs/**/*.wav`), so the copies
+are never committed.
+
 ### Registering a single IR mid-conversation
 
 If the user names one specific WAV, run `helixgen register-irs <wav>` — it
-prints the computed `<hash>  <wav>` pair. This changes `mapping.json` — see
-**Git-commit IR library changes** below. (To hash without registering
+copies the WAV into `library/irs/<pack>/`, scaffolds a metadata sidecar, points
+`library/irs/mapping.json` at the copy, and prints the computed `<hash>  <wav>`
+pair (`--no-copy` registers in place without a sidecar). Enrich the new sidecar
+per **Enriching IR metadata (sidecars)** below. (To hash without registering
 anything, `helixgen irhash <wav-or-dir>... [--json]` is stateless.)
 
 ### 3. Recall IR preferences
@@ -415,36 +485,95 @@ stray WAV), catalog it in `<ir-library>/_catalog/`: read the pack's
 FFT-measure each mix's band energy for bright/dark/beefy/tight tags, and write
 `_catalog/<slug>.md` from the template + controlled vocabulary in
 `_catalog/README.md` (its "Adding a new pack" section is the full procedure).
-This keeps "which IR is beefiest/brightest/best-for-X" answerable by grep.
+This keeps "which IR is beefiest/brightest/best-for-X" answerable by grep. Also
+enrich each IR's per-IR sidecar (see **Enriching IR metadata (sidecars)**
+below) — same manual mining, written as per-IR JSON in the helixgen home.
+
+## Enriching IR metadata (sidecars)
+
+Every copy-imported IR gets a scaffolded sidecar at
+`library/irs/<pack>/<name>.json`. Core fills only `irhash`, `wav`,
+`imported_from`, and guesses `mix` from a `Mix NN` filename token; **everything
+else is yours to fill.** Enrich each sidecar after importing a pack (via
+`register-irs`/`ir-scan`) or after `helixgen library ir-backfill`. Sidecar
+(IrMeta) shape:
+
+```json
+{
+  "schema": 1,
+  "irhash": "…",
+  "wav": "…",
+  "imported_from": "…",
+  "pack": null,
+  "cab": null,
+  "speaker": null,
+  "mics": [],
+  "mix": null,
+  "tags": [],
+  "measured": null,
+  "notes_md": null
+}
+```
+
+Procedure (the same `_catalog` mining used in helixgen-core's `irs/_catalog/`):
+
+1. Read the pack's `*Manual*.pdf` for cab/speaker/amp, mic legend, per-mix mic
+   combos, and artist/usage notes → fill `cab`, `speaker`, `mics[]`, `mix`,
+   `pack`.
+2. Fill `tags[]` using **only** the controlled vocabulary (34 tags):
+   - tone: `bright dark warm neutral scooped mid-forward beefy tight boomy boxy
+     fizzy smooth articulate aggressive airy full chime`
+   - gain: `clean edge-of-breakup crunch high-gain`
+   - era: `vintage modern`
+   - use: `classic-rock blues metal thrash garage fuzz indie lead rhythm stereo
+     room`
+
+   (`helixgen library validate` flags off-vocabulary tags as WARNINGS.)
+3. *Optionally* compute a 5-band FFT `measured` dict skill-side with stdlib
+   `wave` + `numpy` in a **throwaway** script (numpy is allowed in skill-side
+   throwaway analysis scripts ONLY — never in shipped code; core leaves
+   `measured` null because core is stdlib-only). Bands (provisional): low
+   60–200 Hz, low_mid 200–500, mid 500–1200, high_mid 1200–4000, high
+   4000–10000.
+4. Write the enriched sidecar back to `library/irs/<pack>/<name>.json`.
+5. **Cross-check** the controlled-tag vocabulary against the LIVE
+   `irs/_catalog/README.md` in the user's helixgen-core checkout as you enrich
+   — that README is gitignored, so core can't verify it stayed in sync. If the
+   two diverge, note the discrepancy to the user rather than silently picking
+   one.
+
+Do **not** commit IR sidecars from this skill — core auto-commits the home repo,
+and paid-IR WAVs stay gitignored (`library/irs/**/*.wav`).
 
 ## Git-commit IR library changes
 
-Registering an IR (`mapping.json`) or cataloging a new pack (`_catalog/<slug>.md`
-+ the `_catalog/README.md` index) changes files under the IR library directory.
-If that directory is git-managed, commit just those files:
+**`mapping.json` and IR sidecars now live inside the helixgen home**
+(`library/irs/`), which core **auto-commits** — do not hand-commit them from
+this skill (and paid IR `.wav`s stay gitignored via `library/irs/**/*.wav`).
+The one thing left to hand-commit is the tonal **catalog** in the user's
+helixgen-core checkout — `_catalog/<slug>.md` + its `_catalog/README.md` index,
+a separate, user-owned repo. If that directory is git-managed, commit just
+those files:
 
-1. **Detect per-directory**: `git -C <ir-library-dir> rev-parse
+1. **Detect per-directory**: `git -C <catalog-dir> rev-parse
    --is-inside-work-tree`. If it errors or prints `false`, skip silently.
 2. **Honor `git_commit_tones`** from `preferences.json` (default `"auto"`
    commits whenever step 1 says yes; `"true"` always tries; `"false"` never
    commits).
 3. **Respect `guard_paid_irs_in_git`** (default `true`): never `git add` a
    gitignored paid IR `.wav` (see CLAUDE.md's "no paid IRs in repo" note) —
-   commit only `mapping.json` and `_catalog/*.md`. If the user has explicitly
-   turned `guard_paid_irs_in_git` off and wants a WAV tracked too, that's a
-   deliberate `git add -f` they run themselves, not something this skill does
-   for them.
-4. **Stage exactly the changed tracked files** (`git -C <ir-library-dir> add
-   -- mapping.json`, or `git -C <ir-library-dir> add -- _catalog/<slug>.md
-   _catalog/README.md`), never `-A`/`.`. Check `git -C <ir-library-dir>
-   status` first: if the repo already has unrelated staged changes, warn the
-   user and skip rather than folding them into the commit.
-5. **Commit locally, never push** — `git -C <ir-library-dir> commit -m
-   "<message>"` with a short message, e.g. `ir: register YA VX30 212 BLU Mix
-   01.wav` or `ir: catalog Ownhammer OH V30 pack`.
+   commit only the `_catalog/*.md` files. If the user has explicitly turned
+   `guard_paid_irs_in_git` off and wants a WAV tracked too, that's a deliberate
+   `git add -f` they run themselves, not something this skill does for them.
+4. **Stage exactly the changed tracked files** (`git -C <catalog-dir> add --
+   _catalog/<slug>.md _catalog/README.md`), never `-A`/`.`. Check `git -C
+   <catalog-dir> status` first: if the repo already has unrelated staged
+   changes, warn the user and skip rather than folding them into the commit.
+5. **Commit locally, never push** — `git -C <catalog-dir> commit -m
+   "<message>"` with a short message, e.g. `ir: catalog Ownhammer OH V30 pack`.
 
-Keep every git command scoped with `-C <ir-library-dir>` (as in step 1) —
-your shell's cwd is usually **not** the IR library, so an unscoped
+Keep every git command scoped with `-C <catalog-dir>` (as in step 1) — your
+shell's cwd is usually **not** the catalog repo, so an unscoped
 `git add`/`commit` targets the wrong repo.
 
 ## After generating a preset that uses user IRs

@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.24.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.25.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -125,15 +125,18 @@ backup written first — nothing for you to do) — the **tone library**. Each
 tone is a record (content `.hsp` + name + management **intent**): a desired
 **user slot** (`null` = off device, `"auto"`, or `"1A".."128D"` — the slot
 vocabulary runs to bank 128, per `device add --slot`, not just bank 8),
-ordered **setlist memberships**, and provenance `source`. A specific Helix's
-**observed** placement is deliberately NOT in the manifest (manifest v3,
-0.22.0) — it lives per device serial at `~/.helixgen/devices/<serial>.json`.
-Placement observations there are rebuilt wholesale by every `device sync`
-(the first sync after a v2→v3 migration harmlessly re-pushes placement for
-every managed tone), and since 0.24.0 the same file also carries the
-**persisted discover record** (ip/model/firmware — discovery fields
-round-trip through sync rebuilds), so losing the file costs only the device
-address: re-run `helixgen device discover` and sync again. **"On the device" ⟺ the tone has a slot.** There is
+ordered **setlist memberships**, and provenance `source`. Manifest v3 is **intent-only** (desired slot + setlist memberships). A specific
+Helix's **observed** placement (`cid`/`posi`) is deliberately NOT in the manifest
+(manifest v3, 0.22.0) — it lives per device serial (the `serial` from `device
+info`'s `/ProductInfoGet`) at `~/.helixgen/devices/<serial>.json`, **not
+committed** (`devices/` is gitignored), and its placement observations are
+rebuilt wholesale by every `device sync` (and the first sync after a v2→v3
+migration harmlessly re-pushes placement for every managed tone). Since 0.24.0
+the same `devices/<serial>.json` also carries the device's discovered **address**
+record (`ip`, `ip_updated_at`, `model`, `firmware`), written by `device discover`
+and round-tripped through sync rebuilds — so losing the file costs only one
+re-`discover` (placement rebuilds on the next sync). **"On the device" ⟺ the tone has a
+slot.** There is
 **no separate slot ledger** — this one manifest is the single management-intent
 record for "which of my tones goes where." Every generated tone
 **auto-registers** here (off-device by default); `device add`/`unsync` set the
@@ -486,6 +489,13 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},
   gc:{deleted}, irs:[…], errors:[…]}`. Read `errors`.
 
+> **Heads-up after a manifest v2→v3 migration:** the migration splits per-device
+> observed placement out into `devices/<serial>.json`, so the **first `device
+> sync` after migrating re-pushes every managed tone once** — the device's real
+> serial hasn't observed anything yet under its own file, so sync treats the
+> whole managed set as needing a placement refresh. This is harmless and
+> idempotent; don't be alarmed by the one-time full re-push.
+
 > The old directory-mirror `device sync [dir]` is **gone**. Sync is now
 > manifest- and setlist-driven; membership is managed with `device setlist`,
 > not by globbing a directory.
@@ -555,7 +565,7 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
-### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0)
+### Loudness: `device measure` + `device normalize` (0.23.0)
 
 ```bash
 helixgen device measure [--seconds N] [--min-playing N] [--json]     # read-only
@@ -740,7 +750,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.24.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.25.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
