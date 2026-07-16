@@ -412,9 +412,10 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   slots 13/27), so never derive a coordinate from a block's list position —
   the pre-0.21.0 computed-index translation rule is dead (see the CLI.md
   live-ops erratum). An op at
-  a slot holding no block is *silently* ineffective (the device still
-  acks/echoes) — the echo is not proof; read back with `device params` or
-  watch `device meters`.
+  a slot holding no block is *silently* ineffective (a `set-param` write is
+  dropped with no ack; a bypass toggle may still echo) — an echo is not
+  proof an op landed; read back with `device params` or watch
+  `device meters`.
 - **Discover pids with `device params <path> <block>` — never guess.** It
   lists each param's numeric pid, name, current value, type, and range.
 - **Param values are in RAW units** — dB, Hz, 0–1 knob positions, enum ints,
