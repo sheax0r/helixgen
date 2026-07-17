@@ -565,7 +565,7 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
-### Loudness: `device measure` + `device normalize` (0.23.0; library recording 0.26.0)
+### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0; library recording 0.26.0)
 
 ```bash
 helixgen device measure [--seconds N] [--min-playing N] [--json]     # read-only
@@ -625,7 +625,9 @@ no compounding). The essentials:
   `helixgen library show <name> --json`. Latest run wins (records
   overwrite); in-band zero-trim runs still record (they confirm the tone
   measures level-matched); dry-runs and non-library `.hsp` files never
-  touch metadata.
+  touch metadata. Note: a snapshot-scope `--yes` run with ANY skipped
+  target records NO library metadata even though the ok targets' trims
+  ARE written to the `.hsp` — re-run cleanly to get the record.
 
 #### Running normalize well — field-proven guidance (live hardware, 2026-07-16)
 
@@ -653,7 +655,7 @@ hardware:
   ≈ +7. Pick the target at or below the **quietest chain's ceiling** (the
   dry-run report shows every target's measured gain — read it before
   choosing `--target-db`).
-- **Chain-out `output_db` at/above 0 dBFS in the results = in-chain clipping
+- **Chain-out `output_db` over 0 dBFS in the results = in-chain clipping
   that normalize CANNOT fix** — its trim is applied downstream of the meter
   taps. Don't chase it with level moves: flag it to the user as a
   **gain-staging problem inside the chain** (amp/drive levels — the `tone`
@@ -833,5 +835,5 @@ Tightly:
 | Treating `device normalize` as a device write, or skipping the sync after `--yes` | Normalize writes trims into the **local `.hsp` only** — the device copy is untouched until the next `device sync <setlist>` / `device install`; and it's dry-run by default — show the user the dry-run report before `--yes` |
 | Re-running `device measure` to confirm a normalize trim landed | The meter taps sit upstream of the output-block gain, so the trim is invisible to `measure` by design — a confirmation re-measure falsely reads "no change"; trust the dB math |
 | Level-matching across presets/setlists with the default anchor (no `--target-db`) | The anchor equalizes within one scope only, and on snapshot scope can drag a preset to its quietest snapshot's level — always pass one explicit absolute `--target-db` and reuse it across runs (see the field-proven guidance above) |
-| Trying to fix a target whose chain-out `output_db` is at/above 0 dBFS with normalize | That's in-chain clipping upstream of the trim — normalize can't touch it; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
+| Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | That's in-chain clipping upstream of the trim — normalize can't touch it; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
 | Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |

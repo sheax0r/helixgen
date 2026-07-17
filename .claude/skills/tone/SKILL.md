@@ -627,7 +627,7 @@ touching the tone:
   level-matched: don't propose output-level moves on top of it (and know
   that hand-editing output `level` will unbalance what normalize set).
 - **Chain-out clipping** — each target's `output_db` is chain-out dBFS;
-  at/above 0 dBFS means **in-chain clipping** that no output trim fixes.
+  over 0 dBFS means **in-chain clipping** that no output trim fixes.
   Fix the gain staging (amp/drive `Level`/`Gain` params) *first* instead of
   proposing tone tweaks on top of a clipping chain — then have the user
   re-run `device normalize`.

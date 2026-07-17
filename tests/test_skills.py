@@ -439,7 +439,7 @@ def test_device_skill_documents_normalize_field_guidance() -> None:
     # the ceiling: output level maxes at +20 dB, clean chains cap the target
     assert re.search(r"\+20\s?dB", text)
     assert re.search(r"ceiling", text, re.IGNORECASE)
-    # chain-out clipping: output_db at/above 0 dBFS, normalize cannot fix it
+    # chain-out clipping: output_db over 0 dBFS, normalize cannot fix it
     assert "output_db" in text
     assert re.search(r"0\s?dBFS", text)
     assert re.search(r"gain.stag", text, re.IGNORECASE)
