@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.25.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.26.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -565,7 +565,7 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
-### Loudness: `device measure` + `device normalize` (0.23.0)
+### Loudness: `device measure` + `device normalize` (0.23.0; library recording 0.26.0)
 
 ```bash
 helixgen device measure [--seconds N] [--min-playing N] [--json]     # read-only
@@ -614,6 +614,61 @@ no compounding). The essentials:
 - It holds the `editbuffer` lock even in dry-run (it recalls snapshots /
   loads presets while measuring), and it changes the device's ACTIVE tone
   selection during the run (restored best-effort afterwards).
+- **`--yes` also records the run on the tone's library metadata (0.26.0).**
+  When the written `.hsp` is a registered tone-library variant, the run is
+  written onto that variant as a `normalized` record carrying the full
+  per-target measurement telemetry (exactly what this verb's `--json`
+  reports — `gain_db`, `output_db`, `total_db`, `trim_db`, `applied`, …;
+  the verb's `--json` lists the recorded variants under `library_recorded`).
+  Human summaries surface in `helixgen describe <tone>` and
+  `helixgen library show <name>`; the full telemetry is under
+  `helixgen library show <name> --json`. Latest run wins (records
+  overwrite); in-band zero-trim runs still record (they confirm the tone
+  measures level-matched); dry-runs and non-library `.hsp` files never
+  touch metadata.
+
+#### Running normalize well — field-proven guidance (live hardware, 2026-07-16)
+
+How to brief the player and pick the flags; all of this is validated on real
+hardware:
+
+- **One riff, played steadily, through the whole run.** The player plays the
+  SAME riff at the same intensity for the entire run; each target is
+  measured for roughly one window, the snapshot recalls / preset loads
+  between windows happen automatically, and the preset's prior state is
+  restored when the run ends. The player's only job is to keep playing.
+- **`--seconds 10` suffices in practice** — the default 20 is conservative.
+  The playing gate needs **pitched, steady playing** (roughly 4 s of
+  credited playing per window minimum); muted scratching, noodling pauses,
+  or silence don't credit the gate.
+- **Cross-tone level matching: ALWAYS pass an explicit absolute
+  `--target-db`.** The default anchor (the first target that measures ok)
+  equalizes **within that scope only** — separate runs won't land on a
+  common level — and on snapshot scope the anchor can drag the whole preset
+  down to its quietest snapshot's level. Pick one absolute target and reuse
+  it on every preset/setlist that should sit level with the others.
+- **A clean chain caps the reachable target.** The output-block `level` maxes
+  out at **+20 dB**, so a target above `chain gain + 20` is unreachable —
+  e.g. a clean snapshot measuring −13 dB chain gain tops out at a total of
+  ≈ +7. Pick the target at or below the **quietest chain's ceiling** (the
+  dry-run report shows every target's measured gain — read it before
+  choosing `--target-db`).
+- **Chain-out `output_db` at/above 0 dBFS in the results = in-chain clipping
+  that normalize CANNOT fix** — its trim is applied downstream of the meter
+  taps. Don't chase it with level moves: flag it to the user as a
+  **gain-staging problem inside the chain** (amp/drive levels — the `tone`
+  skill's territory), then normalize again once the chain is clean.
+- **Re-runs are idempotent** (total-loudness math + the tolerance dead-band):
+  re-running with a different `--target-db` is safe — trims move to the new
+  target and **nothing compounds**.
+
+> **WARNING — the follow-up `device sync` is a whole-managed-pool mirror.**
+> The sync that pushes your trims re-pushes **EVERY** manifest-known tone in
+> its scope whose **content hash differs** — not just the ones you just
+> normalized — and a re-push **overwrites hardware-side edits** that were
+> **never pulled back** into the local `.hsp`. Before the post-normalize
+> sync, ask/warn the user if they've been editing tones on the device
+> itself.
 
 **Manual per-snapshot counterpart.** Hand-balancing without the closed loop
 is the local edit verb, not a device verb: `helixgen set-param <preset.hsp>
@@ -750,7 +805,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.25.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.26.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
@@ -777,3 +832,6 @@ Tightly:
 | Hunting for the device's IP by hand (router UI, arp scans) or assuming a default address exists | Run `helixgen device discover` once — it persists the record and every verb resolves it; there is no built-in default IP (0.24.0), and a missing address fails fast pointing at discover |
 | Treating `device normalize` as a device write, or skipping the sync after `--yes` | Normalize writes trims into the **local `.hsp` only** — the device copy is untouched until the next `device sync <setlist>` / `device install`; and it's dry-run by default — show the user the dry-run report before `--yes` |
 | Re-running `device measure` to confirm a normalize trim landed | The meter taps sit upstream of the output-block gain, so the trim is invisible to `measure` by design — a confirmation re-measure falsely reads "no change"; trust the dB math |
+| Level-matching across presets/setlists with the default anchor (no `--target-db`) | The anchor equalizes within one scope only, and on snapshot scope can drag a preset to its quietest snapshot's level — always pass one explicit absolute `--target-db` and reuse it across runs (see the field-proven guidance above) |
+| Trying to fix a target whose chain-out `output_db` is at/above 0 dBFS with normalize | That's in-chain clipping upstream of the trim — normalize can't touch it; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
+| Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |
