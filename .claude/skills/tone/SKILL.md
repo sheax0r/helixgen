@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.25.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.26.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -604,10 +604,33 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.25.0'`.
-Don't reach for it unprompted; ear-feedback plus the table above is the
+once with `uv tool install --force 'helixgen[device,analyze]==0.26.0'`.
+The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
+from an audio input — e.g. the Stadium's USB return — via sounddevice
+before analyzing it; that additionally needs the `[capture]` extra (plus
+the PortAudio system library):
+`uv tool install --force 'helixgen[device,analyze,capture]==0.26.0'`.
+Don't reach for either unprompted; ear-feedback plus the table above is the
 normal loop. (On-device loudness leveling across snapshots/setlists is the
 `device` skill's `device normalize`.)
+
+**Read the tone's `normalized` record before proposing level/gain moves
+(0.26.0).** When a library tone has been level-matched on hardware, `device
+normalize --yes` records the run on that variant as a `normalized` record —
+a human summary prints in `helixgen describe "<tone>"` / `helixgen library
+show "<name>"`, and the full per-target measurement telemetry is under
+`helixgen library show "<name>" --json`. Two things to read off it before
+touching the tone:
+
+- **Level-match state** — per-target `trim_db` / `total_db` against the
+  run's `target_total_db`. A tone whose targets measured in band is already
+  level-matched: don't propose output-level moves on top of it (and know
+  that hand-editing output `level` will unbalance what normalize set).
+- **Chain-out clipping** — each target's `output_db` is chain-out dBFS;
+  over 0 dBFS means **in-chain clipping** that no output trim fixes.
+  Fix the gain staging (amp/drive `Level`/`Gain` params) *first* instead of
+  proposing tone tweaks on top of a clipping chain — then have the user
+  re-run `device normalize`.
 
 ## Common Mistakes
 

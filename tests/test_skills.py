@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.25.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.26.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -415,6 +415,80 @@ def test_tone_skill_documents_snapshot_edits_and_analyze() -> None:
     assert "helixgen[device,analyze]==" in text, (
         "tone: how to add the analyze extra (uv tool install --force) not shown"
     )
+
+
+# --- core 0.26.0 vocabulary (normalize field guidance + `normalized` record) --
+
+
+def test_device_skill_documents_normalize_field_guidance() -> None:
+    """Hardware-proven normalize run guidance (live session 2026-07-16)."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    # the playing protocol: one riff, played steadily, through the whole run
+    assert re.search(r"same riff", text, re.IGNORECASE)
+    # --seconds 10 suffices; the default 20 is conservative
+    assert "--seconds 10" in text
+    assert re.search(r"default\s+20.{0,40}conservative", text, re.DOTALL | re.IGNORECASE)
+    # the gate needs pitched, steady playing (~4 s credited per window)
+    assert "pitched" in text
+    assert re.search(r"4\s?s\b", text)
+    # cross-tone matching: always an explicit absolute --target-db
+    assert re.search(r"ALWAYS pass an explicit", text)
+    assert "--target-db" in text
+    # the default-anchor trap: snapshot scope can drag to the quietest snapshot
+    assert "quietest" in text
+    # the ceiling: output level maxes at +20 dB, clean chains cap the target
+    assert re.search(r"\+20\s?dB", text)
+    assert re.search(r"ceiling", text, re.IGNORECASE)
+    # chain-out clipping: output_db over 0 dBFS, normalize cannot fix it
+    assert "output_db" in text
+    assert re.search(r"0\s?dBFS", text)
+    assert re.search(r"gain.stag", text, re.IGNORECASE)
+    # re-runs with a different target are safe (nothing compounds)
+    assert re.search(r"different\s+(`?--target-db`?|target)", text)
+    assert re.search(r"nothing compounds|no compounding", text, re.IGNORECASE)
+
+
+def test_device_skill_warns_sync_is_whole_pool_mirror() -> None:
+    """The follow-up sync re-pushes EVERY hash-changed managed tone (not just
+    the normalized ones) and overwrites hardware-side edits never pulled back."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"re-push(es)?\s+\*{0,2}EVERY", text)
+    assert re.search(r"content hash differs", text)
+    assert re.search(r"hardware-side edits", text)
+    assert re.search(r"never pulled back", text)
+
+
+def test_device_skill_documents_normalized_library_record() -> None:
+    """`device normalize --yes` records a `normalized` record on library
+    variants (0.26.0) — summaries in describe/library show, telemetry in
+    --json."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "`normalized`" in text
+    assert "library show" in text
+    assert re.search(r"library show[^\n]*--json", text)
+    assert "per-target" in text
+
+
+def test_tone_skill_documents_record_capture_extra() -> None:
+    """analyze-audio's EXPERIMENTAL --record path needs the [capture] extra."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "--record" in text
+    assert "[capture]" in text
+    assert re.search(r"EXPERIMENTAL.{0,200}--record|--record.{0,200}EXPERIMENTAL",
+                     text, re.DOTALL)
+    # the Stadium's USB return is the capture source story
+    assert re.search(r"USB return", text)
+
+
+def test_tone_skill_reads_normalized_record_before_tweaks() -> None:
+    """The tone skill consumes the `normalized` telemetry: level-match state
+    plus chain-out output_db (clipping) before proposing tone tweaks."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "`normalized`" in text
+    assert "output_db" in text
+    assert re.search(r"library show[^\n]*--json", text)
+    assert re.search(r"clipping", text, re.IGNORECASE)
+    assert re.search(r"gain.stag", text, re.IGNORECASE)
 
 
 def test_tone_skill_documents_patch_loop() -> None:

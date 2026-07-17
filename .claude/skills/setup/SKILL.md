@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.25.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.26.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -154,13 +154,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.25.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.26.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.25.0'
+  uv tool install 'helixgen[device]==0.26.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
