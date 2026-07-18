@@ -48,3 +48,7 @@ To cut release:
 3. Workflow auto-creates annotated tag `helixgen--vX.Y.Z`, fast-forwards `stable` to that commit. Idempotent; refuses force-push if `stable` diverged.
 
 Do **not** manually `git branch -f stable …`, push `stable`, or push `helixgen--v*` tag — workflow owns those refs. Users get release via `/plugin` update. Plugin release needed for plugin-surface changes (skills, block-library data, docs) — and to bump engine version pin skills carry. Core releases first (PyPI `helixgen`, tag `vX.Y.Z`), then this repo bumps pin in skills + README, cuts own release.
+
+## ralphex
+
+Implementation tasks driven from helix coordination workspace run via [ralphex](https://github.com/umputun/ralphex) plan files in `docs/plans/` (scaffold: `docs/plans/TEMPLATE.md`); completed plans move to `docs/plans/completed/`. Launcher syncs local `main` from `github/main` before run. Review = ralphex built-in pipeline (`external_review_tool = none`). `default_branch = main` pinned in `.ralphex/config` — remote named `github`, so no `origin/HEAD` auto-detect. `.ralphex/config` tracked; `.ralphex/worktrees/` + `.ralphex/progress/` runtime state, gitignored.
