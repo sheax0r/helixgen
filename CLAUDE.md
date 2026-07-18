@@ -115,3 +115,15 @@ Do **not** manually `git branch -f stable …`, push `stable`, or push a
 (skills, block-library data, docs) — and to bump the engine version pin the
 skills carry. Core releases first (PyPI `helixgen`, tag `vX.Y.Z`), then this
 repo bumps the pin in the skills + README and cuts its own release.
+
+## ralphex
+
+Implementation tasks driven from the helix coordination workspace run via
+[ralphex](https://github.com/umputun/ralphex) plan files in `docs/plans/`
+(scaffold: `docs/plans/TEMPLATE.md`); completed plans move to
+`docs/plans/completed/`. The launcher syncs local `main` from `github/main`
+before running — `default_branch` is pinned in `.ralphex/config` because the
+remote is named `github`, so ralphex can't auto-detect it from `origin/HEAD`.
+Review is ralphex's built-in review pipeline (`external_review_tool = none`).
+`.ralphex/config` is tracked; `.ralphex/worktrees/` and `.ralphex/progress/`
+are runtime state and gitignored.
