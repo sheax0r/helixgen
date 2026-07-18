@@ -21,7 +21,7 @@ There is no MCP server and no `.mcp.json`. The skills drive the `helixgen`
 **CLI**, provisioned as an isolated tool:
 
 ```bash
-uv tool install 'helixgen[device]==0.26.0'
+uv tool install 'helixgen[device]==0.27.0'
 ```
 
 The `setup` skill's step 0 performs/verifies this (`helixgen --version`),

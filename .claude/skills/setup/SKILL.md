@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.26.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.27.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -154,13 +154,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.26.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.27.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.26.0'
+  uv tool install 'helixgen[device]==0.27.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -248,9 +248,15 @@ The user's guitars are stored as **profiles** — one JSON file per guitar at
 helixgen home library, **not** in `preferences.json`. The profile file is the
 on-disk source of truth for a guitar. Scaffolding and editing profiles
 (**including the control inventory**) via structured questions is this skill's
-job — it replaces the old `instruments`-array onboarding. There is **no CLI
-verb to create a profile** — this skill authors the JSON file directly.
-Read/verify existing profiles with `helixgen library show <guitar> --json` and
+job — it replaces the old `instruments`-array onboarding. Create new profiles
+with `helixgen library add-guitar <name> [--short-name SHORT] [--type
+guitar|bass]` (0.27.0) — it scaffolds the schema-1 skeleton at
+`library/guitars/<slug>.json` (name, short_name, type; every other field
+null/empty for this skill to enrich) and auto-commits the home repo like every
+other library write; then fill in the remaining fields by editing that JSON
+directly. A profile already at `slugify(name)` is refused (exit 1) — edit the
+existing JSON instead (`library validate` checks it). Read/verify existing
+profiles with `helixgen library show <guitar> --json` and
 `helixgen library list --guitars [--json]`.
 
 Profile shape:
@@ -288,7 +294,8 @@ capture the physical controls accurately.
 its name, a short name for display, type (guitar/bass), pickups, construction,
 what it's tonally for (→ `character_md`), the genres it suits, and its physical
 controls — every knob, switch, pickup selector (with its positions), and
-push-pull. Write the answers to `library/guitars/<slug>.json`. If a
+push-pull. Run `library add-guitar` with the name/short-name/type answers,
+then write the rest into `library/guitars/<slug>.json`. If a
 `user_guitars.md` memory exists, seed one profile per guitar from it (the
 user's confirmed guitars: **Les Paul Jr** — P-90 bridge, vol + tone only;
 **ESP LTD EC-1000** — active EMG HH, 3-way selector; **Strandberg Boden
@@ -296,10 +303,11 @@ Essential 6** — HSS, 5-way; **Ibanez Prestige** — HSH, 5-way), still confirm
 the control inventory with the user.
 
 **Committing:** do **not** git-commit the profile yourself. Core owns the
-home-repo commits — any library-mutating verb runs `git add -A` on the helixgen
-home, so a directly-written profile is swept into core's next auto-commit. Just
-note briefly that it'll be committed on the next library write, rather than
-committing it here.
+home-repo commits — `library add-guitar` auto-commits the scaffold it writes,
+and any later library-mutating verb runs `git add -A` on the helixgen home, so
+the directly-edited enrichment is swept into core's next auto-commit. Just
+note briefly that enrichment edits land on the next library write, rather than
+committing them here.
 
 `default_guitar` (in `preferences.json`) now names a guitar **profile** — its
 slug, `name`, or `short_name` — to default to when a tone request doesn't name

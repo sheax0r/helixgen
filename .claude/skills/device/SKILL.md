@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.26.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.27.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -565,10 +565,10 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
-### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0; library recording 0.26.0)
+### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0; library recording 0.26.0, loop source 0.27.0)
 
 ```bash
-helixgen device measure [--seconds N] [--min-playing N] [--json]     # read-only
+helixgen device measure [--seconds N] [--min-playing N] [--source input|loop] [--json]   # read-only
 helixgen device normalize <preset.hsp> [--json]                      # snapshot scope, DRY-RUN
 helixgen device normalize --setlist <name> [--json]                  # setlist scope, DRY-RUN
 helixgen device normalize <preset.hsp> --yes                         # write trims to the LOCAL .hsp
@@ -606,6 +606,21 @@ no compounding). The essentials:
   placement, name mismatch) get a warning and the run **exits 1** to flag
   the partial result — re-run for the stragglers; already-written files
   re-measure in band.
+- **`--source loop` (0.27.0) — measuring off a front-of-chain looper.** When
+  a looper replays a recorded signal instead of live playing, the input-jack
+  gate reads pure silence (no pitch, no input level — every sample would gate
+  out), so loop mode gates on **chain-out level** instead. With no input
+  reference, `gain_db` comes back `null` — the number to compare across
+  targets is the raw **`output_db`** (the looped source is identical across
+  targets by construction, so output-level differences ARE the chain
+  differences). Works on both `measure` and `normalize`; keep the SAME loop
+  replaying across every target of a run. Idempotency is unchanged (the
+  meter taps sit upstream of the trims either way).
+- **An unreachable device fails fast (0.27.0).** `measure` — like `device
+  tuner`/`device meters` — preflights reachability with one cheap TCP probe
+  of the `--port` control port before streaming (the `--port` flag is
+  honored now): a powered-off/unreachable device errors immediately instead
+  of streaming silence for the whole window and ending in "no meter data".
 - **Don't re-measure to "confirm" a trim.** The meter taps sit UPSTREAM of
   the output-block gain, so a written trim is invisible to `device measure`
   by design — the loop trusts the dB math (the output `level` is dB-native,
@@ -779,7 +794,12 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   re-authors an `.hsp`-sourced entry or re-pushes an `.sbe`-sourced one
   (`--setlist` takes `user`/`factory`/a device setlist name here too). Tones
   recorded from `save` (edit buffer) or `create` (on-device copy) have no local
-  source and can't be restored this way — back them up first. A re-authored
+  source and can't be restored this way — back them up first. `--force` pushes
+  into an occupied **pool** slot (the occupant is not deleted), but an occupied
+  **named-setlist** position is refused even with `--force` (0.27.0) — the
+  error names the incumbent; proceeding would stack a second reference at one
+  position. Remove the incumbent reference first (`device delete <cid>
+  --setlist <name>`), then re-run. A re-authored
   `.hsp` is a local file change — see **Git-commit local artifact changes**
   above.
 
@@ -807,7 +827,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.26.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.27.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
@@ -837,3 +857,5 @@ Tightly:
 | Level-matching across presets/setlists with the default anchor (no `--target-db`) | The anchor equalizes within one scope only, and on snapshot scope can drag a preset to its quietest snapshot's level — always pass one explicit absolute `--target-db` and reuse it across runs (see the field-proven guidance above) |
 | Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | That's in-chain clipping upstream of the trim — normalize can't touch it; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
 | Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |
+| Measuring a looper-replayed signal with the default input gate | The input jack is silent while a front-of-chain looper replays, so the default gate credits nothing and the window fails — pass `--source loop` (and compare raw `output_db`, not `gain_db`, across targets) |
+| Reaching for `slots restore --force` to overwrite an occupied setlist position | `--force` only covers an occupied **pool** slot; an occupied named-setlist position is refused (the error names the incumbent) — `device delete <cid> --setlist <name>` the incumbent reference first, then re-run |

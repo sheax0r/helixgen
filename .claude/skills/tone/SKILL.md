@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.26.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.27.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -604,12 +604,20 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.26.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.27.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.26.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.27.0'`.
+The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
+passing any of them without `--record` is a **usage error** (0.27.0; they
+used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
+decoded **whole-file into memory** as float64 (~2.7 GB peak for an hour of
+48 kHz stereo — keep captures to minutes; there is no streaming mode), and
+the momentary/short-term LUFS **maxima** are computed on a 100 ms hop, so a
+peak straddling two hop positions can under-read by a fraction of a dB
+(integrated LUFS is unaffected).
 Don't reach for either unprompted; ear-feedback plus the table above is the
 normal loop. (On-device loudness leveling across snapshots/setlists is the
 `device` skill's `device normalize`.)

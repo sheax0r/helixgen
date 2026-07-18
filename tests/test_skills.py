@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.26.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.27.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -503,3 +503,64 @@ def test_tone_skill_documents_coordinates() -> None:
     txt = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
     assert "lane" in txt and "pos" in txt
     assert "duplicate" in txt.lower()
+
+
+# --- core 0.27.0 vocabulary (loop-source measuring, restore --force refusal,
+# telemetry reachability preflight, analyze-audio guardrails, add-guitar) ------
+
+
+def test_device_skill_documents_loop_source() -> None:
+    """`--source loop` (0.27.0): chain-out gating, null gain_db, raw output_db."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "--source loop" in text
+    # loop mode gates on chain-out level (the input-jack gate reads silence)
+    assert re.search(r"loop.{0,400}chain-out level", text, re.DOTALL | re.IGNORECASE)
+    assert re.search(r"gain_db.{0,60}null|null.{0,60}gain_db", text, re.DOTALL)
+    # the cross-target comparison number is the RAW output_db
+    assert re.search(r"raw[^\n]{0,80}output_db|output_db[^\n]{0,80}raw", text)
+    # one loop, kept replaying across every target of a run
+    assert re.search(r"SAME loop", text, re.IGNORECASE)
+
+
+def test_device_skill_documents_restore_force_refusal() -> None:
+    """slots restore --force refuses an occupied named-setlist position (0.27.0)."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"occupied[^\n]{0,80}(setlist|position)", text, re.IGNORECASE)
+    assert re.search(r"refus\w+[^.]{0,120}`?--force`?|`?--force`?[^.]{0,120}refus", text)
+    assert "incumbent" in text
+    # pool semantics unchanged: --force still pushes into an occupied POOL slot
+    assert re.search(r"--force[^\n]{0,120}pool|pool[^\n]{0,120}--force",
+                     text, re.IGNORECASE)
+
+
+def test_device_skill_documents_reachability_preflight() -> None:
+    """tuner/meters/measure fail fast on an unreachable device; --port honored."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"preflight", text, re.IGNORECASE)
+    assert re.search(r"unreachable|powered-off", text, re.IGNORECASE)
+    assert "--port" in text
+
+
+def test_tone_skill_documents_analyze_audio_guardrails() -> None:
+    """analyze-audio 0.27.0: capture flags need --record; memory + hop caveats."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    # --input/--rate/--channels without --record is now a usage error
+    assert "--input" in text and "--rate" in text and "--channels" in text
+    assert re.search(r"usage error", text, re.IGNORECASE)
+    # whole-file in-memory decode: keep captures short
+    assert re.search(r"whole.file into memory", text, re.IGNORECASE)
+    assert re.search(r"minutes", text)
+    # momentary/short-term maxima ride a 100 ms hop (integrated unaffected)
+    assert re.search(r"100\s?ms hop", text)
+    assert re.search(r"integrated[^\n]{0,60}unaffected", text, re.IGNORECASE)
+
+
+def test_setup_skill_documents_add_guitar() -> None:
+    """`library add-guitar` (0.27.0) is the core write path for new profiles."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    assert "library add-guitar" in text
+    assert "--short-name" in text
+    # an existing profile at slugify(name) is refused — edit it instead
+    assert re.search(r"add-guitar.{0,600}refused", text, re.DOTALL | re.IGNORECASE)
+    # the old direct-JSON-write creation story must not survive
+    assert "no CLI verb to create a profile" not in text
