@@ -797,8 +797,8 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   source and can't be restored this way — back them up first. `--force` pushes
   into an occupied **pool** slot (the occupant is not deleted), but an occupied
   **named-setlist** position is refused even with `--force` (0.27.0) — the
-  error names the incumbent; proceeding would stack a second reference at one
-  position. Remove the incumbent reference first (`device delete <cid>
+  error identifies the incumbent reference (by cid); proceeding would stack a
+  second reference at one position. Remove the incumbent reference first (`device delete <cid>
   --setlist <name>`), then re-run. A re-authored
   `.hsp` is a local file change — see **Git-commit local artifact changes**
   above.
@@ -858,4 +858,4 @@ Tightly:
 | Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | That's in-chain clipping upstream of the trim — normalize can't touch it; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
 | Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |
 | Measuring a looper-replayed signal with the default input gate | The input jack is silent while a front-of-chain looper replays, so the default gate credits nothing and the window fails — pass `--source loop` (and compare raw `output_db`, not `gain_db`, across targets) |
-| Reaching for `slots restore --force` to overwrite an occupied setlist position | `--force` only covers an occupied **pool** slot; an occupied named-setlist position is refused (the error names the incumbent) — `device delete <cid> --setlist <name>` the incumbent reference first, then re-run |
+| Reaching for `slots restore --force` to overwrite an occupied setlist position | `--force` only covers an occupied **pool** slot; an occupied named-setlist position is refused (the error identifies the incumbent by cid) — `device delete <cid> --setlist <name>` the incumbent reference first, then re-run |
