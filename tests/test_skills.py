@@ -574,6 +574,23 @@ def test_device_skill_documents_discover_forget_and_port_default() -> None:
     )
 
 
+def test_setup_skill_documents_discover_port_and_ip_rejection() -> None:
+    """#77 surfaces in setup's discover section: the persisted nonstandard RPC
+    `port` as the `--port` default (2002 otherwise) and the empty/whitespace
+    `--ip` rejection (behavior change — no longer treated as unset)."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    # discover persists a nonstandard port; it becomes the --port default
+    assert "nonstandard" in text
+    assert re.search(r"`--port`[\s\S]{0,160}2002", text), (
+        "setup: --port default (2002 unless nonstandard) not stated"
+    )
+    # empty/whitespace --ip is rejected (behavior change #77), not treated as unset
+    assert "whitespace-only `--ip`" in text
+    assert re.search(r"whitespace-only `--ip`[\s\S]{0,160}reject", text, re.IGNORECASE), (
+        "setup: empty/whitespace --ip rejection not stated"
+    )
+
+
 def test_setup_skill_documents_add_guitar() -> None:
     """`library add-guitar` (0.27.0) is the core write path for new profiles."""
     text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
