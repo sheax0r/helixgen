@@ -13,7 +13,9 @@ Standing constraints for any plan in this repo:
   echoed in `tone`/`device` and README).
 - Never commit paid IR packs, personal device exports, or WAV audio.
 - Do not bump `.claude-plugin/*.json` versions unless the plan explicitly
-  cuts a release; never touch `stable` or `helixgen--v*` tags by hand.
+  cuts a release — bumping `plugin.json` + `marketplace.json` fires the
+  automated release workflow when merged to `main` (`release.yml` triggers
+  on those paths); never touch `stable` or `helixgen--v*` tags by hand.
 
 ### Task 1: <name>
 
