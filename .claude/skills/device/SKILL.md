@@ -31,7 +31,11 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   (`~/.helixgen/devices/<serial>.json`). There is **no built-in default IP**
   any more: with none of the three available, the verb **fails fast with an
   instructive error naming `device discover`** — it never stalls on a wrong
-  guessed address. See **Finding the device** below; `HELIXGEN_HELIX_IP` is
+  guessed address. An **empty or whitespace-only `--ip`** (typically an unset
+  shell variable that expanded to nothing) is **rejected** at parse time with a
+  clear message and a nonzero exit — it is no longer silently treated as unset
+  (behavior change, #77); omit the flag to fall back to the record, or pass a
+  real address. See **Finding the device** below; `HELIXGEN_HELIX_IP` is
   an override for special cases, not the primary path.
 - `HELIXGEN_LIBRARY` — needed by verbs that touch the block library
   (`install`/`sync` transcode `.hsp` content). Same resolution as the other
@@ -79,6 +83,7 @@ consulted first, so you never re-derive behavior from source.
 
 ```bash
 helixgen device discover [--timeout N] [--json]
+helixgen device discover --forget SERIAL-OR-IP [--json]
 ```
 
 One-shot discovery: mDNS first (the Stadium advertises
@@ -86,9 +91,10 @@ One-shot discovery: mDNS first (the Stadium advertises
 then a bounded TCP connect-probe of this machine's **own /24 only** as a
 fallback for multicast-blocked networks. Every candidate is confirmed with
 the read-only `/ProductInfoGet` handshake before being trusted; confirmed
-devices are **persisted** (ip, serial, model, firmware) into
-`~/.helixgen/devices/<serial>.json`. Read-only on the device — no lock taken,
-nothing on the hardware changes.
+devices are **persisted** (ip, serial, model, firmware — plus the derived RPC
+`port`, recorded **only when the device advertises a nonstandard** stream port,
+observed 2001→2002 offset) into `~/.helixgen/devices/<serial>.json`. Read-only
+on the device — no lock taken, nothing on the hardware changes.
 
 - **Run it once, then work direct-to-IP.** After one successful discover,
   every device verb resolves the address from the record automatically. This
@@ -107,6 +113,17 @@ nothing on the hardware changes.
 - **Found nothing?** Ask the user for the IP and pass `--ip <addr>` (or
   prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots above the record
   in the resolution chain.
+- **Prune a stale record: `device discover --forget SERIAL-OR-IP`.** Removes
+  the persisted `devices/<serial>.json` record whose serial or `ip` matches
+  the argument, instead of discovering — use it when a device left the network
+  for good. It **never touches the network**, and exits nonzero with a clear
+  message (not a traceback) when nothing matches or no records exist yet;
+  `--json` emits the removed record paths.
+- **Nonstandard port is remembered.** When discovery sees the device advertise
+  a nonstandard stream port, `--port` now defaults to the record's persisted
+  RPC port (2002 unless nonstandard; the observed 2001→2002 offset) — so a
+  nonstandard-port device is reached without re-passing `--port` every verb. An
+  explicit `--port` always wins.
 
 ## The device model: a preset POOL + reference SETLISTS
 
@@ -133,8 +150,9 @@ committed** (`devices/` is gitignored), and its placement observations are
 rebuilt wholesale by every `device sync` (and the first sync after a v2→v3
 migration harmlessly re-pushes placement for every managed tone). Since 0.24.0
 the same `devices/<serial>.json` also carries the device's discovered **address**
-record (`ip`, `ip_updated_at`, `model`, `firmware`), written by `device discover`
-and round-tripped through sync rebuilds — so losing the file costs only one
+record (`ip`, `ip_updated_at`, `model`, `firmware`, plus `port` — the derived RPC
+port, present **only when nonstandard**; absent means the default 2002), written
+by `device discover` and round-tripped through sync rebuilds — so losing the file costs only one
 re-`discover` (placement rebuilds on the next sync). **"On the device" ⟺ the tone has a
 slot.** There is
 **no separate slot ledger** — this one manifest is the single management-intent
@@ -822,6 +840,7 @@ Tightly:
 |---|---|---|
 | a device verb fails fast with an error naming `device discover` (no `--ip`, no `$HELIXGEN_HELIX_IP`, no persisted record) | no device address is known — there is **no built-in default IP** (0.24.0); this is an immediate instructive failure, never a stall | run `helixgen device discover` once (persists the record); if it finds nothing, ask the user for the IP and pass `--ip` |
 | device verbs time out / can't connect at the recorded address after working before | the persisted discover record went stale (new network or DHCP lease) | re-run `helixgen device discover`, then retry the verb |
+| a verb exits non-zero rejecting an **empty/whitespace-only `--ip`** | `--ip ""` (usually an unset shell var that expanded to nothing) is a mistake, not a request to fall back (behavior change, #77) | omit `--ip` to fall back to the persisted record, or pass a real address |
 | setlist not found on device (`create it with \`helixgen device setlist create ...\``) | the named setlist isn't on the device yet | run `device setlist create <name>`, then re-sync |
 | `could not resolve helixgen model 'X'` | a block model doesn't bridge to the device | that tone isn't installable as-is; report it |
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |

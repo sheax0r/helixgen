@@ -378,15 +378,24 @@ It finds the Stadium via mDNS (the device advertises
 `_stadiumserver._tcp.local.` and answers a one-shot multicast query), falls
 back to a bounded TCP probe of this machine's own /24 only, confirms every
 candidate with the read-only `/ProductInfoGet` handshake, and **persists**
-ip/serial/model/firmware into `~/.helixgen/devices/<serial>.json`. It is
-read-only on the device (no lock). After one successful discover, **every
-device verb resolves the address automatically** — no env prefix, no flag.
+ip/serial/model/firmware — plus `port` **only when nonstandard** (one above
+the advertised stream port; the observed 2001→2002 offset — a standard device
+stays portless, `None` = the default 2002) — into
+`~/.helixgen/devices/<serial>.json`. It is read-only on the device (no lock).
+After one successful discover, **every device verb resolves the address
+automatically** — no env prefix, no flag.
 
 **The resolution chain (0.24.0):** `--ip` > `$HELIXGEN_HELIX_IP` > the
 persisted discover record. There is **no built-in default IP** any more, and
 a missing address never stalls: with none of the three available, device
 verbs **fail fast with an instructive error naming `device discover`** — the
-fix is to run it, not to guess an address.
+fix is to run it, not to guess an address. An **empty/whitespace-only `--ip`**
+(typically an unset shell variable) is **rejected** with a nonzero exit — no
+longer silently treated as unset (behavior change, #77); omit the flag to fall
+back down the chain. `--port` defaults to the record's persisted port (2002
+unless a nonstandard advertised port was recorded); an explicit `--port` wins.
+To drop a stale record, `helixgen device discover --forget SERIAL-OR-IP` (no
+network; see the `device` skill / `docs/CLI.md`).
 
 - **Discovery found the device** → done; the record is persisted. Nothing to
   export, nothing to remember.

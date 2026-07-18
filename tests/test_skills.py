@@ -555,6 +555,43 @@ def test_tone_skill_documents_analyze_audio_guardrails() -> None:
     assert re.search(r"integrated[^\n]{0,60}unaffected", text, re.IGNORECASE)
 
 
+def test_device_skill_documents_discover_forget_and_port_default() -> None:
+    """#77 surfaces: `--forget` pruning, the persisted nonstandard RPC `port`
+    as the `--port` default (2002 otherwise), and empty/whitespace `--ip`
+    rejection (behavior change — no longer treated as unset)."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    # pruning a stale persisted record without hitting the network
+    assert "--forget SERIAL-OR-IP" in text
+    # the persisted nonstandard RPC port becomes the --port default (2002 else);
+    # require "nonstandard" coupled to the --port/2002 default so flattening the
+    # conditional to a bare "2002" default cannot pass on an unrelated mention.
+    assert re.search(r"`--port`[\s\S]{0,160}2002[\s\S]{0,60}nonstandard", text, re.IGNORECASE), (
+        "device: --port default (2002 unless nonstandard) not stated"
+    )
+    # empty/whitespace --ip is rejected (behavior change #77), not treated as unset
+    assert "whitespace-only `--ip`" in text
+    assert re.search(r"whitespace-only `--ip`[\s\S]{0,160}reject", text, re.IGNORECASE), (
+        "device: empty/whitespace --ip rejection not stated"
+    )
+
+
+def test_setup_skill_documents_discover_port_and_ip_rejection() -> None:
+    """#77 surfaces in setup's discover section: the persisted nonstandard RPC
+    `port` as the `--port` default (2002 otherwise) and the empty/whitespace
+    `--ip` rejection (behavior change — no longer treated as unset)."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    # discover persists a nonstandard port; it becomes the --port default —
+    # require "nonstandard" coupled to the --port/2002 default (see device test).
+    assert re.search(r"`--port`[\s\S]{0,160}2002[\s\S]{0,60}nonstandard", text, re.IGNORECASE), (
+        "setup: --port default (2002 unless nonstandard) not stated"
+    )
+    # empty/whitespace --ip is rejected (behavior change #77), not treated as unset
+    assert "whitespace-only `--ip`" in text
+    assert re.search(r"whitespace-only `--ip`[\s\S]{0,160}reject", text, re.IGNORECASE), (
+        "setup: empty/whitespace --ip rejection not stated"
+    )
+
+
 def test_setup_skill_documents_add_guitar() -> None:
     """`library add-guitar` (0.27.0) is the core write path for new profiles."""
     text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
