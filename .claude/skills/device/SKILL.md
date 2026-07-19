@@ -487,8 +487,9 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
   the run errors clearly, naming the fix: `helixgen device setlist create
   '<name>'`, then re-sync.
 - **Pool-first, idempotent:** installs tones missing from the pool (transcoded,
-  template-free), re-pushes ones whose `.hsp` content hash changed, skips
-  unchanged ones.
+  template-free), re-pushes ones whose `.hsp` content hash changed — the hash is
+  **recomputed from the file at sync time**, so an in-place edit to an
+  already-synced tone is detected — and skips unchanged ones.
 - **Rebuilds references:** adds/removes/reorders the setlist's references to
   match manifest order — **never orphaning** a pool preset another setlist still
   references.
@@ -497,12 +498,14 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
 - **`--gc` (only with `--all`)** deletes pool presets that no manifest setlist
   references any more. A single-setlist sync never garbage-collects.
 - **`--repush`** forces a content refresh of every in-scope tone already in the
-  pool, even when its recorded `.hsp` hash is unchanged (same non-activating
-  existing-cid update path as a normal hash-triggered update). **After a
-  helixgen transcoder upgrade**, `device sync <setlist> --repush` refreshes
-  device content that a plain sync would skip as unchanged — hash-based change
-  detection compares the `.hsp`, not the transcoder's output, so it can't see a
-  transcoder fix on its own.
+  pool, even when its `.hsp` bytes are unchanged since the last sync (same
+  non-activating existing-cid update path as a normal hash-triggered update).
+  Because plain sync recomputes the file hash at sync time it **already**
+  re-pushes genuinely edited `.hsp` files, so `--repush` is **only** for the
+  unchanged-bytes case: **after a helixgen transcoder upgrade**,
+  `device sync <setlist> --repush` refreshes device content that a plain sync
+  would skip as unchanged — a byte-hash comparison can't see a
+  transcoder-output difference for an unchanged `.hsp`.
 - **Per-tone failures are collected and never abort the run.** Result:
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},
   gc:{deleted}, irs:[…], errors:[…]}`. Read `errors`.

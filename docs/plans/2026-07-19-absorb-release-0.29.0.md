@@ -68,7 +68,7 @@ v0.29.0). Copy wholesale — these are mirrors, not adaptations:
 
 ### Task 3: #92 — correct the `--repush` rationale in `device/SKILL.md`
 
-- [ ] In `.claude/skills/device/SKILL.md`, rewrite the `--repush` bullet
+- [x] In `.claude/skills/device/SKILL.md`, rewrite the `--repush` bullet
       (~lines 499-505). Remove the phrasing "hash-based change detection
       compares the `.hsp`, not the transcoder's output, so it can't see a
       transcoder fix on its own" — it wrongly implies plain sync can't see
@@ -78,7 +78,7 @@ v0.29.0). Copy wholesale — these are mirrors, not adaptations:
       case — refreshing already-synced tones after a **transcoder upgrade**,
       where a byte-hash comparison can't see a transcoder-output difference for
       an unchanged `.hsp`.
-- [ ] Also add the "recomputed at sync time" note to the pool-first bullet
+- [x] Also add the "recomputed at sync time" note to the pool-first bullet
       (~lines 489-491), which currently lacks the symmetry `docs/CLI.md` carries.
 
 ### Task 4: #91 — tone skill: never gate normalization on `path.output`
