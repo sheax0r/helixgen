@@ -669,3 +669,77 @@ def test_device_skill_repush_rationale_is_unchanged_bytes_only() -> None:
         text,
         re.DOTALL,
     ), "device: --repush not scoped to the unchanged-bytes case"
+
+
+# --- review fixes: durability, library prefix, progress volume, actuator scope -
+
+
+def test_tone_skill_prefixes_every_helixgen_call_with_the_library() -> None:
+    """Every `helixgen` invocation in the tone skill must carry an explicit
+    `HELIXGEN_LIBRARY=` prefix — shell exports don't persist across agent Bash
+    calls, so a bare call silently resolves against the wrong library. `library
+    doc` (step 7a) is the one that regressed."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    bare = [
+        line.strip()
+        for line in text.splitlines()
+        if re.match(r"\s*helixgen\s", line)
+    ]
+    assert not bare, f"tone: unprefixed helixgen invocation(s): {bare}"
+
+
+def test_tone_skill_warns_bundled_library_is_not_durable() -> None:
+    """Step 7 writes the `.hsp` (and 7a its `description_md`) into whatever
+    library resolved. Under the bundled-library fallback that is inside the
+    plugin, which a `/plugin` update replaces — the skill doing the writing
+    must say so, not just the README."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert re.search(
+        r"`/plugin` update can\s+replace", text, re.IGNORECASE
+    ), "tone: bundled-library volatility not warned at the write site"
+    assert re.search(
+        r"~/\.helixgen/library/.{0,60}durable", text, re.DOTALL | re.IGNORECASE
+    ), "tone: durable-home alternative not named"
+
+
+def test_device_skill_warns_bundled_library_irs_are_not_durable() -> None:
+    """`register-irs`/`ir-scan` default to `<library>/irs`; under the bundled
+    fallback that is the plugin's own tree. The device skill drives IR fixes in
+    its troubleshooting table, so it must carry the warning too, not only
+    setup."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(
+        r"data/library/irs/.{0,120}`/plugin` update can\s+replace",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "device: bundled-library IR volatility not warned"
+
+
+def test_device_skill_states_plain_progress_is_per_item() -> None:
+    """core's `_SyncProgressRenderer` emits a phase header plus one line per
+    item (and per IR upload) in plain mode — not `one-line-per-phase`. An agent
+    told to expect a handful of lines misreads ~100 as a failure."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert not re.search(
+        r"one-line-per-phase", text, re.IGNORECASE
+    ), "device: stale `one-line-per-phase` progress claim survives"
+    assert re.search(
+        r"one line per \*\*?item", text, re.IGNORECASE
+    ), "device: per-item progress volume not stated"
+
+
+def test_tone_skill_scopes_the_output_level_actuator_claim() -> None:
+    """`output.level` is not the actuator for the *authoring-time* pass (5.7),
+    but `device normalize` does write it. An unqualified "not the
+    volume-normalization actuator" contradicts the device skill and CLI.md."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert re.search(
+        r"not\*\* the actuator for the \*authoring-time\* normalization",
+        text,
+        re.IGNORECASE,
+    ), "tone: output-level claim not scoped to the authoring-time pass"
+    assert re.search(
+        r"`device normalize`\s+\*does\* write output-block `level`",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "tone: `device normalize` output-level exception not stated"

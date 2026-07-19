@@ -204,10 +204,13 @@ ritually:
   `"input": {"source": "inst1", "impedance": "230K"}`.
 - **Output level/pan** — `"output": {"level": -3.0}` is a clean final,
   *unmeasured* trim of the whole path; `pan` for hard-panned dual-path tones.
-  It is **not** the volume-normalization actuator — the device's meters tap
-  upstream of it, so it is invisible to `device measure`. When the amp has no
-  channel volume, that pass uses an end-of-chain volume block instead (see
-  section 5.7).
+  It is **not** the actuator for the *authoring-time* normalization pass
+  (5.7) — the device's meters tap upstream of it, so it is invisible to
+  `device measure`. When the amp has no channel volume, that pass uses an
+  end-of-chain volume block instead (see section 5.7). (`device normalize`
+  *does* write output-block `level`, using its own dB math that adds the
+  in-force output level back to the measured gain — so output-level trims
+  are correct there, and only there.)
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:
@@ -523,6 +526,14 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/<sl
   --artist "Foo Fighters" --song "White Limo" --guitar "Les Paul Jr"
 ```
 
+**Say where it landed, and whether that's durable.** Report the written
+`.hsp` path. Under the bundled-library fallback
+(`${CLAUDE_PLUGIN_ROOT}/data/library`) the tone — and the `description_md`
+written in 7a — lives inside the plugin, which a `/plugin` update can
+replace: tell the user in one clause, and that a populated
+`~/.helixgen/library/` (or `$HELIXGEN_LIBRARY`) is the durable home. No
+warning needed when the resolved library is already the user's own.
+
 (Or `--descriptor "<Descriptor>"` instead of `--artist`/`--song`; drop
 `--guitar` only for a guitar-agnostic tone. The library prefix is per the
 Prerequisites resolution.) With no `-o`, `generate` writes the `.hsp` into the
@@ -554,7 +565,7 @@ anymore — it's the tone metadata's `description_md`, authored with
 `helixgen library doc`. Write it after `generate`:
 
 ```bash
-helixgen library doc "<name>" --from-file /tmp/<slug>.description.md   # or: … - (reads stdin)
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen library doc "<name>" --from-file /tmp/<slug>.description.md   # or: … - (reads stdin)
 ```
 
 (`<name>` resolves as the logical slug (`test-artist-test-song`), the metadata filename (`<slug>.json`), or a full variant **preset name** — which includes the guitar, e.g. `Test Artist - Test Song - Scratch Tele`. A bare `Artist - Song` without the guitar segment won't match; use the slug or the full preset name.)

@@ -46,8 +46,12 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
 - `HELIXGEN_IRS="<dir>"` — only when the user has a custom IR directory on
   record and you're running an IR-registering fix (`register-irs`,
   `ir-scan`); otherwise the engine defaults to `<library>/irs` — inside
-  whatever `HELIXGEN_LIBRARY` points at. (`~/.helixgen/irs/` is the legacy
-  pre-0.26 location, read only to bridge an old `mapping.json` up.)
+  whatever `HELIXGEN_LIBRARY` points at. Under the bundled-library fallback
+  that is the plugin's own `data/library/irs/`, which a `/plugin` update can
+  replace — so when registering IRs the user wants to keep, put them under
+  `$HELIXGEN_IRS` or somewhere durable and say so (setup skill, step 0).
+  (`~/.helixgen/irs/` is the legacy pre-0.26 location, read only to bridge an
+  old `mapping.json` up.)
 - IR verbs also write the **IR-hash cache** at `~/.helixgen/cache/irhash.json`
   — **regardless of `HELIXGEN_IRS`** (that env var doesn't relocate it). For
   a fully isolated session (tests/sandboxes), since core 0.29.0 setting
@@ -513,13 +517,17 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--no-progress] [--
   `device sync <setlist> --repush` refreshes device content that a plain sync
   would skip as unchanged — a byte-hash comparison can't see a
   transcoder-output difference for an unchanged `.hsp`.
-- **Progress output goes to stderr, not stdout.** Sync shows a live per-phase
-  display — a progress bar when stderr is a TTY, plain one-line-per-phase text
-  otherwise, which is what an agent Bash call sees. It is **not** warnings or
-  errors; don't read it as failure. `--no-progress` only forces the plain form
-  — it does **not** silence the per-phase lines, and it is a no-op for an agent
-  Bash call, which is already non-TTY and therefore already plain. stdout (the
-  summary) and `--json` are never affected, so parsing is unchanged either way.
+- **Progress output goes to stderr, not stdout.** Sync shows a live display —
+  a progress bar when stderr is a TTY, plain text otherwise, which is what an
+  agent Bash call sees. **The plain form is one line per *item*, not per
+  phase**: a `sync: <phase> (<n>)` header, then `  <phase> <i>/<n>: <label>`
+  for every tone, plus `  uploading IR <i>/<n>: <label>` per IR. A 40-tone
+  setlist is ~100 stderr lines — expect a wall of them, not a handful. It is
+  **not** warnings or errors; don't read it as failure. `--no-progress` only
+  forces the plain form — it does **not** silence the per-item lines, and it
+  is a no-op for an agent Bash call, which is already non-TTY and therefore
+  already plain. stdout (the summary) and `--json` are never affected, so
+  parsing is unchanged either way.
 - **Per-tone failures are collected and never abort the run.** Result:
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},
   gc:{deleted}, irs:[…], errors:[…]}`. Read `errors`.
