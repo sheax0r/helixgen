@@ -97,11 +97,12 @@ IRs, the setlists manifest (now at `setlists/manifest.json`), per-device
 observed state (`devices/`), and device-lock leases (`locks/`) all derive
 their default location from it, and the per-area env vars
 (`HELIXGEN_LIBRARY`, `HELIXGEN_IRS`, `HELIXGEN_SETLISTS`, `HELIXGEN_LOCKS`)
-win over the home-derived default when set. **But it is not a one-knob
-isolation switch in 0.22.0:** `preferences.json` and the IR-hash cache still
-resolve to the real `~/.helixgen` regardless of `HELIXGEN_HOME`, so a fully
-isolated session needs `HELIXGEN_PREFS` and `HELIXGEN_IRHASH_CACHE` (or
-`HELIXGEN_CACHE`) set explicitly alongside it, as above. Two engine
+win over the home-derived default when set. **Since core 0.29.0 it is a
+one-knob isolation switch:** `preferences.json` and the IR-hash cache follow
+`$HELIXGEN_HOME` too (they anchored to the real `~/.helixgen` in earlier
+versions), so setting it alone relocates everything. `HELIXGEN_PREFS` and
+`HELIXGEN_IRHASH_CACHE` (or `HELIXGEN_CACHE`) remain available as
+finer-grained overrides that win over the home. Two engine
 behaviors to not be surprised by: on its first write
 the engine **auto-initializes the home as a git repo** (whenever `git` is on
 PATH; a missing git only warns — nothing fails) with `devices/`, `cache/`,
