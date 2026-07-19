@@ -43,12 +43,16 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
   skill's "Invoking helixgen" section.)
 - **IR env vars, when they apply:** IR-touching verbs (`list-irs`,
   `register-irs`, `generate` with IR blocks) read `HELIXGEN_IRS="<dir>"` if
-  the user has a custom IR directory on record (else `~/.helixgen/irs/`).
+  the user has a custom IR directory on record (else `<library>/irs` — i.e.
+  inside whatever `HELIXGEN_LIBRARY` points at, *not* `~/.helixgen/irs/`,
+  which is the legacy pre-0.26 location core only reads to bridge an old
+  `mapping.json`).
   Note the **IR-hash cache** lives separately at
   `~/.helixgen/cache/irhash.json` and is written by IR verbs **regardless of
-  `HELIXGEN_IRS`** — for a fully isolated session also set
-  `HELIXGEN_IRHASH_CACHE` (single cache file) or `HELIXGEN_CACHE` (cache
-  directory), same prefix-per-call mechanism.
+  `HELIXGEN_IRS`** — since core 0.29.0 a fully isolated session just sets
+  `$HELIXGEN_HOME` (the cache follows it); `HELIXGEN_IRHASH_CACHE` (single
+  cache file) and `HELIXGEN_CACHE` (cache directory) remain finer-grained
+  overrides, same prefix-per-call mechanism.
 - The library must be populated. Verify quickly with
   `helixgen list-blocks --category amp` — an empty/`no blocks` result means
   the library env isn't reaching the CLI (or the library is empty); note the

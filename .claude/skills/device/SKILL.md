@@ -45,14 +45,17 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   prefixes on every call is harmless and keeps invocations uniform.
 - `HELIXGEN_IRS="<dir>"` — only when the user has a custom IR directory on
   record and you're running an IR-registering fix (`register-irs`,
-  `ir-scan`); otherwise the engine defaults to `~/.helixgen/irs/`.
+  `ir-scan`); otherwise the engine defaults to `<library>/irs` — inside
+  whatever `HELIXGEN_LIBRARY` points at. (`~/.helixgen/irs/` is the legacy
+  pre-0.26 location, read only to bridge an old `mapping.json` up.)
 - IR verbs also write the **IR-hash cache** at `~/.helixgen/cache/irhash.json`
   — **regardless of `HELIXGEN_IRS`** (that env var doesn't relocate it). For
-  a fully isolated session (tests/sandboxes), also prefix
-  `HELIXGEN_IRHASH_CACHE=<file>` (the single cache file) or
-  `HELIXGEN_CACHE=<dir>` (the cache directory) — and `HELIXGEN_LOCKS=<dir>`
-  (the device-lock lease root, see **Device locks** below). Normal sessions
-  can ignore this.
+  a fully isolated session (tests/sandboxes), since core 0.29.0 setting
+  `$HELIXGEN_HOME=<dir>` alone is enough — the cache, the locks and every
+  other area follow it. `HELIXGEN_IRHASH_CACHE=<file>` (the single cache
+  file), `HELIXGEN_CACHE=<dir>` (the cache directory) and `HELIXGEN_LOCKS=<dir>`
+  (the device-lock lease root, see **Device locks** below) remain
+  finer-grained overrides. Normal sessions can ignore this.
 - `HELIXGEN_LOCK_TOKEN=<token>` — only while holding a **session lease**
   (see **Device locks** below): carry the token printed by `device lock` as
   a prefix on every covered verb, same prefix-per-call mechanism as

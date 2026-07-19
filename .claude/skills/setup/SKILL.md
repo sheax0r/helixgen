@@ -79,7 +79,13 @@ persisted by `helixgen device discover` (step 1.5 below; `--ip` and
 user has a custom IR
 directory on record (step 2 / `$HELIXGEN_IRS`), prefix IR-touching verbs
 (`register-irs`, `ir-scan`, `list-irs`, `generate` with IR blocks) with
-`HELIXGEN_IRS="<dir>"` too — otherwise they default to `~/.helixgen/irs/`.
+`HELIXGEN_IRS="<dir>"` too — otherwise they default to `<library>/irs`, i.e.
+**inside whatever `HELIXGEN_LIBRARY` points at**. Under the bundled-library
+fallback that is the plugin's own `data/library/irs/`, which a `/plugin`
+update can replace — so if the user is registering IRs they want to keep,
+either put them on record under `$HELIXGEN_IRS` or move them somewhere
+durable. (`~/.helixgen/irs/` is the pre-0.26 *legacy* location; core only
+reads it to bridge an old `mapping.json` up on first use.)
 It's harmless to carry all applicable prefixes uniformly.
 
 One cache to know about: IR verbs also write the **IR-hash cache** at
