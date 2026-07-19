@@ -98,10 +98,10 @@ v0.29.0). Copy wholesale — these are mirrors, not adaptations:
 
 ### Task 5: cut the release
 
-- [ ] Bump `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
+- [x] Bump `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
       together: `4.6.0` → `4.7.0` (minor — new engine pin + skill/doc updates).
       Both files must agree or the release workflow's own gate fails.
-- [ ] Move this plan to `docs/plans/completed/`.
+- [x] Move this plan to `docs/plans/completed/`.
 
 ## Validation Commands
 
