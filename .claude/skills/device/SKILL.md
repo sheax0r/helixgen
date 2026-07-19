@@ -513,7 +513,9 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--no-progress] [--
 - **Progress output goes to stderr, not stdout.** Sync shows a live per-phase
   display — a progress bar when stderr is a TTY, plain one-line-per-phase text
   otherwise, which is what an agent Bash call sees. It is **not** warnings or
-  errors; don't read it as failure. `--no-progress` suppresses it. stdout (the
+  errors; don't read it as failure. `--no-progress` only forces the plain form
+  — it does **not** silence the per-phase lines, and it is a no-op for an agent
+  Bash call, which is already non-TTY and therefore already plain. stdout (the
   summary) and `--json` are never affected, so parsing is unchanged either way.
 - **Per-tone failures are collected and never abort the run.** Result:
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},

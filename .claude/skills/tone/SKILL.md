@@ -198,10 +198,12 @@ ritually:
   pickup setup calls for it (e.g. `"impedance": "230K"` to tame a fuzz the
   vintage way; `"pad": true` for hot active pickups):
   `"input": {"source": "inst1", "impedance": "230K"}`.
-- **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim
-  (an alternative to an end-of-chain volume block in the volume-normalization
-  pass when the amp has no channel volume); `pan` for hard-panned dual-path
-  tones.
+- **Output level/pan** — `"output": {"level": -3.0}` is a clean final,
+  *unmeasured* trim of the whole path; `pan` for hard-panned dual-path tones.
+  It is **not** the volume-normalization actuator — the device's meters tap
+  upstream of it, so it is invisible to `device measure`. When the amp has no
+  channel volume, that pass uses an end-of-chain volume block instead (see
+  section 5.7).
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:

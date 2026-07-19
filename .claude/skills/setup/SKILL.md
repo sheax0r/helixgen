@@ -84,11 +84,13 @@ It's harmless to carry all applicable prefixes uniformly.
 
 One cache to know about: IR verbs also write the **IR-hash cache** at
 `~/.helixgen/cache/irhash.json` — and they do so **regardless of
-`HELIXGEN_IRS`** (the IR-directory env does not relocate it). If a session
-needs full isolation (tests, sandboxes), also set `HELIXGEN_IRHASH_CACHE`
-(path to the single cache file) or `HELIXGEN_CACHE` (the cache *directory*)
-alongside the other env prefixes — and `HELIXGEN_LOCKS` (the device-lock
-lease root; see the `device` skill). Inspect/maintain the cache with
+`HELIXGEN_IRS`** (the IR-directory env does not relocate it). Since core
+0.29.0 a session that needs full isolation (tests, sandboxes) should just set
+`$HELIXGEN_HOME` — the cache follows it, along with everything else (see the
+next paragraph). `HELIXGEN_IRHASH_CACHE` (path to the single cache file) and
+`HELIXGEN_CACHE` (the cache *directory*) remain available as finer-grained
+overrides, as does `HELIXGEN_LOCKS` (the device-lock lease root; see the
+`device` skill). Inspect/maintain the cache with
 `helixgen ir-cache --stats|--clear|--prune`. Normal sessions can ignore it.
 
 **The helixgen home (`$HELIXGEN_HOME`, 0.22.0).** `$HELIXGEN_HOME` (default
@@ -100,7 +102,10 @@ their default location from it, and the per-area env vars
 win over the home-derived default when set. **Since core 0.29.0 it is a
 one-knob isolation switch:** `preferences.json` and the IR-hash cache follow
 `$HELIXGEN_HOME` too (they anchored to the real `~/.helixgen` in earlier
-versions), so setting it alone relocates everything. `HELIXGEN_PREFS` and
+versions), so setting it alone relocates every area a tone/device session
+touches. (One straggler: `helixgen bootstrap`'s upstream-repo clone cache is
+still hard-coded to `~/.helixgen/.cache` — irrelevant to normal sessions.)
+`HELIXGEN_PREFS` and
 `HELIXGEN_IRHASH_CACHE` (or `HELIXGEN_CACHE`) remain available as
 finer-grained overrides that win over the home. Two engine
 behaviors to not be surprised by: on its first write
