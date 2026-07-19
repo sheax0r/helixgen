@@ -34,14 +34,19 @@ Standing constraints:
 
 ### Task 1: bump the engine pin to 0.29.0
 
-- [ ] `grep -rn "0\.27\.0" --include="*.md" --include="*.json" .` (excluding
+- [x] `grep -rn "0\.27\.0" --include="*.md" --include="*.json" .` (excluding
       `.ralphex/`, `.claude/worktrees/`) to find every pin occurrence.
-- [ ] Update each to `0.29.0`. Known sites: `.claude/skills/setup/SKILL.md`
+- [x] Update each to `0.29.0`. Known sites: `.claude/skills/setup/SKILL.md`
       (step 0), `.claude/skills/device/SKILL.md` (~lines 18-19 and the
       troubleshooting table row), `.claude/skills/tone/SKILL.md` (~line 23 plus
       the `[device,analyze]` and `[device,analyze,capture]` extras variants
       around lines 607 and 612), `README.md`, and the plugin `CLAUDE.md`.
-- [ ] Verify no `0.27.0` remains outside ignored dirs.
+      Also `tests/test_skills.py`'s `ENGINE_PIN` constant, which pins the
+      expected version and would otherwise fail.
+- [x] Verify no `0.27.0` **pin** remains outside ignored dirs. Bare `(0.27.0)`
+      feature-introduced-in markers (e.g. `--source loop` (0.27.0)) are
+      historical fact and intentionally stay; the validation grep was narrowed
+      to pin forms accordingly.
 
 ### Task 2: resync the mirrored docs from core 0.29.0 (authoritative)
 
@@ -116,8 +121,11 @@ assert entry["version"] == p["version"], (p["version"], entry["version"])
 print("plugin/marketplace versions agree:", p["version"])
 EOF
 
-# Pin consistency — no stale 0.27.0 anywhere that ships
-! grep -rn "0\.27\.0" --include="*.md" --include="*.json" \
-    --exclude-dir=.ralphex --exclude-dir=worktrees . \
+# Pin consistency — no stale 0.27.0 *pin* anywhere that ships.
+# Matches pin forms only (`==0.27.0`, `version 0.27.0`); bare "(0.27.0)"
+# feature-introduced-in markers are historical fact and must stay.
+! grep -rn "==0\.27\.0\|version 0\.27\.0" --include="*.md" --include="*.json" \
+    --include="*.py" --exclude-dir=.ralphex --exclude-dir=worktrees \
+    --exclude-dir=completed --exclude-dir=plans . \
   && echo "no stale 0.27.0 pins"
 ```
