@@ -601,3 +601,29 @@ def test_setup_skill_documents_add_guitar() -> None:
     assert re.search(r"add-guitar.{0,600}refused", text, re.DOTALL | re.IGNORECASE)
     # the old direct-JSON-write creation story must not survive
     assert "no CLI verb to create a profile" not in text
+
+
+def test_tone_skill_never_gates_normalization_on_path_output() -> None:
+    """#91: an absent/null `path.output` means device-default output block, not
+    a missing output target — it must never gate the normalization pass. The
+    skill also has to say *why* it still steers to the amp channel volume: the
+    meters tap upstream of the `b13` output `gain`."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    # the guard itself, tied to the normalization pass
+    assert "Volume-normalization pass" in text
+    assert re.search(
+        r"[Nn]ever gate.{0,80}`path\.output`", text, re.DOTALL
+    ), "tone: no explicit never-gate-on-path.output guard"
+    # what absent/null actually means: device defaults, and every path has b13
+    assert re.search(
+        r"(absent|null).{0,200}device defaults", text, re.DOTALL | re.IGNORECASE
+    ), "tone: absent/null output not explained as device defaults"
+    assert re.search(r"0\.0 dB\s*/\s*0\.5 pan", text), (
+        "tone: device-default output values (0.0 dB / 0.5 pan) not stated"
+    )
+    assert "`b13`" in text
+    assert "has_output_override" in text
+    # why the amp channel volume stays the actuator: meters tap upstream of b13
+    assert re.search(
+        r"meters.{0,80}\*\*upstream\*\*.{0,120}`b13`", text, re.DOTALL | re.IGNORECASE
+    ), "tone: upstream-of-b13 meter rationale not stated"

@@ -83,7 +83,7 @@ v0.29.0). Copy wholesale — these are mirrors, not adaptations:
 
 ### Task 4: #91 — tone skill: never gate normalization on `path.output`
 
-- [ ] In `.claude/skills/tone/SKILL.md`, at the volume/normalization guidance
+- [x] In `.claude/skills/tone/SKILL.md`, at the volume/normalization guidance
       (~line 374, which already correctly names amp channel-volume `ChVol` /
       amp `Level` — **not** `Master`, since Master also changes power-amp
       sag/feel), add an explicit guard: **never gate a normalization pass on
@@ -91,7 +91,7 @@ v0.29.0). Copy wholesale — these are mirrors, not adaptations:
       device defaults (0.0 dB / 0.5 pan), **not** that the path has no output
       target — every path terminates in a `b13` output whose `gain` always
       exists.
-- [ ] Note *why* the skill still steers to amp channel-volume rather than the
+- [x] Note *why* the skill still steers to amp channel-volume rather than the
       output block: the meters tap **upstream** of the `b13` gain
       (`docs/helix-protocol.md`), so output-block level is the wrong actuator
       for a measured normalize.

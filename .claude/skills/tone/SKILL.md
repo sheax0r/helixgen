@@ -378,6 +378,22 @@ add one end-of-chain volume block (from `list-blocks --category volume`) and
 automate that. In a layered two-amp preset, level whichever amp is active in
 each snapshot via that amp's own channel volume.
 
+**Never gate this pass on `path.output`.** An absent or `null` `output` on a
+path (or a snapshot) means the output block is at **device defaults** (0.0 dB /
+0.5 pan) — **not** that the path has no output target. Every DSP path
+terminates in a `b13` output endpoint whose `gain` always exists; `view` just
+omits the `output` object when both level and pan are default. So a
+`path.output is None` check is never a reason to skip normalizing — if you need
+to know whether an explicit override exists, that's `has_output_override`
+(`docs/recipe-reference.md`), not an is-None test.
+
+And normalize with the **amp channel volume anyway**, not that output block:
+the device's meters all tap **upstream** of the `b13` `gain`
+(`docs/helix-protocol.md` — a landed −60 dB output-gain write moves no meter
+cell), so output level is the wrong actuator for anything measured, and a
+later `device normalize` pass can't see it. Reserve `output` for a final
+clean trim of the whole path (section 5).
+
 Apply three forces, in order:
 
 1. **Anchor** (force 1, `volume_normalize_baseline`): set the reference part
