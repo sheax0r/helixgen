@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.27.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.29.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -45,14 +45,21 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   prefixes on every call is harmless and keeps invocations uniform.
 - `HELIXGEN_IRS="<dir>"` — only when the user has a custom IR directory on
   record and you're running an IR-registering fix (`register-irs`,
-  `ir-scan`); otherwise the engine defaults to `~/.helixgen/irs/`.
+  `ir-scan`); otherwise the engine defaults to `<library>/irs` — inside
+  whatever `HELIXGEN_LIBRARY` points at. Under the bundled-library fallback
+  that is the plugin's own `data/library/irs/`, which a `/plugin` update can
+  replace — so when registering IRs the user wants to keep, put them under
+  `$HELIXGEN_IRS` or somewhere durable and say so (setup skill, step 0).
+  (`~/.helixgen/irs/` is the legacy pre-0.26 location, read only to bridge an
+  old `mapping.json` up.)
 - IR verbs also write the **IR-hash cache** at `~/.helixgen/cache/irhash.json`
   — **regardless of `HELIXGEN_IRS`** (that env var doesn't relocate it). For
-  a fully isolated session (tests/sandboxes), also prefix
-  `HELIXGEN_IRHASH_CACHE=<file>` (the single cache file) or
-  `HELIXGEN_CACHE=<dir>` (the cache directory) — and `HELIXGEN_LOCKS=<dir>`
-  (the device-lock lease root, see **Device locks** below). Normal sessions
-  can ignore this.
+  a fully isolated session (tests/sandboxes), since core 0.29.0 setting
+  `$HELIXGEN_HOME=<dir>` alone is enough — the cache, the locks and every
+  other area follow it. `HELIXGEN_IRHASH_CACHE=<file>` (the single cache
+  file), `HELIXGEN_CACHE=<dir>` (the cache directory) and `HELIXGEN_LOCKS=<dir>`
+  (the device-lock lease root, see **Device locks** below) remain
+  finer-grained overrides. Normal sessions can ignore this.
 - `HELIXGEN_LOCK_TOKEN=<token>` — only while holding a **session lease**
   (see **Device locks** below): carry the token printed by `device lock` as
   a prefix on every covered verb, same prefix-per-call mechanism as
@@ -171,7 +178,11 @@ something this skill drives.)
 Every device-**mutating** verb auto-acquires a machine-local advisory lease
 for its duration (lease files at `~/.helixgen/locks/<device-ip>/<scope>.lock`;
 root override `$HELIXGEN_LOCKS`), so concurrent helixgen processes on this
-machine never collide on the device. Read-only verbs take nothing; you don't
+machine never collide on the device. **The guarantee assumes every client is
+≥0.22.0** — locking arrived in that version, and an older `helixgen` on this
+machine takes no lease and ignores existing ones, so it collides as if locks
+didn't exist. If anything other than the pinned uv tool might be driving the
+device, don't rely on locks for parallelism. Read-only verbs take nothing; you don't
 lock anything by hand for a single verb — it's automatic. Scopes are granular
 and non-conflicting with each other: `editbuffer` (live-ops on the ACTIVE
 tone: `load`/`snapshot`/`bypass`/`model`/`set-param` — plus `normalize`,
@@ -479,16 +490,17 @@ helixgen device set-info <cid>... --color green --notes "..."   # batch color + 
 ### Sync a setlist onto the device (pool + references)
 
 ```bash
-helixgen device sync <setlist> [--exclude-irs] [--repush] [--json]
-helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
+helixgen device sync <setlist> [--exclude-irs] [--repush] [--no-progress] [--json]
+helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--no-progress] [--json]
 ```
 
 - **Resolves the setlist by name** under `-5`. If the device doesn't have it,
   the run errors clearly, naming the fix: `helixgen device setlist create
   '<name>'`, then re-sync.
 - **Pool-first, idempotent:** installs tones missing from the pool (transcoded,
-  template-free), re-pushes ones whose `.hsp` content hash changed, skips
-  unchanged ones.
+  template-free), re-pushes ones whose `.hsp` content hash changed — the hash is
+  **recomputed from the file at sync time**, so an in-place edit to an
+  already-synced tone is detected — and skips unchanged ones.
 - **Rebuilds references:** adds/removes/reorders the setlist's references to
   match manifest order — **never orphaning** a pool preset another setlist still
   references.
@@ -497,12 +509,25 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
 - **`--gc` (only with `--all`)** deletes pool presets that no manifest setlist
   references any more. A single-setlist sync never garbage-collects.
 - **`--repush`** forces a content refresh of every in-scope tone already in the
-  pool, even when its recorded `.hsp` hash is unchanged (same non-activating
-  existing-cid update path as a normal hash-triggered update). **After a
-  helixgen transcoder upgrade**, `device sync <setlist> --repush` refreshes
-  device content that a plain sync would skip as unchanged — hash-based change
-  detection compares the `.hsp`, not the transcoder's output, so it can't see a
-  transcoder fix on its own.
+  pool, even when its `.hsp` bytes are unchanged since the last sync (same
+  non-activating existing-cid update path as a normal hash-triggered update).
+  Because plain sync recomputes the file hash at sync time it **already**
+  re-pushes genuinely edited `.hsp` files, so `--repush` is **only** for the
+  unchanged-bytes case: **after a helixgen transcoder upgrade**,
+  `device sync <setlist> --repush` refreshes device content that a plain sync
+  would skip as unchanged — a byte-hash comparison can't see a
+  transcoder-output difference for an unchanged `.hsp`.
+- **Progress output goes to stderr, not stdout.** Sync shows a live display —
+  a progress bar when stderr is a TTY, plain text otherwise, which is what an
+  agent Bash call sees. **The plain form is one line per *item*, not per
+  phase**: a `sync: <phase> (<n>)` header, then `  <phase> <i>/<n>: <label>`
+  for every tone, plus `  uploading IR <i>/<n>: <label>` per IR. A 40-tone
+  setlist is ~100 stderr lines — expect a wall of them, not a handful. It is
+  **not** warnings or errors; don't read it as failure. `--no-progress` only
+  forces the plain form — it does **not** silence the per-item lines, and it
+  is a no-op for an agent Bash call, which is already non-TTY and therefore
+  already plain. stdout (the summary) and `--json` are never affected, so
+  parsing is unchanged either way.
 - **Per-tone failures are collected and never abort the run.** Result:
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},
   gc:{deleted}, irs:[…], errors:[…]}`. Read `errors`.
@@ -846,7 +871,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.27.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.29.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.27.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.29.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -263,6 +263,9 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
         pins.update(found)
         # any extras combination anywhere on the surface must pin the same core
         pins.update(re.findall(r"helixgen\[[a-z,]+\]==([0-9][0-9.]*)", text))
+        # the `--version` output a surface tells the agent to expect is a second
+        # copy of the pin — a half-applied bump would otherwise stay green here
+        pins.update(re.findall(r"helixgen, version ([0-9][0-9.]*)", text))
     assert pins == {ENGINE_PIN}, (
         f"engine pin must be exactly {ENGINE_PIN} on every surface: {sorted(pins)}"
     )
@@ -601,3 +604,142 @@ def test_setup_skill_documents_add_guitar() -> None:
     assert re.search(r"add-guitar.{0,600}refused", text, re.DOTALL | re.IGNORECASE)
     # the old direct-JSON-write creation story must not survive
     assert "no CLI verb to create a profile" not in text
+
+
+def test_tone_skill_never_gates_normalization_on_path_output() -> None:
+    """#91: an absent/null `path.output` means device-default output block, not
+    a missing output target — it must never gate the normalization pass. The
+    skill also has to say *why* it still steers to the amp channel volume: the
+    meters tap upstream of the `b13` output `gain`."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    # the guard itself, tied to the normalization pass
+    assert "Volume-normalization pass" in text
+    assert re.search(
+        r"[Nn]ever gate.{0,80}`path\.output`", text, re.DOTALL
+    ), "tone: no explicit never-gate-on-path.output guard"
+    # what absent/null actually means: device defaults, and every path has b13
+    assert re.search(
+        r"(absent|null).{0,200}device defaults", text, re.DOTALL | re.IGNORECASE
+    ), "tone: absent/null output not explained as device defaults"
+    assert re.search(r"0\.0 dB\s*/\s*0\.5 pan", text), (
+        "tone: device-default output values (0.0 dB / 0.5 pan) not stated"
+    )
+    assert "`b13`" in text
+    assert "has_output_override" in text
+    # why the amp channel volume stays the actuator: meters tap upstream of b13
+    assert re.search(
+        r"meters.{0,80}\*\*upstream\*\*.{0,120}`b13`", text, re.DOTALL | re.IGNORECASE
+    ), "tone: upstream-of-b13 meter rationale not stated"
+
+
+# --- core 0.29.0: sync recomputes the .hsp hash at sync time (#92) ------------
+
+STALE_REPUSH_PATTERNS = [
+    # the pre-#92 story: hash detection compares the recorded hash, so it
+    # supposedly can't see an in-place `.hsp` edit at all
+    re.compile(r"recorded\s+`?\.hsp`?\s+hash\s+is\s+unchanged", re.IGNORECASE),
+    re.compile(
+        r"hash-based change\s+detection compares the `?\.hsp`?, not the",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(r"can'?t see a\s+transcoder fix on its own", re.IGNORECASE | re.DOTALL),
+]
+
+
+def test_device_skill_repush_rationale_is_unchanged_bytes_only() -> None:
+    """#92: plain sync recomputes the file hash at sync time, so it already
+    re-pushes genuinely edited `.hsp` files. `--repush` exists only for the
+    unchanged-bytes case (refreshing after a transcoder upgrade) — the skill
+    must not imply hash detection is blind to in-place edits."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    stale = [pat.pattern for pat in STALE_REPUSH_PATTERNS if pat.search(text)]
+    assert not stale, f"device: pre-#92 --repush rationale survives: {stale}"
+    # the load-bearing fact: the hash is recomputed from the file at sync time
+    assert re.search(
+        r"recomputed from the file at sync time", text, re.IGNORECASE
+    ), "device: sync-time hash recomputation (#92) not stated"
+    assert re.search(
+        r"in-place edit.{0,80}already-synced tone is detected",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "device: in-place-edit detection not stated on the pool-first bullet"
+    # and --repush scoped to the unchanged-bytes case, not to edited files
+    assert re.search(
+        r"`--repush`.{0,400}\*\*only\*\* for the\s+unchanged-bytes case",
+        text,
+        re.DOTALL,
+    ), "device: --repush not scoped to the unchanged-bytes case"
+
+
+# --- review fixes: durability, library prefix, progress volume, actuator scope -
+
+
+def test_tone_skill_prefixes_every_helixgen_call_with_the_library() -> None:
+    """Every `helixgen` invocation in the tone skill must carry an explicit
+    `HELIXGEN_LIBRARY=` prefix — shell exports don't persist across agent Bash
+    calls, so a bare call silently resolves against the wrong library. `library
+    doc` (step 7a) is the one that regressed."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    bare = [
+        line.strip()
+        for line in text.splitlines()
+        if re.match(r"\s*helixgen\s", line)
+    ]
+    assert not bare, f"tone: unprefixed helixgen invocation(s): {bare}"
+
+
+def test_tone_skill_warns_bundled_library_is_not_durable() -> None:
+    """Step 7 writes the `.hsp` (and 7a its `description_md`) into whatever
+    library resolved. Under the bundled-library fallback that is inside the
+    plugin, which a `/plugin` update replaces — the skill doing the writing
+    must say so, not just the README."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert re.search(
+        r"`/plugin` update can\s+replace", text, re.IGNORECASE
+    ), "tone: bundled-library volatility not warned at the write site"
+    assert re.search(
+        r"~/\.helixgen/library/.{0,60}durable", text, re.DOTALL | re.IGNORECASE
+    ), "tone: durable-home alternative not named"
+
+
+def test_device_skill_warns_bundled_library_irs_are_not_durable() -> None:
+    """`register-irs`/`ir-scan` default to `<library>/irs`; under the bundled
+    fallback that is the plugin's own tree. The device skill drives IR fixes in
+    its troubleshooting table, so it must carry the warning too, not only
+    setup."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(
+        r"data/library/irs/.{0,120}`/plugin` update can\s+replace",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "device: bundled-library IR volatility not warned"
+
+
+def test_device_skill_states_plain_progress_is_per_item() -> None:
+    """core's `_SyncProgressRenderer` emits a phase header plus one line per
+    item (and per IR upload) in plain mode — not `one-line-per-phase`. An agent
+    told to expect a handful of lines misreads ~100 as a failure."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert not re.search(
+        r"one-line-per-phase", text, re.IGNORECASE
+    ), "device: stale `one-line-per-phase` progress claim survives"
+    assert re.search(
+        r"one line per \*\*?item", text, re.IGNORECASE
+    ), "device: per-item progress volume not stated"
+
+
+def test_tone_skill_scopes_the_output_level_actuator_claim() -> None:
+    """`output.level` is not the actuator for the *authoring-time* pass (5.7),
+    but `device normalize` does write it. An unqualified "not the
+    volume-normalization actuator" contradicts the device skill and CLI.md."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert re.search(
+        r"not\*\* the actuator for the \*authoring-time\* normalization",
+        text,
+        re.IGNORECASE,
+    ), "tone: output-level claim not scoped to the authoring-time pass"
+    assert re.search(
+        r"`device normalize`\s+\*does\* write output-block `level`",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "tone: `device normalize` output-level exception not stated"

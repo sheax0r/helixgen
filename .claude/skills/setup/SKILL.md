@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.27.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.29.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -79,16 +79,24 @@ persisted by `helixgen device discover` (step 1.5 below; `--ip` and
 user has a custom IR
 directory on record (step 2 / `$HELIXGEN_IRS`), prefix IR-touching verbs
 (`register-irs`, `ir-scan`, `list-irs`, `generate` with IR blocks) with
-`HELIXGEN_IRS="<dir>"` too — otherwise they default to `~/.helixgen/irs/`.
+`HELIXGEN_IRS="<dir>"` too — otherwise they default to `<library>/irs`, i.e.
+**inside whatever `HELIXGEN_LIBRARY` points at**. Under the bundled-library
+fallback that is the plugin's own `data/library/irs/`, which a `/plugin`
+update can replace — so if the user is registering IRs they want to keep,
+either put them on record under `$HELIXGEN_IRS` or move them somewhere
+durable. (`~/.helixgen/irs/` is the pre-0.26 *legacy* location; core only
+reads it to bridge an old `mapping.json` up on first use.)
 It's harmless to carry all applicable prefixes uniformly.
 
 One cache to know about: IR verbs also write the **IR-hash cache** at
 `~/.helixgen/cache/irhash.json` — and they do so **regardless of
-`HELIXGEN_IRS`** (the IR-directory env does not relocate it). If a session
-needs full isolation (tests, sandboxes), also set `HELIXGEN_IRHASH_CACHE`
-(path to the single cache file) or `HELIXGEN_CACHE` (the cache *directory*)
-alongside the other env prefixes — and `HELIXGEN_LOCKS` (the device-lock
-lease root; see the `device` skill). Inspect/maintain the cache with
+`HELIXGEN_IRS`** (the IR-directory env does not relocate it). Since core
+0.29.0 a session that needs full isolation (tests, sandboxes) should just set
+`$HELIXGEN_HOME` — the cache follows it, along with everything else (see the
+next paragraph). `HELIXGEN_IRHASH_CACHE` (path to the single cache file) and
+`HELIXGEN_CACHE` (the cache *directory*) remain available as finer-grained
+overrides, as does `HELIXGEN_LOCKS` (the device-lock lease root; see the
+`device` skill). Inspect/maintain the cache with
 `helixgen ir-cache --stats|--clear|--prune`. Normal sessions can ignore it.
 
 **The helixgen home (`$HELIXGEN_HOME`, 0.22.0).** `$HELIXGEN_HOME` (default
@@ -97,11 +105,15 @@ IRs, the setlists manifest (now at `setlists/manifest.json`), per-device
 observed state (`devices/`), and device-lock leases (`locks/`) all derive
 their default location from it, and the per-area env vars
 (`HELIXGEN_LIBRARY`, `HELIXGEN_IRS`, `HELIXGEN_SETLISTS`, `HELIXGEN_LOCKS`)
-win over the home-derived default when set. **But it is not a one-knob
-isolation switch in 0.22.0:** `preferences.json` and the IR-hash cache still
-resolve to the real `~/.helixgen` regardless of `HELIXGEN_HOME`, so a fully
-isolated session needs `HELIXGEN_PREFS` and `HELIXGEN_IRHASH_CACHE` (or
-`HELIXGEN_CACHE`) set explicitly alongside it, as above. Two engine
+win over the home-derived default when set. **Since core 0.29.0 it is a
+one-knob isolation switch:** `preferences.json` and the IR-hash cache follow
+`$HELIXGEN_HOME` too (they anchored to the real `~/.helixgen` in earlier
+versions), so setting it alone relocates every area a tone/device session
+touches. (One straggler: `helixgen bootstrap`'s upstream-repo clone cache is
+still hard-coded to `~/.helixgen/.cache` — irrelevant to normal sessions.)
+`HELIXGEN_PREFS` and
+`HELIXGEN_IRHASH_CACHE` (or `HELIXGEN_CACHE`) remain available as
+finer-grained overrides that win over the home. Two engine
 behaviors to not be surprised by: on its first write
 the engine **auto-initializes the home as a git repo** (whenever `git` is on
 PATH; a missing git only warns — nothing fails) with `devices/`, `cache/`,
@@ -154,13 +166,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.27.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.29.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.27.0'
+  uv tool install 'helixgen[device]==0.29.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't

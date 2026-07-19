@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.27.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.29.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -43,12 +43,16 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
   skill's "Invoking helixgen" section.)
 - **IR env vars, when they apply:** IR-touching verbs (`list-irs`,
   `register-irs`, `generate` with IR blocks) read `HELIXGEN_IRS="<dir>"` if
-  the user has a custom IR directory on record (else `~/.helixgen/irs/`).
+  the user has a custom IR directory on record (else `<library>/irs` — i.e.
+  inside whatever `HELIXGEN_LIBRARY` points at, *not* `~/.helixgen/irs/`,
+  which is the legacy pre-0.26 location core only reads to bridge an old
+  `mapping.json`).
   Note the **IR-hash cache** lives separately at
   `~/.helixgen/cache/irhash.json` and is written by IR verbs **regardless of
-  `HELIXGEN_IRS`** — for a fully isolated session also set
-  `HELIXGEN_IRHASH_CACHE` (single cache file) or `HELIXGEN_CACHE` (cache
-  directory), same prefix-per-call mechanism.
+  `HELIXGEN_IRS`** — since core 0.29.0 a fully isolated session just sets
+  `$HELIXGEN_HOME` (the cache follows it); `HELIXGEN_IRHASH_CACHE` (single
+  cache file) and `HELIXGEN_CACHE` (cache directory) remain finer-grained
+  overrides, same prefix-per-call mechanism.
 - The library must be populated. Verify quickly with
   `helixgen list-blocks --category amp` — an empty/`no blocks` result means
   the library env isn't reaching the CLI (or the library is empty); note the
@@ -198,10 +202,15 @@ ritually:
   pickup setup calls for it (e.g. `"impedance": "230K"` to tame a fuzz the
   vintage way; `"pad": true` for hot active pickups):
   `"input": {"source": "inst1", "impedance": "230K"}`.
-- **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim
-  (an alternative to an end-of-chain volume block in the volume-normalization
-  pass when the amp has no channel volume); `pan` for hard-panned dual-path
-  tones.
+- **Output level/pan** — `"output": {"level": -3.0}` is a clean final,
+  *unmeasured* trim of the whole path; `pan` for hard-panned dual-path tones.
+  It is **not** the actuator for the *authoring-time* normalization pass
+  (5.7) — the device's meters tap upstream of it, so it is invisible to
+  `device measure`. When the amp has no channel volume, that pass uses an
+  end-of-chain volume block instead (see section 5.7). (`device normalize`
+  *does* write output-block `level`, using its own dB math that adds the
+  in-force output level back to the measured gain — so output-level trims
+  are correct there, and only there.)
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:
@@ -378,6 +387,28 @@ add one end-of-chain volume block (from `list-blocks --category volume`) and
 automate that. In a layered two-amp preset, level whichever amp is active in
 each snapshot via that amp's own channel volume.
 
+**Never gate this pass on `path.output`.** An absent or `null` `output` on a
+path (or a snapshot) means the output block is at **device defaults** (0.0 dB /
+0.5 pan) — **not** that the path has no output target. Every DSP path
+terminates in a `b13` output endpoint whose `gain` always exists; `view` just
+omits the `output` object when both level and pan are default. So an absent
+`output` in `helixgen view` is a fact about the **value** (it's at defaults),
+never a reason to skip normalizing. (Engine-side readers have
+`PathEntry.has_output_override` for the explicit-override question — see
+`docs/recipe-reference.md`; that's a Python property, not a CLI-visible field,
+so it isn't something you can query from here.)
+
+And normalize with the **amp channel volume anyway**, not that output block:
+the device's meters all tap **upstream** of the `b13` `gain`
+(`docs/helix-protocol.md` — a landed −60 dB output-gain write moves no meter
+cell), so output level is the wrong actuator for anything measured: an
+authoring-time output trim never shows up in a `device measure` chain-gain
+number. (A later `device normalize` pass *does* account for it — it adds the
+output level already in force to the measured gain to get total loudness,
+which is what makes re-runs idempotent — but the raw measurement it works
+from is still blind to the trim.) Reserve `output` for a final clean trim of
+the whole path (section 5).
+
 Apply three forces, in order:
 
 1. **Anchor** (force 1, `volume_normalize_baseline`): set the reference part
@@ -497,6 +528,14 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/<sl
   --artist "Foo Fighters" --song "White Limo" --guitar "Les Paul Jr"
 ```
 
+**Say where it landed, and whether that's durable.** Report the written
+`.hsp` path. Under the bundled-library fallback
+(`${CLAUDE_PLUGIN_ROOT}/data/library`) the tone — and the `description_md`
+written in 7a — lives inside the plugin, which a `/plugin` update can
+replace: tell the user in one clause, and that a populated
+`~/.helixgen/library/` (or `$HELIXGEN_LIBRARY`) is the durable home. No
+warning needed when the resolved library is already the user's own.
+
 (Or `--descriptor "<Descriptor>"` instead of `--artist`/`--song`; drop
 `--guitar` only for a guitar-agnostic tone. The library prefix is per the
 Prerequisites resolution.) With no `-o`, `generate` writes the `.hsp` into the
@@ -528,7 +567,7 @@ anymore — it's the tone metadata's `description_md`, authored with
 `helixgen library doc`. Write it after `generate`:
 
 ```bash
-helixgen library doc "<name>" --from-file /tmp/<slug>.description.md   # or: … - (reads stdin)
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen library doc "<name>" --from-file /tmp/<slug>.description.md   # or: … - (reads stdin)
 ```
 
 (`<name>` resolves as the logical slug (`test-artist-test-song`), the metadata filename (`<slug>.json`), or a full variant **preset name** — which includes the guitar, e.g. `Test Artist - Test Song - Scratch Tele`. A bare `Artist - Song` without the guitar segment won't match; use the slug or the full preset name.)
@@ -604,12 +643,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.27.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.29.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.27.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.29.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
