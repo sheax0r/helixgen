@@ -391,10 +391,12 @@ each snapshot via that amp's own channel volume.
 path (or a snapshot) means the output block is at **device defaults** (0.0 dB /
 0.5 pan) — **not** that the path has no output target. Every DSP path
 terminates in a `b13` output endpoint whose `gain` always exists; `view` just
-omits the `output` object when both level and pan are default. So a
-`path.output is None` check is never a reason to skip normalizing — if you need
-to know whether an explicit override exists, that's `has_output_override`
-(`docs/recipe-reference.md`), not an is-None test.
+omits the `output` object when both level and pan are default. So an absent
+`output` in `helixgen view` is a fact about the **value** (it's at defaults),
+never a reason to skip normalizing. (Engine-side readers have
+`PathEntry.has_output_override` for the explicit-override question — see
+`docs/recipe-reference.md`; that's a Python property, not a CLI-visible field,
+so it isn't something you can query from here.)
 
 And normalize with the **amp channel volume anyway**, not that output block:
 the device's meters all tap **upstream** of the `b13` `gain`
