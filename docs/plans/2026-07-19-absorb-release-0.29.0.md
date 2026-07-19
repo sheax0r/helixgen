@@ -53,14 +53,14 @@ Standing constraints:
 Core checkout is at `/Users/michael.shea/git/helix/helixgen-core` (on `main`,
 v0.29.0). Copy wholesale — these are mirrors, not adaptations:
 
-- [ ] Copy `/Users/michael.shea/git/helix/helixgen-core/docs/CLI.md` over
+- [x] Copy `/Users/michael.shea/git/helix/helixgen-core/docs/CLI.md` over
       `docs/CLI.md`.
-- [ ] Copy `/Users/michael.shea/git/helix/helixgen-core/docs/recipe-reference.md`
+- [x] Copy `/Users/michael.shea/git/helix/helixgen-core/docs/recipe-reference.md`
       over `docs/recipe-reference.md`.
-- [ ] Confirm `docs/helix-protocol.md` still matches core's byte-for-byte
+- [x] Confirm `docs/helix-protocol.md` still matches core's byte-for-byte
       (`diff` against the core copy; it had zero drift — copy it too if it has
-      since diverged).
-- [ ] Sanity-check the resync landed the expected content: `docs/CLI.md` now
+      since diverged). Verified still byte-identical; no copy needed.
+- [x] Sanity-check the resync landed the expected content: `docs/CLI.md` now
       documents the `device sync` **live per-phase progress display** /
       `--no-progress` (core 0.28.0) and the corrected `--repush` semantics
       (recomputed-at-sync-time hash, #92); `docs/recipe-reference.md` now carries
