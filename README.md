@@ -54,7 +54,7 @@ See [`ir-hash-algorithm.md`](https://github.com/sheax0r/helixgen-core/blob/main/
 
 On a **Stadium** connected to your LAN, the `/device` skill installs presets directly over the network (see the next section) — no desktop app needed. The manual route below works for any Helix, or when the device isn't network-reachable.
 
-The `/tone` skill writes to `/tmp/<slug>.hsp` by default. Move it somewhere durable (e.g. `~/Documents/Helix Presets/`) before you reboot if you want to keep it.
+The `/tone` skill writes into your tone library at `~/.helixgen/library/tones/<slug>.hsp` — durable, nothing to rescue from `/tmp`. The skill reports the exact path; `helixgen describe "<tone>"` finds it again later.
 
 **To load on the device:**
 

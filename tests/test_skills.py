@@ -263,6 +263,9 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
         pins.update(found)
         # any extras combination anywhere on the surface must pin the same core
         pins.update(re.findall(r"helixgen\[[a-z,]+\]==([0-9][0-9.]*)", text))
+        # the `--version` output a surface tells the agent to expect is a second
+        # copy of the pin — a half-applied bump would otherwise stay green here
+        pins.update(re.findall(r"helixgen, version ([0-9][0-9.]*)", text))
     assert pins == {ENGINE_PIN}, (
         f"engine pin must be exactly {ENGINE_PIN} on every surface: {sorted(pins)}"
     )
@@ -627,3 +630,42 @@ def test_tone_skill_never_gates_normalization_on_path_output() -> None:
     assert re.search(
         r"meters.{0,80}\*\*upstream\*\*.{0,120}`b13`", text, re.DOTALL | re.IGNORECASE
     ), "tone: upstream-of-b13 meter rationale not stated"
+
+
+# --- core 0.29.0: sync recomputes the .hsp hash at sync time (#92) ------------
+
+STALE_REPUSH_PATTERNS = [
+    # the pre-#92 story: hash detection compares the recorded hash, so it
+    # supposedly can't see an in-place `.hsp` edit at all
+    re.compile(r"recorded\s+`?\.hsp`?\s+hash\s+is\s+unchanged", re.IGNORECASE),
+    re.compile(
+        r"hash-based change\s+detection compares the `?\.hsp`?, not the",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(r"can'?t see a\s+transcoder fix on its own", re.IGNORECASE | re.DOTALL),
+]
+
+
+def test_device_skill_repush_rationale_is_unchanged_bytes_only() -> None:
+    """#92: plain sync recomputes the file hash at sync time, so it already
+    re-pushes genuinely edited `.hsp` files. `--repush` exists only for the
+    unchanged-bytes case (refreshing after a transcoder upgrade) — the skill
+    must not imply hash detection is blind to in-place edits."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    stale = [pat.pattern for pat in STALE_REPUSH_PATTERNS if pat.search(text)]
+    assert not stale, f"device: pre-#92 --repush rationale survives: {stale}"
+    # the load-bearing fact: the hash is recomputed from the file at sync time
+    assert re.search(
+        r"recomputed from the file at sync time", text, re.IGNORECASE
+    ), "device: sync-time hash recomputation (#92) not stated"
+    assert re.search(
+        r"in-place edit.{0,80}already-synced tone is detected",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "device: in-place-edit detection not stated on the pool-first bullet"
+    # and --repush scoped to the unchanged-bytes case, not to edited files
+    assert re.search(
+        r"`--repush`.{0,400}\*\*only\*\* for the\s+unchanged-bytes case",
+        text,
+        re.DOTALL,
+    ), "device: --repush not scoped to the unchanged-bytes case"

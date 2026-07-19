@@ -390,9 +390,13 @@ to know whether an explicit override exists, that's `has_output_override`
 And normalize with the **amp channel volume anyway**, not that output block:
 the device's meters all tap **upstream** of the `b13` `gain`
 (`docs/helix-protocol.md` — a landed −60 dB output-gain write moves no meter
-cell), so output level is the wrong actuator for anything measured, and a
-later `device normalize` pass can't see it. Reserve `output` for a final
-clean trim of the whole path (section 5).
+cell), so output level is the wrong actuator for anything measured: an
+authoring-time output trim never shows up in a `device measure` chain-gain
+number. (A later `device normalize` pass *does* account for it — it adds the
+output level already in force to the measured gain to get total loudness,
+which is what makes re-runs idempotent — but the raw measurement it works
+from is still blind to the trim.) Reserve `output` for a final clean trim of
+the whole path (section 5).
 
 Apply three forces, in order:
 

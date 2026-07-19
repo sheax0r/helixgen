@@ -171,7 +171,11 @@ something this skill drives.)
 Every device-**mutating** verb auto-acquires a machine-local advisory lease
 for its duration (lease files at `~/.helixgen/locks/<device-ip>/<scope>.lock`;
 root override `$HELIXGEN_LOCKS`), so concurrent helixgen processes on this
-machine never collide on the device. Read-only verbs take nothing; you don't
+machine never collide on the device. **The guarantee assumes every client is
+≥0.22.0** — locking arrived in that version, and an older `helixgen` on this
+machine takes no lease and ignores existing ones, so it collides as if locks
+didn't exist. If anything other than the pinned uv tool might be driving the
+device, don't rely on locks for parallelism. Read-only verbs take nothing; you don't
 lock anything by hand for a single verb — it's automatic. Scopes are granular
 and non-conflicting with each other: `editbuffer` (live-ops on the ACTIVE
 tone: `load`/`snapshot`/`bypass`/`model`/`set-param` — plus `normalize`,
@@ -479,8 +483,8 @@ helixgen device set-info <cid>... --color green --notes "..."   # batch color + 
 ### Sync a setlist onto the device (pool + references)
 
 ```bash
-helixgen device sync <setlist> [--exclude-irs] [--repush] [--json]
-helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
+helixgen device sync <setlist> [--exclude-irs] [--repush] [--no-progress] [--json]
+helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--no-progress] [--json]
 ```
 
 - **Resolves the setlist by name** under `-5`. If the device doesn't have it,
@@ -506,6 +510,11 @@ helixgen device sync --all [--gc] [--exclude-irs] [--repush] [--json]
   `device sync <setlist> --repush` refreshes device content that a plain sync
   would skip as unchanged — a byte-hash comparison can't see a
   transcoder-output difference for an unchanged `.hsp`.
+- **Progress output goes to stderr, not stdout.** Sync shows a live per-phase
+  display — a progress bar when stderr is a TTY, plain one-line-per-phase text
+  otherwise, which is what an agent Bash call sees. It is **not** warnings or
+  errors; don't read it as failure. `--no-progress` suppresses it. stdout (the
+  summary) and `--json` are never affected, so parsing is unchanged either way.
 - **Per-tone failures are collected and never abort the run.** Result:
   `{ok, setlists, pool:{installed,updated,skipped}, references:{added,removed},
   gc:{deleted}, irs:[…], errors:[…]}`. Read `errors`.
