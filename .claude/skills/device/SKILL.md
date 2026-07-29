@@ -623,7 +623,9 @@ helixgen device normalize <preset.hsp> --yes                         # write tri
 
 `device measure` (read-only) reduces playing-gated telemetry to robust dB
 stats while the player plays — the input-invariant **chain gain** is the
-number to compare across snapshots/presets. `device normalize` is the closed
+number to compare across snapshots/presets (input-invariant for a **clean**
+chain; saturation breaks it, which is why a replayed source has to be
+level-calibrated — see "Calibrating a repeatable source" below). `device normalize` is the closed
 loop built on it: it recalls each target (each NAMED snapshot of a local
 `.hsp`, or each tone of a manifest setlist), prompts the player to play per
 target, and computes the dB trim that equalizes each target's **total
@@ -725,6 +727,80 @@ hardware:
 - **Re-runs are idempotent** (total-loudness math + the tolerance dead-band):
   re-running with a different `--target-db` is safe — trims move to the new
   target and **nothing compounds**.
+
+#### Calibrating a repeatable source — computer playback into the instrument jack
+
+Replaying a recorded signal instead of playing by hand makes a run repeatable
+and unattended. Three things decide whether the numbers mean anything.
+
+- **SOURCE LEVEL DETERMINES THE SPREAD — calibrate it, never just pick one.**
+  A **clean** chain tracks source level roughly **1:1**; a **saturated** one is
+  nearly input-independent. So the clean-to-saturated spread — and every trim
+  normalize derives from it — is a function of **how hard the source drives the
+  chain**, not a property of the preset. Field-measured 2026-07-27: four runs of
+  one preset spread ~9 dB from source level alone. An arbitrary source level
+  yields a perfectly repeatable rig producing trims that are an **artifact of
+  that arbitrary choice**.
+  **Calibrate against `input_db`, not `gain_db`.** Measure with the player
+  playing **by hand** and note `input_db`; then adjust the playback volume until
+  the loop reads within **~1 dB** of it. `input_db` is the jack level itself, so
+  it is chain-independent and works on any preset — whereas `gain_db` on a clean
+  chain is precisely the quantity that *doesn't* move with source level, so
+  nulling against it "converges" instantly at any arbitrary level. Record the
+  setting; it is part of the rig, and changing it invalidates comparison with
+  earlier runs. For that by-hand reference, pin the input impedance to a fixed
+  value rather than Auto — a real pickup is impedance-loaded, so `FirstBlock`
+  auto-modes make the reference itself preset-dependent.
+  **Not loop-specific:** `--source input` and `--source loop` share the physics.
+  This is also what reconciles "chain gain is input-invariant" above: that holds
+  for a **clean** chain; saturation is what breaks it.
+- **Play it gaplessly — `afplay` in a shell loop is not.** Each `afplay`
+  invocation costs ~0.8–0.9 s of process startup, so `while :; do afplay …; done`
+  turns a 5.00 s loop into a ~5.9 s period jittering ±0.3 s, destroying the whole
+  point of an exact-length loop. Use sox's own `repeat`, which is gapless inside
+  one effects chain:
+
+  ```bash
+  play -q helix-cal-loop.wav repeat 9999    # sox; ^C to stop
+  ```
+
+- **Measure whole loop cycles.** For a periodic stimulus, a window of exactly
+  *k* cycles covers the same set of signal values regardless of where it starts,
+  so the reading stops depending on window phase. Set `--seconds` to a multiple
+  of the loop length, or record a loop that divides the window. A 5.00 s loop
+  suits both `--seconds 10` and the default `--seconds 20`.
+  Scope it honestly: this matters most for `--source loop`'s raw `output_db` and
+  for saturated chains. `gain_db` on a clean chain is largely phase-insensitive,
+  and the residual error is a dB or two, not a wild number.
+  Known ceiling: the meters are a ~10 Hz point sampler, and a loop whose period
+  is an exact multiple of 0.1 s samples the *same* phase positions every cycle,
+  so extra cycles don't dither that error away. A deliberately incommensurate
+  period (5.03 s) would average better at the cost of the whole-cycle property.
+  5.00 s takes the whole-cycle side of that trade.
+
+**A ready-made stimulus** ships with the repo's loudness spec:
+`docs/superpowers/specs/assets/helix-cal-loop.wav` — 10 guitar-DI notes E2–C5,
+exactly 5.00 s (240000 samples at 48 kHz), peak −3 dBFS, CC0, rebuildable via
+`build-helix-cal-loop.sh` beside it.
+
+**Rig it like this.** Play into the **1/4" instrument jack** with the guitar
+unplugged, and use the default `--source input`.
+
+- **Pin the Mac's output device to the headphone jack.** The Stadium is itself a
+  USB audio interface, so plugging it in often steals the system default output —
+  the loop then leaves over USB, nothing reaches the jack, and `measure` reports
+  "not enough playing" with no hint why. Most likely first-run failure.
+- **Start the volume low with the input `Pad` engaged.** A headphone output is
+  ~1–2 Vrms into an input expecting ~100 mV. The `output_db > 0` clipping
+  guidance above catches chain-out clipping, *not* a slammed input converter.
+- **Why the instrument jack specifically:** `--source input` credits a sample
+  only when it sees **both** a real pitch reading and a non-silent
+  instrument-input meter. A return/aux/USB feed is not expected to register on
+  that meter — inferred from the input-source vocabulary, not documented, so
+  treat it as the reason to start at the jack rather than a proven prohibition.
+- **If the gate never credits the loop**, fall back to `--source loop`, which
+  gates on chain-out level instead; `gain_db` then comes back null and
+  `output_db` is the number to compare.
 
 > **WARNING — the follow-up `device sync` is a whole-managed-pool mirror.**
 > The sync that pushes your trims re-pushes **EVERY** manifest-known tone in

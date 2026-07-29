@@ -25,6 +25,7 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 - `.claude-plugin/` — `plugin.json` + `marketplace.json`; version bump here on `main` triggers release (see Releasing)
 - `data/library/` — bundled block library (`HELIXGEN_LIBRARY`)
 - `docs/` — runtime references skills consult: `CLI.md`, `recipe-reference.md`, `helix-protocol.md` (synced FROM helixgen-core — core authoritative), plus `demo.gif`
+- `docs/superpowers/specs/` — **design specs** (`YYYY-MM-DD-<topic>-design.md`), written before implementation and kept as the record of *why*. Distinct from `docs/plans/`, which holds ralphex implementation plan files. Spec assets (calibration audio, fixtures) live under `docs/superpowers/specs/assets/`.
 - `tests/` — skill-doc frontmatter + content checks (`python3 -m pytest`, needs only pytest)
 
 **Plugin backlog lives at `BACKLOG.md` in coordination workspace** (repos' shared backlog; entries #57–#59 cover repo split) — file plugin-only work there.
