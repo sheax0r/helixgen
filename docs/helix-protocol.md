@@ -413,12 +413,12 @@ msgpack map.
 | **LIST** | `/GetContainerContents` | `(reqid:i, containerCID:i)` | `,ibi` → `[reqid, msgpack-array-of-item-maps, trailing:i]` | Lists a container's items (dialect A maps). **Large replies chunk the blob** across multiple frames — reassemble before msgpack-decoding. |
 | **READ meta** | `/GetContentRef` | `(reqid:i, cid:i)` | item metadata map (dialect A) | Single item's metadata. On a root CID returns the container's friendly name. |
 | **LOAD** | `/LoadPresetWithCID` | `(reqid:i, cid:i)` | `/status`; then device streams `/setEditBuffer` + `/setPropertyValue` on **2001** | Loads a preset into the edit buffer. Full content arrives on the PUB stream, not in the 2002 reply. |
-| **CREATE (empty)** | `/CreateContent` | `(reqid:i, container:i, pos:i, ctype:i, msgpack{name:"…"})` | `/status [reqid, newCid, hist]` | Creates a **new empty content entry** in `container` at slot `pos`. `ctype = 2` = a **preset**; **`ctype = 1003` under the setlists root `-5` creates a SETLIST** (live-verified 2026-07-14 — an item's `type` metadata field carries the ctype it was created with). **Its `/status` is special:** field 2 is the **new CID**, field 3 is the **edit-buffer dirty flag** (`hist`), **not** an ok-code — `1` here means "the active preset has unsaved edits", and the create still succeeded at the requested `pos` (§9). Confirm by re-listing the container; never delete on a non-zero field 3. This is the first step of "Save As New" (§7.1), and the `helixgen device setlist create` path. |
+| **CREATE (empty)** | `/CreateContent` | `(reqid:i, container:i, pos:i, ctype:i, msgpack{name:"…"})` | `/status [reqid, newCid, hist]` | Creates a **new empty content entry** in `container` at slot `pos`. An **occupied** `pos` is never refused: the new entry **INSERTS** at the requested `pos` and the incumbent **and every subsequent item shift +1** (live-verified 2026-07-27, fw 1.3.2/1340, incl. mid-pool — the device never overwrites or relocates the new entry; duplicate names permitted). `ctype = 2` = a **preset**; **`ctype = 1003` under the setlists root `-5` creates a SETLIST** (live-verified 2026-07-14 — an item's `type` metadata field carries the ctype it was created with). **Its `/status` is special:** field 2 is the **new CID**, field 3 is the **edit-buffer dirty flag** (`hist`), **not** an ok-code — `1` here means "the active preset has unsaved edits", and the create still succeeded at the requested `pos` (§9). Confirm by re-listing the container; never delete on a non-zero field 3. This is the first step of "Save As New" (§7.1), and the `helixgen device setlist create` path. |
 | **CREATE (copy)** | `/AddContentsToContainer` | `(reqid:i, container:i, msgpack[srcCIDs], pos:i, 0:i, 0:i)` | `/status [reqid, code, n]` | Copies the listed source CIDs into `container` at slot `pos`. **The new CID is NOT in this `/status`** — re-list the container and match by `posi`/`name` to discover it. Trailing two ints observed as `0,0` (**partially decoded**). |
 | **SAVE (persist buffer)** | `/SavePresetWithCID` | `(reqid:i, cid:i, 0:i, N:i)` | `/status [reqid, code, n]` | Persists the **current edit buffer** into an existing `cid`. The `0` third arg is fixed in captures. **`N` is an unknown 4th arg** — the editor sent `N=6` for a preset whose edit buffer had `bcnt=28` / 20 blocks, so **`N` is NOT the block count**; its meaning is unknown and **`N=0` works** (verified byte-faithful: after a `/SavePresetWithCID … 0` + reload, the `sfg_` and `pm__` sections are identical; only the volatile `hist`/`cg__` sections differ). |
 | **WRITE content** | `/SetContentData` | `(reqid:i, cid:i, contentBlob:b)` | `/status [reqid, code, n]` | Writes preset **content** directly into an existing `cid`, replacing it. `contentBlob` is the **stored-preset** encoding (`\xff\xff\xff\xff pgsm` magic — see §4 "content encodings"), **not** the edit-buffer `_sbepgsm` form. This is how the editor installs an **imported** preset (it also sends `/SetContentAttrs` for name/colour and `/LoadPresetWithCID` after). Live-verified: used to restore a preset **byte-faithfully**. Combined with `/CreateContent` (§7.1) this is the full "author arbitrary content into a new slot" path. |
 | **RENAME / set attrs** | `/SetContentAttrs` | `(reqid:i, cid:i, msgpack{name:"…"})` | `/status [reqid, code, n]` | Sets item attributes; `{name:"…"}` renames (works on presets, **setlists**, and **IRs** alike). The preset **colour** is `{colr: <int>}` — an **int enum index** (a string is accepted with status 0 but silently coerced to 0; live-verified 2026-07-14). Once non-default, `colr` appears in the item's container-listing/`GetContentRef` map (that is the read path). Preset **notes** are NOT an attr — see the `pm__` note below. |
-| **DELETE** | `/RemoveContent` | `(reqid:i, container:i, msgpack[cids])` | `/status [reqid, code, n]` | Removes the listed CIDs from `container`. Deleting a **setlist** cid from `-5` kills its references but never the pool presets they point at. Deleting an **IR** cid from `-11` unregisters it immediately, but its backing `ir/*.wav` lingers until a **lazy device GC** (minutes) — during that window `/IrPathForHashGet` still resolves, so an immediate re-import is skipped as "already present" (and a delete → quick re-import of the same IR can wedge: file + path index present, no `-11` entry). helixgen removes the file over SFTP as part of its IR delete to close the window. |
+| **DELETE** | `/RemoveContent` | `(reqid:i, container:i, msgpack[cids])` | `/status [reqid, code, n]` | Removes the listed CIDs from `container`. Deletion does **NOT** shift later items back: it leaves a **gap** at the deleted `posi` (live-verified 2026-07-27) — a block `/ReorderContainerContent` restores a contiguous container. Deleting a **setlist** cid from `-5` kills its references but never the pool presets they point at. Deleting an **IR** cid from `-11` unregisters it immediately, but its backing `ir/*.wav` lingers until a **lazy device GC** (minutes) — during that window `/IrPathForHashGet` still resolves, so an immediate re-import is skipped as "already present" (and a delete → quick re-import of the same IR can wedge: file + path index present, no `-11` entry). helixgen removes the file over SFTP as part of its IR delete to close the window. |
 | **IR path lookup** | `/IrPathForHashGet` | `(reqid:i, blob16:b)` | `/xxxIrxPathForHash1 [reqid, path:s]` | IRs are referenced by a **16-byte hash**; this resolves a hash to its on-device path. Reply address is literally `/xxxIrxPathForHash1`; the path is device-side, e.g. `"/data/stadium-family-fw/ir/<name>.wav"` (IR files live under `/data/stadium-family-fw/ir/`). |
 
 ### Live edit-buffer manipulation
@@ -496,8 +496,19 @@ values >1.0 legal; dB = `20*log10(v)`). HW-characterized 2026-07-14 on a
 serial-path preset: mid 796 = the path chain nodes as adjacent L/R cell pairs
 (cells 0–1 = instrument input; cells 8–9 == 26–27 = chain out), mid 800's
 populated cells = the output-send stereo pairs, each carrying the chain-out
-level. **Every tap sits upstream of the output block's `gain`** (a landed
-−60 dB output-gain write moves no cell). Bypassing the amp collapses the
+level. **Every tap sits DOWNSTREAM of the output block's `gain`** — a meter
+reading already includes whatever output level is in force.
+**Re-measured 2026-07-30** (Stadium XL, fw 1.3.2), same preset and stimulus,
+only the output gain moved: `0 dB → gain_db +8.37`, `−20 dB → gain_db
+−11.11`, i.e. a −20 dB write moved the meter −20.04 dB.
+This **corrects a prior claim** here that "every tap sits upstream of the
+output block's `gain` (a landed −60 dB output-gain write moves no cell)".
+That was an inference, not a measurement, and `device normalize` was built on
+it: it added the output level on top of a gain that already contained it, so
+every trim was double-counted and the loop oscillated instead of converging
+(see hc-daz). Treat any tap-position claim as measured only when it names the
+experiment, the model and the firmware — as this one now does.
+Bypassing the amp collapses the
 downstream cells ~−33 dB — the meters are the ground truth for whether a
 live-op actually landed (the 2001 echo is NOT: the device echoes success for
 a toggle of the wrong block). Full per-layout cell-index formula still open
@@ -792,6 +803,13 @@ footswitch/controller assignment commands are parameterised on the device.
   **confirms the write by re-listing the container** and only treats it as a
   failure when the content is genuinely absent. Full investigation:
   `docs/superpowers/specs/2026-07-15-createcontent-status1-findings.md`.
+  **Field 2 (the new CID) has never been observed wrong in a delivered
+  `/status` frame** — 21 probes 2026-07-27 (15 code-0 incl. 10 back-to-back,
+  6 code-1; clean and dirty buffers, empty and occupied targets), every reply
+  cid confirmed by point `/GetContentRef` + strict re-list. The historic
+  "unreliable reply" reputation attaches to replies that never arrive on the
+  flaky transport, not to lying ones
+  (`docs/superpowers/specs/2026-07-27-createcontent-followups.md`).
   (Note: in a **pool** container listing, `blck`/`flow` are `-1` for **every**
   preset — including freshly + successfully installed ones — so they are **not**
   an empty/populated signal; use `/GetContentData` size to tell an empty stub
@@ -801,6 +819,19 @@ footswitch/controller assignment commands are parameterised on the device.
 - **`/CreateContent` `ctype`.** `ctype = 2` (preset) and `ctype = 1003`
   (setlist, under root `-5`) are live-verified; the IR-creation value is
   unknown (IRs are created by the watched-dir import, not `/CreateContent`).
+- **Watched-dir imports do not invalidate the `-11` container-listing cache**
+  (hardware-observed 2026-07-27, fw 1.3.2 b1340). A watched-dir IR import
+  registers fully — content row (`/GetContentRef` works), path index
+  (`/IrPathForHashGet` resolves), `/addContent` broadcast (carrying the new
+  `cid_`) — yet `/GetContainerContents` on `-11` keeps returning the
+  pre-import listing indefinitely (stale for 11+ min in observation; holding
+  a 2001 subscription during the read does **not** force it to converge).
+  Any RPC **content write** invalidates the cache: a `/SetContentAttrs`
+  rename of a row (even to its same name) made the listing complete on the
+  next read, instantly. This is presumably why the editor never sees the
+  problem — it maintains its own model from `/addContent` deltas rather than
+  re-listing. helixgen's `push_ir` exploits it: after registration it issues
+  a same-name rename of the new cid as a no-op cache nudge.
 - **Preset notes** live as the `preset.meta.info` entry (`{key_, type:"s",
   val_}`) in the content blob's **`pm__` property list** — not as a content
   attr. Read/write = `/GetContentData` → edit the entry → `/SetContentData`

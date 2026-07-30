@@ -28,10 +28,17 @@ From the shipped design (`device` SKILL.md Loudness section, `docs/CLI.md`,
   says the opposite for *authoring* (`tone/SKILL.md:401-404`: normalize with the amp
   channel volume, because the meters tap upstream of `b13 gain`). Both are correct; they
   are different jobs.
-- **The trim is downstream of every meter tap.** `helix-protocol.md:499`: "Every tap sits
+- ~~**The trim is downstream of every meter tap.** `helix-protocol.md:499`: "Every tap sits
   upstream of the output block's `gain` (a landed −60 dB output-gain write moves no cell)."
   A confirming `device measure` cannot see a written trim. Verification must capture
-  outside the Helix. That parenthetical is also proof the write *lands*.
+  outside the Helix. That parenthetical is also proof the write *lands*.~~
+  **RETRACTED 2026-07-30 (he-06i / core PR #51) — this premise was FALSE.** The taps sit
+  **DOWNSTREAM** of the output gain: re-measured on Stadium XL fw 1.3.2, same preset and
+  stimulus, only the output gain moved — `0 dB → gain_db +8.37`, `−20 dB → gain_db −11.11`
+  (a −20 dB write moved the meter −20.04 dB). A confirming `device measure` **does** see a
+  synced trim, and `device normalize` had been double-counting the output level (see
+  hc-daz). The quoted claim was an inference presented as a measurement; it is corrected in
+  `docs/helix-protocol.md` and in the `device`/`tone` skills.
 - **Output `level` range is −120..+20 dB** (`recipe-reference.md:97`), so a `--target-db`
   above `chain gain + 20` is unreachable and the quietest chain sets a run's ceiling.
 - **`output_db` above 0 dBFS is in-chain clipping**, upstream of the trim, unfixable by any

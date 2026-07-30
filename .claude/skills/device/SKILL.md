@@ -625,14 +625,33 @@ helixgen device normalize <preset.hsp> --yes                         # write tri
 stats while the player plays — the input-invariant **chain gain** is the
 number to compare across snapshots/presets (input-invariant for a **clean**
 chain; saturation breaks it, which is why a replayed source has to be
-level-calibrated — see "Calibrating a repeatable source" below). `device normalize` is the closed
-loop built on it: it recalls each target (each NAMED snapshot of a local
+level-calibrated — [MEASURED 2026-07-27, model/firmware not recorded: four runs
+of one preset spread ~9 dB on source level alone; see "Calibrating a repeatable
+source" below]). `device normalize` is the closed loop built on it: it recalls each target (each NAMED snapshot of a local
 `.hsp`, or each tone of a manifest setlist), prompts the player to play per
 target, and computes the dB trim that equalizes each target's **total
-loudness** (measured chain gain + the output-block level already in force)
-against the anchor — the first target that measured ok — or an absolute
-`--target-db`. Trimming totals makes re-runs idempotent (in-band zero trims,
-no compounding). The essentials:
+loudness** against the anchor — the first target that measured ok — or an
+absolute `--target-db`. The measured chain gain **IS** the total: the meter
+taps sit DOWNSTREAM of the output block's gain, so `gain_db` already contains
+whatever output level is in force ([MEASURED] Stadium XL fw 1.3.2,
+2026-07-30 — same preset and stimulus, only the output gain moved: `0 dB →
+gain_db +8.37`, `−20 dB → gain_db −11.11`, a −20 dB write moving the meter
+−20.04 dB; `docs/helix-protocol.md` §meter grids). Sizing each trim against
+an **absolute** target is what makes re-runs converge (in-band zero trims, no
+compounding).
+
+> **Provenance tags.** Every meter-semantics claim in this section is tagged
+> **[MEASURED …]** (naming the experiment, model and firmware) or
+> **[INFERRED]**. An inference presented as a measurement is what broke
+> `device normalize`: the old docs asserted the taps were *upstream* of the
+> output gain, `normalize` added the output level on top of a `gain_db` that
+> already included it, every trim was double-counted, and the loop oscillated
+> instead of converging (core PR #51, hc-daz — engine fixed in core 0.33.0;
+> against the pinned 0.30.0 engine the trims are still double-counted, so
+> re-measure and re-run rather than trusting a single pass). Do not add an
+> untagged claim here.
+
+The essentials:
 
 - **DRY-RUN by default — always run and show the dry-run report first.**
   Measuring happens either way, but without `--yes` trims are only reported.
@@ -658,23 +677,29 @@ no compounding). The essentials:
 - **`--source loop` (0.27.0) — measuring off a front-of-chain looper.** When
   a looper replays a recorded signal instead of live playing, the input-jack
   gate reads pure silence (no pitch, no input level — every sample would gate
-  out), so loop mode gates on **chain-out level** instead. With no input
-  reference, `gain_db` comes back `null` — the number to compare across
+  out; [MEASURED — the observed run failure that motivated `--source loop` in
+  0.27.0, model/firmware not recorded]), so loop mode gates on **chain-out
+  level** instead. With no input reference, `gain_db` comes back `null` — the
+  number to compare across
   targets is the raw **`output_db`** (the looped source is identical across
   targets by construction, so output-level differences ARE the chain
   differences). Works on both `measure` and `normalize`; keep the SAME loop
-  replaying across every target of a run. Idempotency is unchanged (the
-  meter taps sit upstream of the trims either way).
+  replaying across every target of a run. Convergence is unchanged — trims are
+  sized against an absolute target either way, and a re-measure reads the
+  trimmed level.
 - **An unreachable device fails fast (0.27.0).** `measure` — like `device
   tuner`/`device meters` — preflights reachability with one cheap TCP probe
   of the `--port` control port before streaming (the `--port` flag is
   honored now): a powered-off/unreachable device errors immediately instead
   of streaming silence for the whole window and ending in "no meter data".
-- **Don't re-measure to "confirm" a trim.** The meter taps sit UPSTREAM of
-  the output-block gain, so a written trim is invisible to `device measure`
-  by design — the loop trusts the dB math (the output `level` is dB-native,
-  so each trim is exact). A confirmation re-measure would falsely report
-  "no change".
+- **Re-measuring IS a valid way to confirm a trim** — once the trim has been
+  **synced to the device**. The taps sit downstream of the output-block gain
+  ([MEASURED], above), so a landed trim moves `gain_db` by the written amount.
+  What a re-measure cannot see is a trim that only exists in the local `.hsp`:
+  `--yes` writes the file, `device sync` / `device install` puts it on the
+  hardware. (Earlier revisions of this skill said the opposite — "invisible by
+  design, trust the dB math". That was wrong, and it is why nobody caught the
+  double-counted trims.)
 - It holds the `editbuffer` lock even in dry-run (it recalls snapshots /
   loads presets while measuring), and it changes the device's ACTIVE tone
   selection during the run (restored best-effort afterwards).
@@ -713,20 +738,35 @@ hardware:
   common level — and on snapshot scope the anchor can drag the whole preset
   down to its quietest snapshot's level. Pick one absolute target and reuse
   it on every preset/setlist that should sit level with the others.
-- **A clean chain caps the reachable target.** The output-block `level` maxes
-  out at **+20 dB**, so a target above `chain gain + 20` is unreachable —
-  e.g. a clean snapshot measuring −13 dB chain gain tops out at a total of
-  ≈ +7. Pick the target at or below the **quietest chain's ceiling** (the
-  dry-run report shows every target's measured gain — read it before
-  choosing `--target-db`).
+- **A clean chain caps the reachable target.** The output-block `level` is
+  capped at **+20 dB** by helixgen's own recipe schema (`recipe-reference.md`:
+  `level` is −120..20), so a target above `chain gain + 20` is unreachable
+  through the normal authoring path — e.g. a clean snapshot measuring −13 dB
+  chain gain tops out at a total of ≈ +7. **This is a LOCAL SCHEMA limit, not
+  a hardware one** ([MEASURED] Stadium XL fw 1.3.2, 2026-07-29: a `set-param`
+  write of `25` was accepted, read back as `25.0`, and the hardware applied a
+  faithful +5.00 dB over the +20 setting — capture peak −0.59 dBFS, so not a
+  clipping artifact; see he-b9i. `device set-param` does not range-check
+  either, so a typo'd value lands silently). Treat +20 as the ceiling to design
+  against, not as a physical wall. Pick the target at or below the **quietest
+  chain's ceiling** (the dry-run report shows every target's measured gain —
+  read it before choosing `--target-db`).
 - **Chain-out `output_db` over 0 dBFS in the results = in-chain clipping
-  that normalize CANNOT fix** — its trim is applied downstream of the meter
-  taps. Don't chase it with level moves: flag it to the user as a
-  **gain-staging problem inside the chain** (amp/drive levels — the `tone`
-  skill's territory), then normalize again once the chain is clean.
-- **Re-runs are idempotent** (total-loudness math + the tolerance dead-band):
-  re-running with a different `--target-db` is safe — trims move to the new
-  target and **nothing compounds**.
+  that normalize CANNOT fix** — the clipping happens **inside the chain**,
+  upstream of the output block the trim moves, so the distortion is already
+  baked into the signal before any level move touches it. (Trimming the output
+  level *does* pull the reading down — the taps are downstream of it — which is
+  exactly why chasing the number with level moves hides the problem instead of
+  fixing it.) Flag it to the user as a **gain-staging problem inside the
+  chain** (amp/drive levels — the `tone` skill's territory), then normalize
+  again once the chain is clean.
+- **Re-runs converge** (absolute-target math + the tolerance dead-band):
+  each trim is sized to put the target AT `--target-db`, not to nudge it by a
+  delta, and the next run measures the tone at its new level — so an in-band
+  target gets a zero trim and **nothing compounds**. Re-running with a
+  different `--target-db` is safe. Requires the corrected engine (core
+  0.33.0); the pinned 0.30.0 double-counts the output level, which oscillates
+  between two states instead of converging.
 
 #### Calibrating a repeatable source — computer playback into the instrument jack
 
@@ -737,15 +777,19 @@ and unattended. Three things decide whether the numbers mean anything.
   A **clean** chain tracks source level roughly **1:1**; a **saturated** one is
   nearly input-independent. So the clean-to-saturated spread — and every trim
   normalize derives from it — is a function of **how hard the source drives the
-  chain**, not a property of the preset. Field-measured 2026-07-27: four runs of
-  one preset spread ~9 dB from source level alone. An arbitrary source level
+  chain**, not a property of the preset. [MEASURED 2026-07-27, model/firmware
+  not recorded]: four runs of one preset spread ~9 dB from source level alone.
+  An arbitrary source level
   yields a perfectly repeatable rig producing trims that are an **artifact of
   that arbitrary choice**.
   **Calibrate against `input_db`, not `gain_db`.** Measure with the player
   playing **by hand** and note `input_db`; then adjust the playback volume until
   the loop reads within **~1 dB** of it. `input_db` is the jack level itself, so
-  it is chain-independent and works on any preset — whereas `gain_db` on a clean
-  chain is precisely the quantity that *doesn't* move with source level, so
+  it is chain-independent and works on any preset ([INFERRED] from the cell's
+  position ahead of the chain — the tap-position experiment above was run on
+  the chain-out cells, not this one, so treat "input_db is pre-chain" as
+  unverified until someone applies a known delta around it) — whereas
+  `gain_db` on a clean chain is precisely the quantity that *doesn't* move with source level, so
   nulling against it "converges" instantly at any arbitrary level. Record the
   setting; it is part of the rig, and changing it invalidates comparison with
   earlier runs. For that by-hand reference, pin the input impedance to a fixed
@@ -772,8 +816,9 @@ and unattended. Three things decide whether the numbers mean anything.
   Scope it honestly: this matters most for `--source loop`'s raw `output_db` and
   for saturated chains. `gain_db` on a clean chain is largely phase-insensitive,
   and the residual error is a dB or two, not a wild number.
-  Known ceiling: the meters are a ~10 Hz point sampler, and a loop whose period
-  is an exact multiple of 0.1 s samples the *same* phase positions every cycle,
+  Known ceiling: the meters are a ~10 Hz point sampler ([MEASURED] — the
+  observed 2001 meter-frame rate; see `docs/helix-protocol.md`), and a loop
+  whose period is an exact multiple of 0.1 s samples the *same* phase positions every cycle,
   so extra cycles don't dither that error away. A deliberately incommensurate
   period (5.03 s) would average better at the cost of the whole-cycle property.
   5.00 s takes the whole-cycle side of that trade.
@@ -977,9 +1022,9 @@ Tightly:
 | Expecting `device install` to reconcile a whole setlist | It installs/records **one** tone but doesn't rebuild a setlist's full reference order the way `device sync <setlist>` does — use sync for batch/whole-setlist work |
 | Hunting for the device's IP by hand (router UI, arp scans) or assuming a default address exists | Run `helixgen device discover` once — it persists the record and every verb resolves it; there is no built-in default IP (0.24.0), and a missing address fails fast pointing at discover |
 | Treating `device normalize` as a device write, or skipping the sync after `--yes` | Normalize writes trims into the **local `.hsp` only** — the device copy is untouched until the next `device sync <setlist>` / `device install`; and it's dry-run by default — show the user the dry-run report before `--yes` |
-| Re-running `device measure` to confirm a normalize trim landed | The meter taps sit upstream of the output-block gain, so the trim is invisible to `measure` by design — a confirmation re-measure falsely reads "no change"; trust the dB math |
+| Re-measuring to confirm a trim **before syncing it** | `--yes` writes the local `.hsp` only, so the hardware is still at the old level and the re-measure reads "no change" — sync/install first, *then* re-measure (the taps ARE downstream of the output gain, so a landed trim moves `gain_db` by the written amount) |
 | Level-matching across presets/setlists with the default anchor (no `--target-db`) | The anchor equalizes within one scope only, and on snapshot scope can drag a preset to its quietest snapshot's level — always pass one explicit absolute `--target-db` and reuse it across runs (see the field-proven guidance above) |
-| Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | That's in-chain clipping upstream of the trim — normalize can't touch it; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
+| Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | The clipping happened inside the chain, upstream of the output block the trim moves — a level trim pulls the reading down without undoing the distortion; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
 | Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |
 | Measuring a looper-replayed signal with the default input gate | The input jack is silent while a front-of-chain looper replays, so the default gate credits nothing and the window fails — pass `--source loop` (and compare raw `output_db`, not `gain_db`, across targets) |
 | Reaching for `slots restore --force` to overwrite an occupied setlist position | `--force` only covers an occupied **pool** slot; an occupied named-setlist position is refused (the error identifies the incumbent by cid) — `device delete <cid> --setlist <name>` the incumbent reference first, then re-run |

@@ -609,8 +609,10 @@ def test_setup_skill_documents_add_guitar() -> None:
 def test_tone_skill_never_gates_normalization_on_path_output() -> None:
     """#91: an absent/null `path.output` means device-default output block, not
     a missing output target — it must never gate the normalization pass. The
-    skill also has to say *why* it still steers to the amp channel volume: the
-    meters tap upstream of the `b13` output `gain`."""
+    skill also has to say *why* it still steers to the amp channel volume:
+    `device normalize` owns the output block and overwrites what is parked
+    there (he-06i — the old "the meters tap upstream of `b13`" rationale was a
+    false premise, corrected by core PR #51)."""
     text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
     # the guard itself, tied to the normalization pass
     assert "Volume-normalization pass" in text
@@ -626,10 +628,39 @@ def test_tone_skill_never_gates_normalization_on_path_output() -> None:
     )
     assert "`b13`" in text
     assert "has_output_override" in text
-    # why the amp channel volume stays the actuator: meters tap upstream of b13
+    # why the amp channel volume stays the actuator: normalize owns the output
+    # block and a snapshot-scope run overwrites whatever is parked there
     assert re.search(
-        r"meters.{0,80}\*\*upstream\*\*.{0,120}`b13`", text, re.DOTALL | re.IGNORECASE
-    ), "tone: upstream-of-b13 meter rationale not stated"
+        r"actuator \*?\*?`device normalize` owns.{0,240}(overwrite|rewrite|discard)",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    ), "tone: normalize-owns-the-output-block rationale not stated"
+    # and the retracted premise must be flagged as false, not merely dropped
+    assert re.search(
+        r"\*\*FALSE\*\*.{0,200}\*\*DOWNSTREAM\*\*", text, re.DOTALL
+    ), "tone: the retracted upstream-tap premise is not marked FALSE"
+
+
+def test_no_skill_claims_the_meter_taps_sit_upstream_of_the_output_gain() -> None:
+    """he-06i / core PR #51: measured on Stadium XL fw 1.3.2, a −20 dB
+    output-gain write moved the meter −20.04 dB — the taps are DOWNSTREAM.
+    The old claim shipped as fact for the whole life of the loudness feature
+    and broke `device normalize`; it must not creep back into any skill."""
+    stale = re.compile(
+        r"(meters?|taps?)[^.\n]{0,120}\bupstream\b[^.\n]{0,120}"
+        r"(output[- ]block|output gain|`b13`)",
+        re.IGNORECASE,
+    )
+    for skill in ("tone", "device", "setup"):
+        text = (SKILLS_ROOT / skill / "SKILL.md").read_text()
+        # the corrections quote the retracted wording; only quoted-and-retracted
+        # occurrences are allowed, so require a nearby FALSE/DOWNSTREAM marker
+        for m in stale.finditer(text):
+            window = text[max(0, m.start() - 400): m.end() + 400]
+            assert re.search(r"FALSE|DOWNSTREAM|used to give|old docs", window), (
+                f"{skill}: un-retracted 'taps sit upstream of the output gain' "
+                f"claim at offset {m.start()}: {m.group(0)!r}"
+            )
 
 
 # --- core 0.29.0: sync recomputes the .hsp hash at sync time (#92) ------------
@@ -734,12 +765,12 @@ def test_tone_skill_scopes_the_output_level_actuator_claim() -> None:
     volume-normalization actuator" contradicts the device skill and CLI.md."""
     text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
     assert re.search(
-        r"not\*\* the actuator for the \*authoring-time\* normalization",
+        r"not\*\*\s+the\s+actuator\s+for\s+the\s+\*authoring-time\*\s+normalization",
         text,
         re.IGNORECASE,
     ), "tone: output-level claim not scoped to the authoring-time pass"
     assert re.search(
-        r"`device normalize`\s+\*does\* write output-block `level`",
+        r"actuator `device normalize` owns",
         text,
         re.DOTALL | re.IGNORECASE,
     ), "tone: `device normalize` output-level exception not stated"

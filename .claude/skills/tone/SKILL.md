@@ -202,15 +202,15 @@ ritually:
   pickup setup calls for it (e.g. `"impedance": "230K"` to tame a fuzz the
   vintage way; `"pad": true` for hot active pickups):
   `"input": {"source": "inst1", "impedance": "230K"}`.
-- **Output level/pan** — `"output": {"level": -3.0}` is a clean final,
-  *unmeasured* trim of the whole path; `pan` for hard-panned dual-path tones.
-  It is **not** the actuator for the *authoring-time* normalization pass
-  (5.7) — the device's meters tap upstream of it, so it is invisible to
-  `device measure`. When the amp has no channel volume, that pass uses an
-  end-of-chain volume block instead (see section 5.7). (`device normalize`
-  *does* write output-block `level`, using its own dB math that adds the
-  in-force output level back to the measured gain — so output-level trims
-  are correct there, and only there.)
+- **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim of
+  the whole path; `pan` for hard-panned dual-path tones. It is **not** the
+  actuator for the *authoring-time* normalization pass (5.7) — it is the
+  actuator `device normalize` owns, and a snapshot-scope run overwrites it.
+  When the amp has no channel volume, that pass uses an end-of-chain volume
+  block instead (see section 5.7). (The trim is **not** invisible to
+  `device measure`: the meters tap DOWNSTREAM of the output gain — [MEASURED]
+  Stadium XL fw 1.3.2, 2026-07-30; earlier revisions of this skill claimed the
+  opposite.)
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:
@@ -398,16 +398,18 @@ never a reason to skip normalizing. (Engine-side readers have
 `docs/recipe-reference.md`; that's a Python property, not a CLI-visible field,
 so it isn't something you can query from here.)
 
-And normalize with the **amp channel volume anyway**, not that output block:
-the device's meters all tap **upstream** of the `b13` `gain`
-(`docs/helix-protocol.md` — a landed −60 dB output-gain write moves no meter
-cell), so output level is the wrong actuator for anything measured: an
-authoring-time output trim never shows up in a `device measure` chain-gain
-number. (A later `device normalize` pass *does* account for it — it adds the
-output level already in force to the measured gain to get total loudness,
-which is what makes re-runs idempotent — but the raw measurement it works
-from is still blind to the trim.) Reserve `output` for a final clean trim of
-the whole path (section 5).
+And normalize with the **amp channel volume anyway**, not that output block —
+though **not** for the reason this skill used to give. The old rationale ("the
+meters tap upstream of the `b13` `gain`, so an authoring-time output trim is
+invisible to `device measure`") is **FALSE**: the taps sit **DOWNSTREAM** of
+the output gain and a measure DOES see the trim ([MEASURED] Stadium XL fw
+1.3.2, 2026-07-30 — a −20 dB output-gain write moved the meter −20.04 dB;
+`docs/helix-protocol.md`, core PR #51). The actual reason to leave the output
+block alone here: it is the actuator **`device normalize` owns** — a
+snapshot-scope run rewrites `output.level` per snapshot outright, so any
+part-to-part balance parked there is discarded by the first normalize pass,
+while channel-volume balance survives it. Reserve `output` for a final clean
+trim of the whole path (section 5).
 
 Apply three forces, in order:
 
