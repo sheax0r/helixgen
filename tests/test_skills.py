@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.38.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.39.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -807,9 +807,22 @@ def test_device_skill_states_the_three_connections() -> None:
     assert sample_row and "sample" in sample_row[0]
 
 
+def test_device_skill_does_not_open_a_mode_conversation() -> None:
+    """`sample` works out of the box since core 0.39.0 (the engine carries
+    the stimulus), so asking the user to pick a mode before a first run is
+    pure friction — and asking it EVERY run, as happened in the field, sends
+    people back to hand-playing six windows."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    head = _section(text, "#### Which mode")
+    flat = " ".join(head.split())
+    assert "Do not open a mode conversation" in flat
+    assert re.search(r"`sample` is the DEFAULT mode", flat)
+    assert re.search(r"Raise modes only when the user brings them up", flat)
+
+
 def test_device_skill_carries_the_mode_decision_tree() -> None:
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    body = _section(text, "#### Which mode")
+    body = _section(text, "#### The modes, for when it does come up")
     for mode in ("`play`", "`sample`", "`looper`"):
         assert mode in body, mode
     assert "normalization.mode" in body
@@ -820,7 +833,8 @@ def test_device_skill_carries_the_mode_decision_tree() -> None:
     assert "analog cable" in rows["**`sample`** (default)"]
     # stimulus-first: replaying a recording is the normal case, and hand-
     # playing every window is the fallback -- not the other way round
-    assert re.search(r"Default to `sample`", body)
+    assert re.search(r"`sample` is the default and needs no setup", body)
+    assert re.search(r"never the recommended path", body)
 
 
 def test_device_skill_says_normalize_plays_the_sample_stimulus() -> None:
