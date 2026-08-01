@@ -6,19 +6,18 @@ A Claude Code plugin that generates Line 6 Helix Stadium presets from natural-la
 
 > ⚠️ **Unofficial tool — use at your own risk.** Not affiliated with or endorsed by Line 6 / Yamaha (see [Trademark notice](#trademark-notice)). Loading any user-generated preset on your hardware carries risk — rejected loads, corrupted preset slots, on-device crashes. Review what you import. The MIT [LICENSE](LICENSE) disclaims all warranty.
 
-## Slash commands
+## Invoking the skills by name
 
-Each skill is reachable by name, so you can ask for one directly instead of
-hoping it gets picked up:
+Each skill is reachable directly, so you can ask for one instead of hoping it
+gets picked up:
 
-| Command | What it does |
+| | What it does |
 |---|---|
 | `/helixgen:setup` | Provision the CLI, preferences, guitar profiles and the device connection |
 | `/helixgen:tone` | Design and generate a preset from a tone description |
 | `/helixgen:device` | Install, sync, level-match, back up, or manage setlists and IRs |
 
-Each takes free text (`/helixgen:tone lead in Zombie on my EC-1000`) and asks
-what you want when called bare.
+Each takes free text — `/helixgen:tone lead in Zombie on my EC-1000`.
 
 ## Install
 
@@ -36,7 +35,7 @@ brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.36.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
+The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.37.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
 
 **Using the Python CLI directly** (no plugin)? Same binary — see [`docs/CLI.md`](docs/CLI.md). A standalone install starts with an empty library at `~/.helixgen/library/`, so seed it first with `helixgen bootstrap` (the plugin's skills instead point `HELIXGEN_LIBRARY` at the bundled `data/library`).
 

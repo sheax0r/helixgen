@@ -1,4 +1,4 @@
-"""Lightweight checks on every `.claude/skills/<name>/SKILL.md` in the repo.
+"""Lightweight checks on every `skills/<name>/SKILL.md` in the repo.
 
 Mirrors what the Claude Code skill loader needs to succeed: a YAML frontmatter
 block with `name` and `description` keys, combined size ≤ 1024 chars
@@ -15,7 +15,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILLS_ROOT = REPO_ROOT / ".claude" / "skills"
+SKILLS_ROOT = REPO_ROOT / "skills"
 
 
 def _skill_files() -> list[Path]:
@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.36.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.37.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -971,56 +971,45 @@ def test_tone_skill_step_numbering_is_consistent() -> None:
     assert referenced <= set(headings), referenced - set(headings)
 
 
-# --- slash commands (4.10.0) ------------------------------------------------
-
-COMMANDS_ROOT = REPO_ROOT / "commands"
-
-#: Every skill gets a same-named command, so `/helixgen:<skill>` works. A
-#: skill with no command is only reachable if the model decides to load it;
-#: the command is how a USER asks for it by name.
-EXPECTED_COMMANDS = {"setup", "tone", "device"}
+# --- plugin layout (4.11.0) -------------------------------------------------
 
 
-def _command_frontmatter(path: Path) -> dict:
-    text = path.read_text()
-    assert text.startswith("---\n"), f"{path}: no frontmatter block"
-    end = text.index("\n---\n", 3)
-    body = text[end + 5:]
-    fields = dict(
-        re.findall(r"^([a-z-]+):\s*(.+)$", text[4:end], re.MULTILINE))
-    return {"fields": fields, "body": body}
+def test_skills_live_where_the_plugin_loader_scans_them() -> None:
+    """THE regression this release exists to fix.
+
+    A plugin's skills are auto-discovered at `skills/` in the plugin ROOT.
+    `.claude/skills/` is the layout for a *repo-local* skill and is NOT
+    scanned inside an installed plugin — shipped there, every skill in this
+    repo silently failed to load for four minor versions, and
+    `Skill(helixgen:setup)` answered "Unknown skill". Nothing in the plugin
+    manifest declared them either.
+    """
+    assert SKILLS_ROOT.is_dir(), (
+        "skills/ must sit at the plugin root — the loader does not scan "
+        ".claude/skills/ inside an installed plugin")
+    assert not (REPO_ROOT / ".claude" / "skills").exists(), (
+        "a second copy under .claude/skills/ will load as duplicates or "
+        "shadow the real ones")
+    assert {p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()} == {
+        "setup", "tone", "device"}
 
 
-def test_every_skill_has_a_matching_command() -> None:
-    on_disk = {p.stem for p in COMMANDS_ROOT.glob("*.md")}
-    skills = {p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()}
-    assert skills == EXPECTED_COMMANDS, skills
-    assert on_disk == EXPECTED_COMMANDS, on_disk
-
-
-def test_commands_carry_loadable_frontmatter() -> None:
-    for path in sorted(COMMANDS_ROOT.glob("*.md")):
-        meta = _command_frontmatter(path)
-        assert meta["fields"].get("description"), f"{path}: no description"
-        assert len(meta["fields"]["description"]) <= 200, path
-        assert meta["body"].strip(), f"{path}: empty body"
-
-
-def test_each_command_invokes_its_own_skill() -> None:
-    # a command that doesn't name its skill is just a loose prompt: the whole
-    # point is that /helixgen:tone runs the tone SKILL, not an improvisation.
-    for name in sorted(EXPECTED_COMMANDS):
-        body = _command_frontmatter(COMMANDS_ROOT / f"{name}.md")["body"]
-        assert re.search(rf"`{name}` skill", body), name
-        # and it must pass the user's own words through
-        assert "$ARGUMENTS" in body, name
-
-
-def test_commands_handle_being_called_bare() -> None:
-    # `/helixgen:tone` with no argument must ask, not invent a tone request.
-    for name in sorted(EXPECTED_COMMANDS):
-        body = _command_frontmatter(COMMANDS_ROOT / f"{name}.md")["body"]
-        assert re.search(r"[Ww]ith no arguments", body), name
+def test_no_command_stubs_shadow_the_skills() -> None:
+    """Commands load BEFORE skills and a same-named command WINS: the skill
+    is then skipped as a duplicate. Shipping `commands/setup.md` next to
+    skill `setup` therefore replaced a 1200-line skill with a 5-line stub
+    that told the model to "use the setup skill" — the very skill it had
+    just suppressed. Skills are invocable by name on their own
+    (`/helixgen:setup`), so the stubs bought nothing.
+    """
+    commands = REPO_ROOT / "commands"
+    if not commands.is_dir():
+        return
+    clashing = {p.stem for p in commands.glob("*.md")} & {
+        p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()}
+    assert not clashing, (
+        f"command(s) {sorted(clashing)} share a name with a skill and will "
+        f"suppress it")
 
 
 def test_setup_skill_converges_instead_of_interviewing() -> None:
@@ -1048,3 +1037,19 @@ def test_setup_skill_converges_instead_of_interviewing() -> None:
     target_rule = _section(text, "#### The `normalization` block")
     assert re.search(r"17\.5 dB, written without asking", target_rule)
     assert not re.search(r"only write a number you can attribute", target_rule)
+
+
+def test_mirrored_docs_match_core() -> None:
+    """`docs/CLI.md` and friends are byte-synced FROM helixgen-core and the
+    skills point at them as the deep reference. A stale copy sends an agent
+    that follows a SEE ALSO to the previous release's story — which is how
+    the 0.36.0 target paragraph went missing here for a full release."""
+    core = Path.home() / "git" / "gt" / "helixgen_core" / "mayor" / "rig"
+    if not core.is_dir():
+        pytest.skip("core checkout not present")
+    for name in ("CLI.md", "recipe-reference.md", "helix-protocol.md"):
+        theirs, ours = core / "docs" / name, REPO_ROOT / "docs" / name
+        if not theirs.exists():
+            continue
+        assert ours.read_text() == theirs.read_text(), (
+            f"docs/{name} has drifted from core — resync it, don't edit it")

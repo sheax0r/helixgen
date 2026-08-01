@@ -9,7 +9,7 @@ Claude Code plugin + single-plugin marketplace for helixgen: generate Line 6 Hel
 No MCP server, no `.mcp.json`. Skills drive `helixgen` **CLI**, provisioned as isolated tool:
 
 ```bash
-uv tool install 'helixgen[device]==0.36.0'
+uv tool install 'helixgen[device]==0.37.0'
 ```
 
 `setup` skill step 0 performs/verifies this (`helixgen --version`), handles stale-shadow failure mode (broken `helixgen` earlier on PATH — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` — `NO_COLOR=1` matters: with `FORCE_COLOR` set, uv emits ANSI codes inside substitution — or fall back to plain `~/.local/bin/helixgen` path, never touch ambient Python), upgrades with `uv tool install --force 'helixgen[device]==X.Y.Z'`.
@@ -21,7 +21,7 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 
 ## Project layout
 
-- `.claude/skills/` — three skills: `setup` (CLI provisioning + device/prefs onboarding), `tone` (author `.hsp` from tone request), `device` (push/sync authored tones onto hardware)
+- `skills/` — three skills (plugin ROOT, which is where the loader scans; `.claude/skills/` is NOT scanned inside an installed plugin): `setup` (CLI provisioning + device/prefs onboarding), `tone` (author `.hsp` from tone request), `device` (push/sync authored tones onto hardware)
 - `.claude-plugin/` — `plugin.json` + `marketplace.json`; version bump here on `main` triggers release (see Releasing)
 - `data/library/` — bundled block library (`HELIXGEN_LIBRARY`)
 - `docs/` — runtime references skills consult: `CLI.md`, `recipe-reference.md`, `helix-protocol.md` (synced FROM helixgen-core — core authoritative), plus `demo.gif`
@@ -34,7 +34,7 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 
 - **Worktrees, branched from fresh `github/main`.** All non-trivial work in git worktree whose branch starts from freshly-fetched `github/main` (GitHub remote named **`github`**, not `origin`) — never commit directly on local `main`. Fetch again before picking release version number.
 - **Adversarial review before shipping.** Before merging PR, dispatch at least one independent review subagent prompted to *break* change. Confirmed findings fixed or explicitly deferred to backlog.
-- **Agent-facing surfaces ship in sync — across repos.** Skills describe CLI behavior implemented in helixgen-core. Core behavior change that skills describe needs companion PR here updating `.claude/skills/*` + synced `docs/` copies (`CLI.md`, `recipe-reference.md`, `helix-protocol.md`); land two PRs together, cross-reference.
+- **Agent-facing surfaces ship in sync — across repos.** Skills describe CLI behavior implemented in helixgen-core. Core behavior change that skills describe needs companion PR here updating `skills/*` + synced `docs/` copies (`CLI.md`, `recipe-reference.md`, `helix-protocol.md`); land two PRs together, cross-reference.
 - **Skills operate through CLI, not source.** Skills must let agent work purely via `helixgen` CLI; behavioral contracts live in CLI's per-verb `--help` (pinned by core's `tests/test_cli_parity.py`) + synced docs. Running engine = uv-tool-installed package — reading local checkout source can mislead about running version.
 - **Never commit paid IR packs or personal device exports.**
 
