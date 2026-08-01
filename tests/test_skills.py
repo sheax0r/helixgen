@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.37.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.38.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -816,8 +816,11 @@ def test_device_skill_carries_the_mode_decision_tree() -> None:
     # each mode's row must state its own requirement, in its own row
     rows = {ln.split("|")[1].strip(): ln
             for ln in body.splitlines() if ln.startswith("| **`")}
-    assert "LAN only" in rows["**`play`** (default)"]
-    assert "analog cable" in rows["**`sample`**"]
+    assert "LAN only" in rows["**`play`** (fallback)"]
+    assert "analog cable" in rows["**`sample`** (default)"]
+    # stimulus-first: replaying a recording is the normal case, and hand-
+    # playing every window is the fallback -- not the other way round
+    assert re.search(r"Default to `sample`", body)
 
 
 def test_device_skill_says_normalize_plays_the_sample_stimulus() -> None:
@@ -1053,3 +1056,16 @@ def test_mirrored_docs_match_core() -> None:
             continue
         assert ours.read_text() == theirs.read_text(), (
             f"docs/{name} has drifted from core — resync it, don't edit it")
+
+
+def test_setup_skill_copies_the_stimulus_out_of_the_versioned_plugin_dir() -> None:
+    """`${CLAUDE_PLUGIN_ROOT}` resolves to a VERSIONED cache directory
+    (`…/helixgen/4.11.0/…`). Recording that path in preferences means the
+    next plugin update rots it and `sample` mode dies with "no stimulus file
+    at …" for a user who changed nothing."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    flat = " ".join(text.split())
+    assert "~/.helixgen/stimulus/helix-cal-loop.wav" in flat
+    assert re.search(r"COPY it to", flat)
+    assert re.search(r"never write the plugin path itself", flat)
+    assert re.search(r"contains the plugin VERSION", flat)

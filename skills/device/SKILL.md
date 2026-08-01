@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.37.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.38.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -650,24 +650,30 @@ per-run one.
 
 | Mode | Stimulus | Physically needs | Cost |
 |---|---|---|---|
-| **`play`** (default) | the user plays the guitar | LAN only | ~10 s of steady playing per target — 31 tones is ~5 minutes of playing (longer in wall clock, with the loads between targets), and consistency across that span is on the human |
-| **`sample`** | a recorded loop from the computer into Inst 1 | LAN + analog cable + `sox` | one calibration (`device calibrate`), then unattended: **`device normalize` plays the stimulus itself** (0.35.0), one pass around each window. `--no-stimulus` opts out |
+| **`play`** (fallback) | the user plays the guitar | LAN only | ~10 s of steady playing per target — 31 tones is ~5 minutes of playing (longer in wall clock, with the loads between targets), and consistency across that span is on the human |
+| **`sample`** (default) | a recorded loop from the computer into Inst 1 | LAN + analog cable + `sox` | one calibration (`device calibrate`), then unattended: **`device normalize` plays the stimulus itself** (0.35.0), one pass around each window. `--no-stimulus` opts out |
 | **`looper`** | an on-device looper block replaying a recorded riff | LAN only | recording the loop first; implies `--source loop` (`gain_db` is null — compare `output_db`) |
 
-Recommend `play` for a one-off (a tone the user just authored, a couple of
-snapshots) and `sample` for anything library-sized or anything meant to be
-comparable between sessions.
+**Default to `sample`.** The plugin ships the stimulus, so the only thing
+between a user and an unattended run is an analog cable and one calibration —
+whereas `play` costs ~10 s of steady playing per target on EVERY run, forever
+(two 3-snapshot tones is six windows; a 31-tone library is minutes of
+continuous playing each time). Reach for `play` only when there is no
+stimulus or no player binary, and say so rather than presenting it as the
+normal path.
 
 #### First run — no `normalization` block yet
 
 1. Read `~/.helixgen/preferences.json`. No `normalization` block means nothing
    is configured: mode defaults to `play` and every `normalize` flag falls back
    to its built-in default.
-2. Ask which mode the user wants (table above). `play` needs no setup at all —
-   go straight to normalizing.
-3. For `sample`, run **`helixgen device calibrate`** (below) — it does the
-   two-step procedure and writes the whole block, including the stimulus and
-   the volume that reached the reference.
+2. Point the profile at the bundled stimulus and run **`helixgen device
+   calibrate`** (below). Don't ask whether the cable is in — calibrate says
+   so itself, precisely, when the stimulus isn't reaching the jack.
+3. If calibration succeeds you are in `sample` mode and no further playing is
+   needed on any run. If it fails, report what to cable (analog out → Inst 1,
+   guitar unplugged, and pin the computer's output device) and fall back to
+   `play` so the user is never blocked.
 4. **Use the shipped absolute target, 17.5 dB** — the `setup` skill writes
    it into `normalization.target_db` with its provenance (no CLI verb does;
    the file is hand-managed). A profile without it makes every run
@@ -1022,8 +1028,10 @@ trusted.
   period (5.03 s) would average better at the cost of the whole-cycle property.
   5.00 s takes the whole-cycle side of that trade.
 
-**A ready-made stimulus** ships with the repo's loudness spec:
-`docs/superpowers/specs/assets/helix-cal-loop.wav` — 10 guitar-DI notes E2–C5,
+**A ready-made stimulus** ships with the plugin at
+`${CLAUDE_PLUGIN_ROOT}/docs/superpowers/specs/assets/helix-cal-loop.wav` —
+copied to `~/.helixgen/stimulus/` on setup, because the plugin path carries a
+version that changes under you — 10 guitar-DI notes E2–C5,
 exactly 5.00 s (240000 samples at 48 kHz), peak −3 dBFS, CC0, rebuildable via
 `build-helix-cal-loop.sh` beside it.
 
@@ -1195,7 +1203,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.37.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.38.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
