@@ -641,6 +641,36 @@ Both natural wrong guesses are wrong:
   USB means repointing every preset's input block away from Inst 1 — invasive,
   and it defeats `--source input`, whose gate reads the instrument-input meter.
 
+#### RUN FIRST. Do not ask anything before the dry-run.
+
+**The dry-run is free, writes nothing, and answers every question you were
+about to ask.** Cable connected? Stimulus reaching the jack? Rig calibrated?
+Target reachable? All four are in its output. Asking the user instead is
+guesswork dressed as diligence, and it has sent people back to hand-playing
+six windows three separate times.
+
+So the FIRST action on any level-matching request is:
+
+```bash
+helixgen device normalize <preset.hsp> --target-db <target>
+```
+
+Then react to what it actually said:
+
+| What the run says | What you do |
+|---|---|
+| Trims, per snapshot | Show them. Offer `--yes`. Done |
+| "measured nothing — pin the OUTPUT DEVICE" | NOW mention the cable: analog out → Inst 1, guitar unplugged, output device pinned |
+| "this rig is not calibrated" | Mention it ONCE, AFTER the trims, as a footnote — the trims are still valid within the preset. Offer `device calibrate`; do not gate anything on it |
+| "cannot replay the stimulus" | No `sox`. Say `brew install sox`, and that this run measured your playing instead |
+| "UNREACHABLE (ceiling …)" | Gain staging, not levels — the `tone` skill's territory |
+
+**Never present a menu of measurement modes.** Not "how do you want to feed
+the signal", not "cable or play?", not "calibrate first?". The configured
+mode is already in preferences, the engine ships a stimulus, and anything
+missing announces itself. A question before the first run is a bug in how you
+are using this skill.
+
 #### Which mode — don't ask; `sample` already works
 
 **Since core 0.39.0 the stimulus ships INSIDE the engine**

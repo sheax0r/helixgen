@@ -1098,3 +1098,24 @@ def test_device_skill_drives_calibration_as_a_user_action() -> None:
     # the uncalibrated note is relayed once and is not a blocker
     assert re.search(r"relay it plainly ONCE", flat)
     assert re.search(r"an uncalibrated run is useful, not\s+broken", flat)
+
+
+def test_device_skill_runs_before_it_asks() -> None:
+    """Three releases running, the skill asked the user a question the
+    dry-run would have answered — cable? calibrate? which mode? — and each
+    time the user ended up back at hand-playing six windows. The rule is now
+    imperative and comes FIRST in the loudness section."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    body = _section(text, "#### RUN FIRST")
+    flat = " ".join(body.split())
+    assert "The dry-run is free, writes nothing" in flat
+    assert "Never present a menu of measurement modes" in flat
+    # the four things it must NOT ask, named so they cannot creep back
+    for forbidden in ("how do you want to feed", "cable or play",
+                      "calibrate first"):
+        assert forbidden in flat.lower(), forbidden
+    # and the calibration note is a footnote AFTER the trims, not a gate
+    assert re.search(r"AFTER the trims", flat)
+    assert re.search(r"do not gate anything on it", flat)
+    # RUN FIRST must precede the mode discussion in the document
+    assert text.index("#### RUN FIRST") < text.index("#### Which mode")
