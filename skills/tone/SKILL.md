@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.41.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.42.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -711,6 +711,46 @@ until `device sync`/`install` rebuilds the device copy the hardware is still
 running the old chain and the re-measure reads "no change". Do **not** solve it by raising the output block instead: that
 amplifies the chain's noise floor by the same amount.
 
+#### Repairing a tone that can't reach the target (the gain-staging loop)
+
+When `device normalize` reports `UNREACHABLE (ceiling X)` for a snapshot, the
+output block has nothing left to give — its trim is the LAST stage, capped at
++20 dB. The chain itself has to get louder. This is a loop, not a
+calculation: `ChVol` is wildly non-linear (a measured 0.55 → 1.0 was +24.7 dB
+on one amp), so you converge on it the same way the volume calibration does.
+
+Run it yourself; don't hand the user a list of verbs.
+
+1. **Read the shortfall from the run.** `--json` gives `ceiling_db` and the
+   run's `target_total_db` per target. `shortfall = target − ceiling`. That is
+   how much MORE chain gain the snapshot needs.
+2. **Find the actuator.** `helixgen view <preset.hsp>` → the amp block's
+   channel-volume param (`ChVol`, or the amp's `Level` — confirm with
+   `show-block`, the name varies). **Never `Master`** (it moves power-amp sag
+   and feel). No channel volume ⇒ add an end-of-chain volume block instead.
+3. **Check the headroom first.** If `ChVol` is already at 1.0, this loop
+   cannot help — say so plainly rather than nudging a maxed knob. The fix is
+   then a hotter amp model, a drive/boost in front, or accepting a lower
+   target for that tone.
+4. **Step, don't solve.** Raise `ChVol` by ~0.05–0.10 for a few dB, more for a
+   large shortfall — but never jump straight to 1.0 on a >20 dB shortfall, or
+   you overshoot into a wall of gain. On a dual-amp preset raise **both amps
+   by the same amount**, or the blend moves.
+   `helixgen set-param <preset.hsp> "<amp>" ChVol <value> --snapshot <name>`
+   (per-snapshot: it is usually ONE quiet snapshot that is short, and a base
+   edit would move the whole preset).
+5. **Sync before re-measuring.** The edit is in the local `.hsp`; until
+   `device sync <setlist>` / `device install` rebuilds the device copy, a
+   re-measure reads the OLD chain and looks like the edit did nothing. This
+   is the single most common way to waste a loop.
+6. **Re-measure and repeat** until `ceiling ≥ target`. Then run the normal
+   `--yes` pass to set the trim.
+
+Report each iteration in one line — the param, the value, the resulting chain
+gain — so the user can see it converging rather than watching silence. Stop
+and ask if it has not converged in ~4 iterations: something else is wrong
+(wrong actuator, a bypassed block, a gate killing the signal).
+
 **Chain-out `output_db` over 0 dBFS in the results is in-chain clipping**, and
 no level move fixes it — back off the amp/drive gain and re-run (see step 10's
 ear-language table).
@@ -740,12 +780,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.41.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.42.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.41.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.42.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is

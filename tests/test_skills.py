@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.41.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.42.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -1119,3 +1119,22 @@ def test_device_skill_runs_before_it_asks() -> None:
     assert re.search(r"do not gate anything on it", flat)
     # RUN FIRST must precede the mode discussion in the document
     assert text.index("#### RUN FIRST") < text.index("#### Which mode")
+
+
+def test_tone_skill_carries_the_gain_staging_repair_loop() -> None:
+    """An UNREACHABLE target is repaired by a LOOP (ChVol is non-linear), and
+    the skill must run it rather than handing the user three verbs. Found on
+    a real library: 6 of 35 tones were pinned at the +20 output cap."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    body = _section(text, "#### Repairing a tone that can't reach the target")
+    flat = " ".join(body.split())
+    assert "Run it yourself; don't hand the user a list of verbs" in flat
+    assert "shortfall = target − ceiling" in flat
+    # the three traps that waste a loop
+    assert re.search(r"Sync before re-measuring", flat)
+    assert re.search(r"reads the OLD chain", flat)
+    assert re.search(r"already at 1\.0", flat)          # no headroom left
+    assert re.search(r"both amps by the same amount", flat)
+    assert re.search(r"[Nn]ever `Master`", flat)
+    # and it converges rather than solving in one shot
+    assert re.search(r"Step, don't solve", flat)
