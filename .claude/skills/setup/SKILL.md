@@ -240,6 +240,45 @@ key: env var > file value > Claude-memory seed > built-in default.
   true` in preferences.json — ok?" Once the user has confirmed that key once,
   later updates to it can be written silently.
 
+#### Converge, don't interview
+
+A setup pass that ends in a list of questions has done half its job. **Fix
+what has one correct answer; ask only where the answer is genuinely the
+user's.** The test is simple: *could I be wrong about this?* If not, do it and
+say you did.
+
+**Do it, don't ask:**
+
+- **The engine is behind the pin this plugin declares.** That is not a
+  preference — the pin IS the version these skills are written against, and a
+  mismatch is the single most common source of "the skill told me to run a
+  flag that doesn't exist". Run `uv tool install --force
+  'helixgen[device]==<pin>'`, verify `helixgen --version`, report the upgrade
+  in one line. (Do ask before a DOWNGRADE — an engine ahead of the pin may be
+  deliberate.)
+- **A missing `normalization` block on an existing profile.** Core scaffolds
+  it for a brand-new profile, so a user whose `preferences.json` merely
+  predates that release gets a worse default for no reason. Write the same
+  thing core would: `mode: "play"`, `target_db: 17.5` with its
+  `target_source` provenance. Nothing here is a guess (see below).
+- **Any missing scaffold with a known-correct shape** — the `~/.helixgen`
+  layout, a `preferences.json` that doesn't exist at all, the home git repo.
+
+**Ask, because you cannot know:**
+
+- **`default_guitar`** — which guitar they actually reach for. Only they know.
+- **Anything destructive**: deleting stale device records, pruning IRs,
+  running `library migrate` for real, overwriting a file that already has
+  content.
+- **A rig decision**: `normalization.mode` beyond the `play` default, because
+  `sample` and `looper` mean cabling and a calibration the user has to
+  physically do.
+- **Subjective content**: `character_md` on a guitar profile, IR character
+  tags. Offer to draft, never invent silently.
+
+Report gaps you did NOT act on as a short list, not as a queue of questions to
+work through one at a time.
+
 Keys this skill owns: `device.model`, `favor_irs`, `reveal_in_finder`,
 `guard_paid_irs_in_git`, `default_guitar`, and the `normalization` block
 (below). (`author` is consumed by the `tone` skill.) The user's guitars are no longer a preferences key — they are guitar
@@ -367,10 +406,12 @@ Scaffold it with `mode: "play"` and everything else null on first run: `play`
 mode needs no cabling and no calibration, so the user is immediately able to
 normalize. Rules for the rest:
 
-- **`target_db`**: **17.5 dB is scaffolded for you** (core 0.36.0), with its
-  provenance in `target_source` — the factory *Stadium Rock Rig* measured
-  17.51 dB total (2026-07-29, Stadium XL). It is a CONSTANT, not something
-  each rig measures: the factory presets are identical across Stadiums, and
+- **`target_db`**: **17.5 dB, written without asking.** Core 0.36.0 scaffolds
+  it into a brand-new profile, so an older `preferences.json` missing the
+  block should simply be brought up to the same state — the value is not a
+  judgement call. Its provenance goes in `target_source`: the factory
+  *Stadium Rock Rig* measured 17.51 dB total (2026-07-29, Stadium XL). It is
+  a CONSTANT, not something each rig measures: the factory presets are identical across Stadiums, and
   separate runs only land on a common level when they all use the same
   number. Don't replace it with a per-preset guess, and don't leave it null —
   a null target makes `device normalize` anchor on its own first target,

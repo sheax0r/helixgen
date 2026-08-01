@@ -1021,3 +1021,30 @@ def test_commands_handle_being_called_bare() -> None:
     for name in sorted(EXPECTED_COMMANDS):
         body = _command_frontmatter(COMMANDS_ROOT / f"{name}.md")["body"]
         assert re.search(r"[Ww]ith no arguments", body), name
+
+
+def test_setup_skill_converges_instead_of_interviewing() -> None:
+    """A setup pass that ends in a list of questions has done half its job.
+    The skill must distinguish what it should just FIX (one correct answer)
+    from what it must ASK (the answer is the user's, or the act is
+    destructive)."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    body = _section(text, "#### Converge, don't interview")
+    flat = " ".join(body.split())
+
+    # the mechanical convergences, by name
+    assert "uv tool install --force" in flat
+    assert re.search(r"engine is behind the pin", flat, re.IGNORECASE)
+    assert "missing `normalization` block" in flat
+    # a downgrade is the one version case that IS a question
+    assert re.search(r"ask before a DOWNGRADE", flat)
+
+    # and the things that stay questions
+    assert "`default_guitar`" in body
+    assert re.search(r"destructive", body, re.IGNORECASE)
+    assert re.search(r"rig decision", body, re.IGNORECASE)
+
+    # POLARITY: the target is written, not proposed
+    target_rule = _section(text, "#### The `normalization` block")
+    assert re.search(r"17\.5 dB, written without asking", target_rule)
+    assert not re.search(r"only write a number you can attribute", target_rule)
