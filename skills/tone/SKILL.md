@@ -411,6 +411,38 @@ part-to-part balance parked there is discarded by the first normalize pass,
 while channel-volume balance survives it. Reserve `output` for a final clean
 trim of the whole path (section 5).
 
+**FORCE ZERO — the reachable floor. Apply this before the other three.**
+
+A later `device normalize` can trim a snapshot DOWN without limit, but it can
+only trim UP by **+20 dB** — the output-block cap. So a snapshot whose chain
+gain lands below `target − 20` (≈ **−2.5 dB** against the standard 17.5 dB
+target) can NEVER be level-matched, however good it sounds. Nothing downstream
+rescues it; the fix has to happen here.
+
+The trap is specific and it bites the same part every time: **a clean or
+edge-of-breakup snapshot on an otherwise high-gain preset.** High gain brings
+compression, which brings apparent loudness for free; a clean part has none of
+that, so an "even-looking" channel volume leaves it 20–40 dB behind its
+siblings. Measured on a real library, 6 of 35 tones shipped in this state, and
+two of them could not be repaired afterwards at all — their amps had run out
+of `ChVol` headroom.
+
+So when a preset mixes a clean part with a high-gain part:
+
+- **Author the clean part's channel volume HIGH** — near the top of its range,
+  not at the anchor. It is not "louder than the rhythm", it is compensating for
+  the compression the rhythm gets and it does not.
+- **Never leave a clean snapshot at the 0.5 anchor** of a preset whose other
+  snapshots are saturated. That single choice is what produced every
+  unrepairable tone found so far.
+- **Prefer gain earlier in the chain** (amp channel volume, a boost block) over
+  planning to make it up at the output later. The output trim is the LAST
+  stage and the smallest.
+
+You cannot measure this while authoring — helixgen renders no audio — so it is
+a rule of thumb like the rest of 5.7. What makes it different is that getting
+it wrong is not a tweak, it is a dead end.
+
 Apply three forces, in order:
 
 1. **Anchor** (force 1, `volume_normalize_baseline`): set the reference part
@@ -626,6 +658,14 @@ The levels you set in 5.7 are **rules of thumb** — helixgen renders no audio,
 so they are a starting balance, not a measurement. `device normalize` closes
 that loop against the real hardware. Offer it once the tone exists; don't
 make the user know the feature is there.
+
+**Run the dry-run as a DESIGN CHECK, before you consider the tone finished.**
+It is the only way to find out whether every snapshot cleared the reachable
+floor (force zero in 5.7), and the answer is cheap to act on right now and
+expensive later: an `UNREACHABLE` target costs one `set-param ChVol` while you
+are still in the tone, versus an install → sync → measure → step loop on
+hardware afterwards — which has already failed outright on tones whose amps
+had no headroom left. If the device is reachable, measure before you report.
 
 **Offer when** the preset has **≥2 named snapshots** (their relative balance is
 exactly what the loop equalizes), or the user keeps other tones on the device
