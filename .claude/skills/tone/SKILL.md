@@ -632,7 +632,17 @@ exactly what the loop equalizes), or the user keeps other tones on the device
 that this one should sit level with. A single-snapshot one-off that nothing
 else is compared against doesn't need it — say so rather than upselling.
 
-**Ask in one line, with the cost in it:**
+**Read `~/.helixgen/preferences.json` → `normalization` FIRST** — the mode
+decides what you ask for, and asking before you know it gets the cost wrong.
+`play` is the default when the block is absent, and needs no setup at all.
+
+| Mode | What the user does | What must be connected | The ask |
+|---|---|---|---|
+| `play` (default) | plays the guitar, ~10 s per target | **Nothing beyond the LAN** — Helix on WiFi/Ethernet, guitar in Inst 1 as usual. Measurement is network telemetry; USB is not involved | "about 10 seconds of you playing per snapshot" |
+| `sample` | **nothing** — the CLI plays a recorded loop | Computer's analog output → 1/4" Inst 1, **guitar unplugged**, and the computer's output device pinned to the one actually cabled (the Stadium steals the system default) | "hands off — it plays the calibration loop itself" |
+| `looper` | **nothing** — an on-device looper replays | Nothing extra; they record the loop first | "keep the looper running" |
+
+**Then ask, in one line, with that mode's cost in it** — e.g. for `play`:
 
 > "Want me to level-match those snapshots against the real hardware? It takes
 > about 10 seconds of you playing per snapshot — 3 snapshots, so roughly half a
@@ -641,34 +651,48 @@ else is compared against doesn't need it — say so rather than upselling.
 If the user says no, stop — the authored levels stand and the report already
 said what they are.
 
-**Then read `~/.helixgen/preferences.json` → `normalization`** and follow the
-mode it names (`play` is the default when the block is absent, and it is the
-one that needs no setup at all). What to tell the user to connect, by mode:
+**`sample` mode needs a calibration first**, and its own order matters: run
+`helixgen device calibrate` **with the guitar still plugged in**, because step
+1 of that verb asks the user to *play by hand* to capture the reference jack
+level. Only step 2 has them unplug the guitar and cable the computer in. Doing
+it the other way round fails the reference window and saves nothing. Skip this
+whenever `normalization.calibration` is already filled in and fresh (the CLI
+warns when it isn't).
 
-| Mode | Tell them to connect | Then |
-|---|---|---|
-| `play` (default) | **Nothing beyond the LAN** — the Helix on WiFi/Ethernet, guitar plugged into Inst 1 as usual. Measurement is network telemetry; USB is not involved. | They play; you run the loop |
-| `sample` | Computer's **analog output → 1/4" Inst 1**, guitar unplugged, and the computer's output device pinned to the one actually cabled (the Stadium steals the system default) | Needs a calibration — `helixgen device calibrate` — if `normalization.calibration` is empty or stale |
-| `looper` | Nothing extra; they record a loop on a front-of-chain looper block first | The run uses `--source loop` automatically |
+**The sequence** — this is the part to get right, because the tone has to be on
+the device *and selected* before anything can be measured:
 
-**The sequence** — this is the part to get right, because the tone has to be
-on the device and ACTIVE before anything can be measured:
+1. **Put it on the Helix and SELECT it.** `device install` (or `device sync
+   <setlist>`) writes the preset but **leaves the active tone untouched** —
+   snapshot-scope normalize verifies the active preset's name and aborts on a
+   mismatch, which on a freshly installed preset is guaranteed. So follow the
+   install with `helixgen device load <cid>` (the `device` skill covers finding
+   the cid) and confirm with `helixgen device active`.
+2. **Dry run first, always** — and pass the absolute target if there is one:
 
-1. **Put it on the Helix.** `device install` (or `device sync <setlist>`) and
-   leave that preset ACTIVE — snapshot-scope normalize verifies the active
-   preset's name and aborts on a mismatch. This is the `device` skill's
-   territory; hand off if the device isn't already set up.
-2. **Dry run first, always:** `helixgen device normalize <preset.hsp>`. It
-   recalls each snapshot, prompts before each window, and reports the trims it
-   *would* write. Show the user that report.
-3. **Write them:** re-run with `--yes`. Trims land in the **local `.hsp`**, as
-   per-snapshot output-level moves — not on the device.
+   ```bash
+   HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen device normalize <preset.hsp> --target-db <profile target>   # dry run
+   ```
+
+   It recalls each snapshot, measures a window per target, and reports the
+   trims it *would* write. Show the user that report. **There is no per-target
+   prompt** — the windows run back to back, so in `play` mode the user must be
+   playing from the moment the run starts and keep going until it ends. Say so
+   before you start it.
+3. **Write them:** re-run the same command with `--yes`. Trims land in the
+   **local `.hsp`**, as per-snapshot output-level moves — not on the device.
 4. **Re-sync** (`device sync` / `device install`) or nothing changes audibly on
    the hardware.
 5. **Update the write-up** — the balance is now measured, so refresh the
    Levels line via `helixgen library doc` (7a), and the run itself is recorded
    on the tone as a `normalized` record you can read back with
    `helixgen describe "<tone>"`.
+
+**Scope rules that decide whether the loop can run at all:** snapshot scope
+needs **≥2 named snapshots**, or an explicit `--target-db` with one. A preset
+with no named snapshots can't be normalized this way at all — level-match it
+as part of a setlist instead (`device normalize --setlist <name>`, the `device`
+skill's territory).
 
 **Cross-tone matching needs an absolute target.** Without `--target-db` the
 run anchors on its own first snapshot, which equalizes *within this preset
@@ -681,8 +705,10 @@ reuse it for every tone.
 that one is a **gain-staging** problem, and unlike the rest of this step it is
 *your* job, not the device skill's: raise the amp's channel volume (both amps
 on a layered preset) and re-run. `ChVol` is wildly non-linear — 0.55 → 1.0 was
-+24.7 dB of chain gain on one measured amp — so move it in small steps and
-re-measure. Do **not** solve it by raising the output block instead: that
++24.7 dB of chain gain on one measured amp — so move it in small steps.
+**Re-sync before re-measuring**: a `ChVol` edit lands in the local `.hsp`, so
+until `device sync`/`install` rebuilds the device copy the hardware is still
+running the old chain and the re-measure reads "no change". Do **not** solve it by raising the output block instead: that
 amplifies the chain's noise floor by the same amount.
 
 **Chain-out `output_db` over 0 dBFS in the results is in-chain clipping**, and

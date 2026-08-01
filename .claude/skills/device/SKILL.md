@@ -629,7 +629,7 @@ what BEFORE asking the user to plug anything in.
 
 | Link | What it carries | Needed for normalization? |
 |---|---|---|
-| **LAN — WiFi or Ethernet** | Every `device` verb: mDNS `_stadiumserver._tcp` discovery, control port 2002, ZMQ/msgpack. **The loudness meters arrive over this link.** | **ALWAYS.** There is no USB control transport in helixgen. |
+| **LAN — WiFi or Ethernet** | Every `device` verb: mDNS `_stadiumserver._tcp` discovery, RPC control on port **2002**, ZMQ/msgpack — plus the `/dspEvent` telemetry burst on port **2003**, which is where **the loudness meters arrive**. Both are this one link. | **ALWAYS.** There is no USB control transport in helixgen. |
 | **Analog audio out → 1/4" Inst 1** | A recorded stimulus played from the computer into the instrument jack. | Only in **`sample`** mode. |
 | **USB audio** | The Stadium's processed output recorded back to the computer (ch 1/2 processed, ch 7 DI tap, ch 3–6 silent). | Only for **`--measure-via capture`**. Never for control. |
 
@@ -650,8 +650,8 @@ per-run one.
 
 | Mode | Stimulus | Physically needs | Cost |
 |---|---|---|---|
-| **`play`** (default) | the user plays the guitar | LAN only | ~10 s of steady playing per target — 31 tones is 10+ minutes of continuous playing, and consistency across that span is on the human |
-| **`sample`** | a recorded loop from the computer into Inst 1 | LAN + analog cable + `sox` | one calibration (`device calibrate`), then unattended and identical every session |
+| **`play`** (default) | the user plays the guitar | LAN only | ~10 s of steady playing per target — 31 tones is ~5 minutes of playing (longer in wall clock, with the loads between targets), and consistency across that span is on the human |
+| **`sample`** | a recorded loop from the computer into Inst 1 | LAN + analog cable + `sox` | one calibration (`device calibrate`), then unattended: **`device normalize` plays the stimulus itself** (0.35.0), one pass around each window. `--no-stimulus` opts out |
 | **`looper`** | an on-device looper block replaying a recorded riff | LAN only | recording the loop first; implies `--source loop` (`gain_db` is null — compare `output_db`) |
 
 Recommend `play` for a one-off (a tone the user just authored, a couple of
@@ -668,14 +668,18 @@ comparable between sessions.
 3. For `sample`, run **`helixgen device calibrate`** (below) — it does the
    two-step procedure and writes the whole block, including the stimulus and
    the volume that reached the reference.
-4. Pick and persist an absolute `--target-db`. **17.5 dB** is the sane default:
-   it is the measured total of the factory *Stadium Rock Rig* ([MEASURED]
-   2026-07-29, Stadium XL — factory presets all carry output level 0.0 dB, so
-   total == chain gain; German Lead 19.17, Modern Metal 17.77, Quiet Time
-   15.54, Jazzy Jazz 9.21). **Per-category targets were tested and rejected**:
-   lead-over-rhythm is only 1.4 dB and the two clean representatives disagree
-   by 6.3 dB, so no defensible per-category offset exists from that sample.
-   One absolute target, reused everywhere.
+4. Pick and persist an absolute `--target-db`. **17.5 dB** is the sane
+   default, and it comes from exactly one measurement: the factory *Stadium
+   Rock Rig* read a total of **17.51 dB** ([MEASURED] 2026-07-29, Stadium XL;
+   factory presets all carry output level 0.0 dB, so total == chain gain).
+   It is that one reference rounded — **not** an average of anything.
+   Separately, four category representatives were measured to test whether
+   per-category targets were worth having (German Lead 19.17, Modern Metal
+   17.77, Quiet Time 15.54, Jazzy Jazz 9.21) and the answer was **no**:
+   lead-over-rhythm is only 1.4 dB and the two cleans disagree by 6.3 dB, so
+   no defensible per-category offset exists from that sample. One absolute
+   target, reused everywhere. Corroboration: an already-normalized library
+   tone measured 17.69 against a +17.9 output level.
 5. Record it in `normalization.target_db` with `target_source` provenance, so
    a later session can tell a measured target from a guess.
 
@@ -704,10 +708,23 @@ What the verb does, so you can narrate it:
    `--tolerance-db` (default 1.0) of that reference. On macOS it sets the
    volume itself via `osascript`; elsewhere it reports the value to set by hand
    and stops.
-3. Writes `normalization.mode = "sample"`, `normalization.sample` (path,
+3. Writes `normalization.mode = "sample"` (a profile already set to `looper`
+   is PRESERVED — it needs the same calibration, and demoting it would flip
+   the implied `--source` back to `input`), `normalization.sample` (path,
    volume, playback command) and `normalization.calibration` (reference and
-   achieved `input_db`, the guitar, the date) into `preferences.json`, merging
-   key-by-key so nothing else in the file is disturbed.
+   achieved `input_db`, the guitar, the date) into `preferences.json`,
+   merging key-by-key so nothing else in the file is disturbed.
+4. **Restores the output volume it found** on every exit path, success or
+   failure — the loop drives the system volume, and a machine left at
+   whatever the search reached, with a loop cabled into an amp, is not an
+   acceptable exit state.
+
+Two profile keys are **recorded but not acted on**: `sample.loop_seconds`
+(documentation of the loop's length, for the whole-cycle rule below) and
+`sample.output_device` (echoed back at you during calibration — helixgen
+cannot select an output device, which is exactly why that step is a human
+instruction). Don't tell a user that setting `output_device` fixes the
+stolen-default problem; only changing it in the OS does.
 
 **It nulls against `input_db`, never `gain_db`** — `gain_db` on a clean chain
 is precisely the quantity that does *not* move with source level, so nulling
@@ -868,8 +885,9 @@ hardware:
   measured for roughly one window, the snapshot recalls / preset loads
   between windows happen automatically, and the preset's prior state is
   restored when the run ends. The player's only job is to keep playing.
-- **`--seconds 10` is the default** (lowered from 20 in core 0.32.1 — field
-  use showed a 10 s window carries >2x margin over the playing gate). The
+- **`--seconds 10` is the default** (lowered from 20 in core 0.33.0 — field
+  use showed a 10 s window carries >2x margin over the playing gate: the gate
+  needs ~4 s of credited playing). The
   gate needs **pitched, steady playing** (roughly 4 s of credited playing per
   window minimum); muted scratching, noodling pauses, or silence don't credit
   it.
@@ -976,10 +994,13 @@ trusted.
   play -q helix-cal-loop.wav repeat 9999    # sox; ^C to stop
   ```
 
-  Since 0.35.0 you do **not** run this yourself for a calibration: the CLI owns
-  the playback (`helixgen.device.stimulus`), starting the loop around each
+  Since 0.35.0 you do **not** run this yourself at all: both `device
+  calibrate` and `device normalize` own the playback
+  (`helixgen.device.stimulus`), starting the loop around each measurement
   window and stopping it on every exit path — including when the window
-  raises. A shell-looped `afplay` is refused outright.
+  raises. A `sample` profile with no `sample.path` is a usage error rather
+  than a silent measurement of nothing, and a shell-looped `afplay` is
+  refused outright. Drive playback yourself only with `--no-stimulus`.
 
 - **Measure whole loop cycles.** For a periodic stimulus, a window of exactly
   *k* cycles covers the same set of signal values regardless of where it starts,
