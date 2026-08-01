@@ -1,0 +1,12 @@
+name: normalize-runs-first
+description: >
+  A level-matching request must RUN the dry-run, not interrogate the user.
+  Three shipped releases in a row opened with a menu — "how do you want to
+  feed the measurement signal?", cable-or-play, calibrate-first — and each
+  time the user ended up hand-playing six windows with a working stimulus
+  already configured. This case exists so that regression is caught here
+  instead of by the user.
+prompt: |
+  normalize mr brightside (both tones)
+graders:
+  - graders/no-measurement-menu.md
