@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.35.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.36.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -969,3 +969,55 @@ def test_tone_skill_step_numbering_is_consistent() -> None:
     # which this skill legitimately points at by name)
     referenced = {n for n in re.findall(r"step (\d+)", text) if n != "0"}
     assert referenced <= set(headings), referenced - set(headings)
+
+
+# --- slash commands (4.10.0) ------------------------------------------------
+
+COMMANDS_ROOT = REPO_ROOT / "commands"
+
+#: Every skill gets a same-named command, so `/helixgen:<skill>` works. A
+#: skill with no command is only reachable if the model decides to load it;
+#: the command is how a USER asks for it by name.
+EXPECTED_COMMANDS = {"setup", "tone", "device"}
+
+
+def _command_frontmatter(path: Path) -> dict:
+    text = path.read_text()
+    assert text.startswith("---\n"), f"{path}: no frontmatter block"
+    end = text.index("\n---\n", 3)
+    body = text[end + 5:]
+    fields = dict(
+        re.findall(r"^([a-z-]+):\s*(.+)$", text[4:end], re.MULTILINE))
+    return {"fields": fields, "body": body}
+
+
+def test_every_skill_has_a_matching_command() -> None:
+    on_disk = {p.stem for p in COMMANDS_ROOT.glob("*.md")}
+    skills = {p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()}
+    assert skills == EXPECTED_COMMANDS, skills
+    assert on_disk == EXPECTED_COMMANDS, on_disk
+
+
+def test_commands_carry_loadable_frontmatter() -> None:
+    for path in sorted(COMMANDS_ROOT.glob("*.md")):
+        meta = _command_frontmatter(path)
+        assert meta["fields"].get("description"), f"{path}: no description"
+        assert len(meta["fields"]["description"]) <= 200, path
+        assert meta["body"].strip(), f"{path}: empty body"
+
+
+def test_each_command_invokes_its_own_skill() -> None:
+    # a command that doesn't name its skill is just a loose prompt: the whole
+    # point is that /helixgen:tone runs the tone SKILL, not an improvisation.
+    for name in sorted(EXPECTED_COMMANDS):
+        body = _command_frontmatter(COMMANDS_ROOT / f"{name}.md")["body"]
+        assert re.search(rf"`{name}` skill", body), name
+        # and it must pass the user's own words through
+        assert "$ARGUMENTS" in body, name
+
+
+def test_commands_handle_being_called_bare() -> None:
+    # `/helixgen:tone` with no argument must ask, not invent a tone request.
+    for name in sorted(EXPECTED_COMMANDS):
+        body = _command_frontmatter(COMMANDS_ROOT / f"{name}.md")["body"]
+        assert re.search(r"[Ww]ith no arguments", body), name
