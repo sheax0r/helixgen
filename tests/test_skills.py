@@ -1138,3 +1138,23 @@ def test_tone_skill_carries_the_gain_staging_repair_loop() -> None:
     assert re.search(r"[Nn]ever `Master`", flat)
     # and it converges rather than solving in one shot
     assert re.search(r"Step, don't solve", flat)
+
+
+def test_tone_skill_states_the_reachable_floor_at_authoring_time() -> None:
+    """normalize trims DOWN without limit but UP by only +20 dB, so a
+    snapshot authored below `target - 20` can never be level-matched. Six of
+    35 tones in a real library shipped in that state and two proved
+    unrepairable. The rule has to live in the authoring pass, not only in the
+    repair loop."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    flat = " ".join(text.split())
+    assert "FORCE ZERO — the reachable floor" in flat
+    assert "can only trim UP by **+20 dB**" in flat
+    assert "−2.5 dB" in flat                       # the floor at a 17.5 target
+    # the specific trap, named so it cannot be missed
+    assert re.search(r"clean or edge-of-breakup snapshot on an otherwise "
+                     r"high-gain preset", flat)
+    assert re.search(r"Never leave a clean snapshot at the 0\.5 anchor", flat)
+    # and step 9 measures before declaring the tone finished
+    assert "Run the dry-run as a DESIGN CHECK" in flat
+    assert re.search(r"cheap to act on right now and expensive later", flat)
