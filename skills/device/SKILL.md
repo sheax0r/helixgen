@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.42.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.43.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -661,6 +661,8 @@ Then react to what it actually said:
 |---|---|
 | Trims, per snapshot | Show them. Offer `--yes`. Done |
 | "measured nothing — pin the OUTPUT DEVICE" | NOW mention the cable: analog out → Inst 1, guitar unplugged, output device pinned |
+| "far hotter/quieter than an instrument-level source" | The playback level is wrong, not the tone — every trim in that run is an artifact of it. Say so and run `device calibrate`; do NOT act on the trims |
+| "was calibrated against …" (drift >3 dB) | Something in the playback path changed since calibration — this run is not comparable to earlier ones. Re-calibrate before trusting it |
 | "this rig is not calibrated" | Mention it ONCE, AFTER the trims, as a footnote — the trims are still valid within the preset. Offer `device calibrate`; do not gate anything on it |
 | "cannot replay the stimulus" | No `sox`. Say `brew install sox`, and that this run measured your playing instead |
 | "UNREACHABLE (ceiling …)" | Gain staging, not levels — the `tone` skill's territory |
@@ -1261,7 +1263,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.42.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.43.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
