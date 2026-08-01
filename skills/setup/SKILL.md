@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.37.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.38.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -166,13 +166,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.37.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.38.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.37.0'
+  uv tool install 'helixgen[device]==0.38.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -402,9 +402,37 @@ so scaffolding it is a convenience, never a requirement.
 }
 ```
 
-Scaffold it with `mode: "play"` and `target_db: 17.5` (with its `target_source` provenance), everything else null: `play`
-mode needs no cabling and no calibration, so the user is immediately able to
-normalize. Rules for the rest:
+**Scaffold it stimulus-first.** Replaying a fixed recording is the NORMAL way
+to measure; hand-playing a window per target is what you do when no stimulus
+exists. A user with `sox` installed and the bundled loop on disk should never
+be asked to play six windows because one field was null — that is the exact
+failure this rule exists to prevent.
+
+So, in order:
+
+1. **Always give the profile a stimulus.** The plugin ships one at
+   `${CLAUDE_PLUGIN_ROOT}/docs/superpowers/specs/assets/helix-cal-loop.wav`
+   (10 guitar-DI notes, exactly 5.00 s at 48 kHz, 24-bit mono, CC0).
+   **COPY it to `~/.helixgen/stimulus/helix-cal-loop.wav` and point
+   `sample.path` there** — never write the plugin path itself, which
+   contains the plugin VERSION (`…/helixgen/4.11.0/…`): the next update
+   writes a new directory and the recorded path rots, breaking `sample` mode
+   with "no stimulus file at …" for a user who changed nothing. Set
+   `loop_seconds: 5.0` alongside it. Mechanical — never leave it null.
+2. **Write `target_db: 17.5`** with its `target_source` provenance.
+3. **Then set the mode.** `sample` when `sox` (or the configured
+   `playback_cmd`) is on PATH and the stimulus file exists — otherwise
+   `play`, and say which and why in one line.
+
+**Do not ask whether the cable is connected.** You cannot infer it and you do
+not have to: run `helixgen device calibrate`, which fails loudly and
+specifically when the stimulus is not reaching the jack (*"the stimulus
+window measured nothing … pin the OUTPUT DEVICE"*). Trying and reading the
+error beats an unanswerable question. Confirm `sample` only after a
+calibration succeeds; if it fails, say what to cable and leave the mode at
+`play` so the user is never stuck.
+
+Rules for the rest:
 
 - **`target_db`**: **17.5 dB, written without asking.** YOU write it — no
   CLI verb does (`preferences.json` is hand-managed), so a profile missing
@@ -420,9 +448,10 @@ normalize. Rules for the rest:
   LUFS target (≤ 0), and the engine refuses a positive one there.
 - **`calibration`**: `helixgen device calibrate` owns it. Recording a
   reference you did not measure would make every later run confidently wrong.
-- **`mode`**: changing it is a rig decision (does the user want to play, or to
-  cable a computer into Inst 1?) — ask, don't infer. `device calibrate` sets it
-  to `sample` when it succeeds.
+- **`mode`**: `sample` whenever a stimulus and a player exist (above).
+  `looper` is the one mode that IS a rig decision — it needs a loop recorded
+  on the device first — so ask before choosing that one. `device calibrate`
+  sets `sample` itself when it succeeds.
 - Scalars honor `HELIXGEN_NORMALIZE_*` env overrides
   (`HELIXGEN_NORMALIZE_TARGET_DB`, `_MODE`, `_SECONDS`, `_TOLERANCE_DB`,
   `_MEASURE_VIA`, `_CAPTURE_INPUT`); the nested blocks are file-only.
