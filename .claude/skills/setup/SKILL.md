@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.35.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.36.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -166,13 +166,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.35.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.36.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.35.0'
+  uv tool install 'helixgen[device]==0.36.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -345,8 +345,8 @@ so scaffolding it is a convenience, never a requirement.
 ```jsonc
 "normalization": {
   "mode": "play",            // play | sample | looper — see the `device` skill
-  "target_db": null,         // absolute total-loudness target; 17.5 is the sane default
-  "target_source": null,     // {kind, name, measured_total_db, measured_on} — provenance
+  "target_db": 17.5,         // the SHIPPED reference target — scaffolded, not invented
+  "target_source": {...},    // where 17.5 came from; scaffolded alongside it
   "seconds": null,           // measurement window (CLI default 10)
   "tolerance_db": null,      // in-band dead zone (CLI default 1.0)
   "measure_via": null,       // meters | capture (CLI default meters)
@@ -367,10 +367,16 @@ Scaffold it with `mode: "play"` and everything else null on first run: `play`
 mode needs no cabling and no calibration, so the user is immediately able to
 normalize. Rules for the rest:
 
-- **`target_db`**: only write a number you can attribute. 17.5 dB is the
-  measured total of the factory *Stadium Rock Rig* (2026-07-29, Stadium XL) —
-  if you use it, record that in `target_source` so a later session can tell a
-  measured target from a guess. Never invent one silently.
+- **`target_db`**: **17.5 dB is scaffolded for you** (core 0.36.0), with its
+  provenance in `target_source` — the factory *Stadium Rock Rig* measured
+  17.51 dB total (2026-07-29, Stadium XL). It is a CONSTANT, not something
+  each rig measures: the factory presets are identical across Stadiums, and
+  separate runs only land on a common level when they all use the same
+  number. Don't replace it with a per-preset guess, and don't leave it null —
+  a null target makes `device normalize` anchor on its own first target,
+  level-matching within one preset while leaving separate runs unmatched.
+  One exception: it is a METERS target. A `--measure-via capture` run needs a
+  LUFS target (≤ 0), and the engine refuses a positive one there.
 - **`calibration`**: `helixgen device calibrate` owns it. Recording a
   reference you did not measure would make every later run confidently wrong.
 - **`mode`**: changing it is a rig decision (does the user want to play, or to

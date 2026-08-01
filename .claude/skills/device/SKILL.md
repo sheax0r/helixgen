@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.35.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.36.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -668,8 +668,10 @@ comparable between sessions.
 3. For `sample`, run **`helixgen device calibrate`** (below) — it does the
    two-step procedure and writes the whole block, including the stimulus and
    the volume that reached the reference.
-4. Pick and persist an absolute `--target-db`. **17.5 dB** is the sane
-   default, and it comes from exactly one measurement: the factory *Stadium
+4. **The absolute target is already there**: core 0.36.0 scaffolds
+   `normalization.target_db = 17.5` with its provenance, so a fresh profile
+   is level-matched to the same baseline as everyone else without anyone
+   typing a number. It comes from exactly one measurement: the factory *Stadium
    Rock Rig* read a total of **17.51 dB** ([MEASURED] 2026-07-29, Stadium XL;
    factory presets all carry output level 0.0 dB, so total == chain gain).
    It is that one reference rounded — **not** an average of anything.
@@ -1190,7 +1192,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.35.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.36.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
