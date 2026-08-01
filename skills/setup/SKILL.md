@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.36.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.37.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -61,7 +61,7 @@ this order:
    installed plugin), resolve the plugin root yourself: it is the ancestor
    directory containing `.claude-plugin/plugin.json` — walk up from this
    skill's own directory (the skill lives at
-   `<plugin-root>/.claude/skills/setup/`).
+   `<plugin-root>/skills/setup/`).
 
 **Sanity-check the resolution once:** run `helixgen list-blocks` with your
 resolved env. If it prints an empty/`no blocks` result, the library env did
@@ -166,13 +166,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.36.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.37.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.36.0'
+  uv tool install 'helixgen[device]==0.37.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -239,6 +239,45 @@ key: env var > file value > Claude-memory seed > built-in default.
   the *first* time a given key is set this way — e.g. "I'll set `favor_irs:
   true` in preferences.json — ok?" Once the user has confirmed that key once,
   later updates to it can be written silently.
+
+#### Converge, don't interview
+
+A setup pass that ends in a list of questions has done half its job. **Fix
+what has one correct answer; ask only where the answer is genuinely the
+user's.** The test is simple: *could I be wrong about this?* If not, do it and
+say you did.
+
+**Do it, don't ask:**
+
+- **The engine is behind the pin this plugin declares.** That is not a
+  preference — the pin IS the version these skills are written against, and a
+  mismatch is the single most common source of "the skill told me to run a
+  flag that doesn't exist". Run `uv tool install --force
+  'helixgen[device]==<pin>'`, verify `helixgen --version`, report the upgrade
+  in one line. (Do ask before a DOWNGRADE — an engine ahead of the pin may be
+  deliberate.)
+- **A missing `normalization` block on an existing profile.** Core scaffolds
+  it for a brand-new profile, so a user whose `preferences.json` merely
+  predates that release gets a worse default for no reason. Write the same
+  thing core would: `mode: "play"`, `target_db: 17.5` with its
+  `target_source` provenance. Nothing here is a guess (see below).
+- **Any missing scaffold with a known-correct shape** — the `~/.helixgen`
+  layout, a `preferences.json` that doesn't exist at all, the home git repo.
+
+**Ask, because you cannot know:**
+
+- **`default_guitar`** — which guitar they actually reach for. Only they know.
+- **Anything destructive**: deleting stale device records, pruning IRs,
+  running `library migrate` for real, overwriting a file that already has
+  content.
+- **A rig decision**: `normalization.mode` beyond the `play` default, because
+  `sample` and `looper` mean cabling and a calibration the user has to
+  physically do.
+- **Subjective content**: `character_md` on a guitar profile, IR character
+  tags. Offer to draft, never invent silently.
+
+Report gaps you did NOT act on as a short list, not as a queue of questions to
+work through one at a time.
 
 Keys this skill owns: `device.model`, `favor_irs`, `reveal_in_finder`,
 `guard_paid_irs_in_git`, `default_guitar`, and the `normalization` block
@@ -335,7 +374,7 @@ confirm-first-then-silent rule above. The one exception is the `normalization`
 block, which **`helixgen device calibrate` writes for you** — don't hand-edit
 the `calibration` sub-block, it is measured data.
 
-#### The `normalization` block (0.35.0)
+#### The `normalization` block
 
 The loudness-normalization protocol: which stimulus, which target, and the
 calibration that makes runs comparable between sessions. **Additive — an
@@ -363,14 +402,16 @@ so scaffolding it is a convenience, never a requirement.
 }
 ```
 
-Scaffold it with `mode: "play"` and everything else null on first run: `play`
+Scaffold it with `mode: "play"` and `target_db: 17.5` (with its `target_source` provenance), everything else null: `play`
 mode needs no cabling and no calibration, so the user is immediately able to
 normalize. Rules for the rest:
 
-- **`target_db`**: **17.5 dB is scaffolded for you** (core 0.36.0), with its
-  provenance in `target_source` — the factory *Stadium Rock Rig* measured
-  17.51 dB total (2026-07-29, Stadium XL). It is a CONSTANT, not something
-  each rig measures: the factory presets are identical across Stadiums, and
+- **`target_db`**: **17.5 dB, written without asking.** YOU write it — no
+  CLI verb does (`preferences.json` is hand-managed), so a profile missing
+  the block stays missing until this skill fills it in, and an unset target
+  makes every run self-anchor. The value is not a judgement call. Its provenance goes in `target_source`: the factory
+  *Stadium Rock Rig* measured 17.51 dB total (2026-07-29, Stadium XL). It is
+  a CONSTANT, not something each rig measures: the factory presets are identical across Stadiums, and
   separate runs only land on a common level when they all use the same
   number. Don't replace it with a per-preset guess, and don't leave it null —
   a null target makes `device normalize` anchor on its own first target,
