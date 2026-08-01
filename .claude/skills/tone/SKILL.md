@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.30.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.35.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -591,7 +591,7 @@ chat:
 Keep it tight and scannable — it's reference material, not a transcript. **Per-variant notes** (anything specific to one guitar's `.hsp`) go to that
 variant's `notes_md` instead: `helixgen library doc "<name>" --variant
 <guitar-slug> (--from-file <md> | -)`. If you regenerate/iterate on the preset
-(step 9), re-run `library doc` to update the description in place.
+(step 10), re-run `library doc` to update the description in place.
 
 Read it back any time with `helixgen describe "<tone>"` (identity + variants
 table + `description_md` verbatim) or `helixgen library show "<name>" [--json]`
@@ -615,12 +615,81 @@ Tell the user, in this order:
 3. **Levels** (from 5.7) — one line on the *intended* relative balance, e.g. `rhythm anchor; lead +~2 dB; clean bumped to match (fine-tune by ear)`. If normalization was skipped by preference, say `Levels: normalization off per preferences`.
 4. **Instrument** — `<guitar> — <one-clause why>` (skip the "why" if the user named the guitar themselves), then `Selector: <position> · Volume: <0–10> · Tone: <0–10>` in that guitar's real switch language, plus a one-clause note for any non-obvious move (roll-off, coil-split, pick attack)
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
-6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop.
+6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop. Once it's on the device, offer the measured level-match (step 9).
 7. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
 
-### 9. Iterate on feedback (when the user loads it and says it's not quite right)
+### 9. Offer to level-match it on the device (measured)
+
+The levels you set in 5.7 are **rules of thumb** — helixgen renders no audio,
+so they are a starting balance, not a measurement. `device normalize` closes
+that loop against the real hardware. Offer it once the tone exists; don't
+make the user know the feature is there.
+
+**Offer when** the preset has **≥2 named snapshots** (their relative balance is
+exactly what the loop equalizes), or the user keeps other tones on the device
+that this one should sit level with. A single-snapshot one-off that nothing
+else is compared against doesn't need it — say so rather than upselling.
+
+**Ask in one line, with the cost in it:**
+
+> "Want me to level-match those snapshots against the real hardware? It takes
+> about 10 seconds of you playing per snapshot — 3 snapshots, so roughly half a
+> minute of steady playing. Or skip it and I'll leave the levels as authored."
+
+If the user says no, stop — the authored levels stand and the report already
+said what they are.
+
+**Then read `~/.helixgen/preferences.json` → `normalization`** and follow the
+mode it names (`play` is the default when the block is absent, and it is the
+one that needs no setup at all). What to tell the user to connect, by mode:
+
+| Mode | Tell them to connect | Then |
+|---|---|---|
+| `play` (default) | **Nothing beyond the LAN** — the Helix on WiFi/Ethernet, guitar plugged into Inst 1 as usual. Measurement is network telemetry; USB is not involved. | They play; you run the loop |
+| `sample` | Computer's **analog output → 1/4" Inst 1**, guitar unplugged, and the computer's output device pinned to the one actually cabled (the Stadium steals the system default) | Needs a calibration — `helixgen device calibrate` — if `normalization.calibration` is empty or stale |
+| `looper` | Nothing extra; they record a loop on a front-of-chain looper block first | The run uses `--source loop` automatically |
+
+**The sequence** — this is the part to get right, because the tone has to be
+on the device and ACTIVE before anything can be measured:
+
+1. **Put it on the Helix.** `device install` (or `device sync <setlist>`) and
+   leave that preset ACTIVE — snapshot-scope normalize verifies the active
+   preset's name and aborts on a mismatch. This is the `device` skill's
+   territory; hand off if the device isn't already set up.
+2. **Dry run first, always:** `helixgen device normalize <preset.hsp>`. It
+   recalls each snapshot, prompts before each window, and reports the trims it
+   *would* write. Show the user that report.
+3. **Write them:** re-run with `--yes`. Trims land in the **local `.hsp`**, as
+   per-snapshot output-level moves — not on the device.
+4. **Re-sync** (`device sync` / `device install`) or nothing changes audibly on
+   the hardware.
+5. **Update the write-up** — the balance is now measured, so refresh the
+   Levels line via `helixgen library doc` (7a), and the run itself is recorded
+   on the tone as a `normalized` record you can read back with
+   `helixgen describe "<tone>"`.
+
+**Cross-tone matching needs an absolute target.** Without `--target-db` the
+run anchors on its own first snapshot, which equalizes *within this preset
+only* — two presets normalized separately still won't sit level with each
+other. If the user keeps a library, use their `normalization.target_db` (or
+propose 17.5 dB, the measured total of the factory *Stadium Rock Rig*) and
+reuse it for every tone.
+
+**If a snapshot can't reach the target**, the run says so with its ceiling —
+that one is a **gain-staging** problem, and unlike the rest of this step it is
+*your* job, not the device skill's: raise the amp's channel volume (both amps
+on a layered preset) and re-run. `ChVol` is wildly non-linear — 0.55 → 1.0 was
++24.7 dB of chain gain on one measured amp — so move it in small steps and
+re-measure. Do **not** solve it by raising the output block instead: that
+amplifies the chain's noise floor by the same amount.
+
+**Chain-out `output_db` over 0 dBFS in the results is in-chain clipping**, and
+no level move fixes it — back off the amp/drive gain and re-run (see step 10's
+ear-language table).
+
+### 10. Iterate on feedback (when the user loads it and says it's not quite right)
 
 After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. If the change is worth recording, refresh the tone's `description_md` with `helixgen library doc` (7a). Don't git-commit library paths yourself — core auto-commits (7b).
 
@@ -645,12 +714,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.30.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.35.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.30.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.35.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -695,6 +764,8 @@ touching the tone:
 | Heavy reverb defaults | Stadium plates run hot; start at 0.10 |
 | Asking 5 clarifying questions | Cap at 3, only what's actually missing |
 | Reporting only amp settings, not the instrument recommendation | Selector + volume + tone (+ coil-split/pick-attack where relevant) are part of the tone; include them in the report (step 6, step 8 item 4) |
+| Authoring a multi-snapshot tone and never offering the measured level-match | 5.7's levels are unmeasured rules of thumb; `device normalize` closes the loop against real hardware in ~10 s of playing per snapshot (step 9). Offer it — don't wait to be asked |
+| Running `device normalize` per preset with no `--target-db` and calling the library level-matched | The default anchor equalizes WITHIN one run only; separate runs land nowhere near each other. Use one absolute target for every tone (step 9) |
 | Leaving a clean/low-gain part at the same level knob as a high-gain part and calling it balanced | High gain reads louder (more compression); push the lower-gain part's channel volume up to sit even — the volume-normalization pass (5.7), gain-compensation force |
 | Generic guitar advice that ignores the named or auto-selected guitar | If the user said "Strat", say "middle/position 4"; for the user's own lineup use its real switches — LP Jr has no selector, EC-1000 is a 3-way (not 5-way), Strandberg/Prestige are 5-way with specific split positions |
 | Defaulting to multiple presets when amp families differ | Default to ONE preset with layered amps + snapshot bypass instead (1a, 5.5); fall back to multiple presets only when it won't fit the 2-pair/12-block/8-snapshot budget |
@@ -740,7 +811,7 @@ regenerate round-trip.
    - "add a delay" → `add_block` with the delay block, `after` the amp/cab.
    - "…but only in the Lead snapshot" → add `"snapshot": "Lead"` (a name, or
      a 0-based index) to the `set_param`/`set_enabled` op — a per-snapshot
-     override instead of a base edit (0.23.0; see step 9's per-snapshot rule).
+     override instead of a base edit (0.23.0; see step 10's per-snapshot rule).
 
    Run `helixgen patch --help` for the full ops schema.
 3. `patch` edits the file **in place** — the user just re-imports the same

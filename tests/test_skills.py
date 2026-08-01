@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.30.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.35.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -428,9 +428,9 @@ def test_device_skill_documents_normalize_field_guidance() -> None:
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     # the playing protocol: one riff, played steadily, through the whole run
     assert re.search(r"same riff", text, re.IGNORECASE)
-    # --seconds 10 suffices; the default 20 is conservative
+    # --seconds 10 IS the default since core 0.32.1 (was 20)
     assert "--seconds 10" in text
-    assert re.search(r"default\s+20.{0,40}conservative", text, re.DOTALL | re.IGNORECASE)
+    assert re.search(r"lowered from 20", text, re.IGNORECASE)
     # the gate needs pitched, steady playing (~4 s credited per window)
     assert "pitched" in text
     assert re.search(r"4\s?s\b", text)
@@ -774,3 +774,110 @@ def test_tone_skill_scopes_the_output_level_actuator_claim() -> None:
         text,
         re.DOTALL | re.IGNORECASE,
     ), "tone: `device normalize` output-level exception not stated"
+
+
+# --- core 0.35.0 vocabulary (the normalization protocol, he-xth) -------------
+
+
+def test_device_skill_states_the_three_connections() -> None:
+    """The most-confused part of the procedure: which link does what. A skill
+    that can't answer "does USB replace the LAN?" sends users cabling the
+    wrong thing."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"three connections", text, re.IGNORECASE)
+    assert "_stadiumserver._tcp" in text
+    # the LAN is not optional and USB is not a control transport
+    assert re.search(r"no USB control transport", text, re.IGNORECASE)
+    assert re.search(r"USB cannot replace the LAN", text, re.IGNORECASE)
+    # the analog cable is sample-mode only
+    assert re.search(r"Inst 1", text)
+
+
+def test_device_skill_carries_the_mode_decision_tree() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    for mode in ("`play`", "`sample`", "`looper`"):
+        assert mode in text, mode
+    assert "normalization.mode" in text
+    # play mode is the no-setup default
+    assert re.search(r"play.{0,80}needs no (cabling|setup)", text,
+                     re.IGNORECASE | re.DOTALL)
+
+
+def test_device_skill_documents_calibrate() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "helixgen device calibrate" in text
+    # the crux: null against input_db, never gain_db
+    assert re.search(r"nulls? against `?input_db`?", text, re.IGNORECASE)
+    assert re.search(r"never `?gain_db`?", text, re.IGNORECASE)
+    # the measured source-level physics that makes calibration necessary
+    assert "0.16 dB/dB" in text
+    # a non-converging run writes nothing, and why it usually fails
+    assert re.search(r"does not converge writes NOTHING", text, re.IGNORECASE)
+    assert re.search(r"steals the system default", text, re.IGNORECASE)
+    # the reference guitar is part of the calibration
+    assert re.search(r"10\+ dB", text)
+
+
+def test_device_skill_documents_prefs_driven_defaults() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"flag > `normalization` prefs block > the", text)
+    assert "settings_from" in text
+
+
+def test_device_skill_documents_the_reachability_escalation() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "ceiling_db" in text and "reachable" in text
+    # the fix is ChVol, not a bigger output trim
+    assert re.search(r"ChVol", text)
+    assert re.search(r"noise floor", text, re.IGNORECASE)
+    assert re.search(r"both amps", text, re.IGNORECASE)
+
+
+def test_device_skill_documents_capture_measurement() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "--measure-via capture" in text
+    assert "BS.1770" in text
+    assert "--capture-input" in text
+    # the dependencies are checked before the first capture, and the default
+    # metric is deliberately unchanged (hc-3kg owns that call)
+    assert re.search(r"BEFORE the\s+first capture", text, re.DOTALL)
+    assert re.search(r"default metric is\s+unchanged", text, re.DOTALL)
+
+
+def test_setup_skill_owns_the_normalization_keys() -> None:
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    assert "`normalization`" in text
+    assert "target_source" in text
+    # the calibration sub-block is measured data, written by the verb
+    assert re.search(r"device calibrate`?\s+(owns|writes)\s+it", text,
+                     re.IGNORECASE | re.DOTALL)
+    assert re.search(r"HELIXGEN_NORMALIZE_", text)
+    # absent block == today's behavior
+    assert re.search(r"[Aa]dditive", text)
+
+
+def test_tone_skill_offers_the_measured_level_match() -> None:
+    """he-xth's user-facing point: after authoring a tone, the skill asks
+    whether to level-match, says what to connect, and runs it."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert re.search(r"### 9\. Offer to level-match", text)
+    # it asks, with the cost stated
+    assert re.search(r"Want me to level-match", text)
+    # it tells the user what to connect, per mode
+    assert re.search(r"Tell them to connect", text)
+    # and it drives the actual sequence, dry-run first
+    assert "helixgen device normalize" in text
+    assert re.search(r"[Dd]ry run first", text)
+    assert "--yes" in text
+    # cross-tone matching needs an absolute target
+    assert "--target-db" in text
+    assert "17.5" in text
+
+
+def test_tone_skill_step_numbering_is_consistent() -> None:
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    # the iterate step moved to 10 when the level-match step landed at 9;
+    # every in-text reference must follow, or the skill sends readers to the
+    # wrong section.
+    assert "### 10. Iterate on feedback" in text
+    assert not re.search(r"see step 9's per-snapshot rule", text)

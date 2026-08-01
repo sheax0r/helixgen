@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.30.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.35.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -166,13 +166,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.30.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.35.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.30.0'
+  uv tool install 'helixgen[device]==0.35.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -241,8 +241,8 @@ key: env var > file value > Claude-memory seed > built-in default.
   later updates to it can be written silently.
 
 Keys this skill owns: `device.model`, `favor_irs`, `reveal_in_finder`,
-`guard_paid_irs_in_git`, `default_guitar`. (`author` is consumed by the `tone`
-skill.) The user's guitars are no longer a preferences key — they are guitar
+`guard_paid_irs_in_git`, `default_guitar`, and the `normalization` block
+(below). (`author` is consumed by the `tone` skill.) The user's guitars are no longer a preferences key — they are guitar
 **profiles** under `library/guitars/` (see **Guitar profiles** below).
 `instruments` and `preset_output_dir` are **deprecated** (replaced by guitar
 profiles and the `library/tones/` default write location); if a loaded
@@ -331,7 +331,57 @@ the choice here (confirm-first-then-silent, matching the other prefs).
 
 There's no `helixgen prefs` CLI yet — `preferences.json` is plain JSON
 (`json.load`/atomic tmp+rename write), so read or hand-edit it directly, per the
-confirm-first-then-silent rule above.
+confirm-first-then-silent rule above. The one exception is the `normalization`
+block, which **`helixgen device calibrate` writes for you** — don't hand-edit
+the `calibration` sub-block, it is measured data.
+
+#### The `normalization` block (0.35.0)
+
+The loudness-normalization protocol: which stimulus, which target, and the
+calibration that makes runs comparable between sessions. **Additive — an
+absent block means every `device normalize` flag keeps its built-in default**,
+so scaffolding it is a convenience, never a requirement.
+
+```jsonc
+"normalization": {
+  "mode": "play",            // play | sample | looper — see the `device` skill
+  "target_db": null,         // absolute total-loudness target; 17.5 is the sane default
+  "target_source": null,     // {kind, name, measured_total_db, measured_on} — provenance
+  "seconds": null,           // measurement window (CLI default 10)
+  "tolerance_db": null,      // in-band dead zone (CLI default 1.0)
+  "measure_via": null,       // meters | capture (CLI default meters)
+  "capture_input": null,     // capture device NAME, for measure_via=capture
+  "sample": {                // the recorded stimulus, `sample` mode only
+    "path": null, "loop_seconds": null,
+    "playback_cmd": "play -q {path} repeat 9999",
+    "output_device": null, "volume": null
+  },
+  "calibration": {           // WRITTEN BY `device calibrate` — measured, don't invent
+    "reference_input_db": null, "reference_guitar": null,
+    "achieved_input_db": null, "calibrated_on": null
+  }
+}
+```
+
+Scaffold it with `mode: "play"` and everything else null on first run: `play`
+mode needs no cabling and no calibration, so the user is immediately able to
+normalize. Rules for the rest:
+
+- **`target_db`**: only write a number you can attribute. 17.5 dB is the
+  measured total of the factory *Stadium Rock Rig* (2026-07-29, Stadium XL) —
+  if you use it, record that in `target_source` so a later session can tell a
+  measured target from a guess. Never invent one silently.
+- **`calibration`**: `helixgen device calibrate` owns it. Recording a
+  reference you did not measure would make every later run confidently wrong.
+- **`mode`**: changing it is a rig decision (does the user want to play, or to
+  cable a computer into Inst 1?) — ask, don't infer. `device calibrate` sets it
+  to `sample` when it succeeds.
+- Scalars honor `HELIXGEN_NORMALIZE_*` env overrides
+  (`HELIXGEN_NORMALIZE_TARGET_DB`, `_MODE`, `_SECONDS`, `_TOLERANCE_DB`,
+  `_MEASURE_VIA`, `_CAPTURE_INPUT`); the nested blocks are file-only.
+
+The `device` skill owns what the modes mean, what to cable, and how to run the
+calibration — point the user there rather than re-explaining it here.
 
 #### Migrating a pre-library home
 
