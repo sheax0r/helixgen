@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.39.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.40.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -686,8 +686,21 @@ never the recommended path.
    done deciding anything.
 3. Only if the run reports it measured nothing: say what to cable (analog out
    → Inst 1, guitar unplugged, and pin the computer's output device — the
-   Stadium steals the system default). Offer `device calibrate` to pin the
-   source level, which is what makes runs comparable BETWEEN sessions.
+   Stadium steals the system default).
+4. **If the run says the rig is not calibrated** (core 0.40.0 prints this
+   note), relay it plainly ONCE and offer to fix it — don't bury it and don't
+   repeat it every run. What to say: the trims are still correct *within*
+   each preset, but hitting the absolute 17.5 target and comparing runs made
+   on different days both depend on the playback level, and
+   `helixgen device calibrate` pins it for one window of playing, once per
+   rig. If they decline, proceed — an uncalibrated run is useful, not
+   broken.
+
+**Calibration is a USER action, driven from here.** "calibrate my rig",
+"the loop level is off", "set up the sample" — run `helixgen device
+calibrate` and walk them through its two steps. Never send someone to
+hand-edit `preferences.json`; the verb writes it, and the file is theirs
+(local to their machine, never shared).
 4. **Use the shipped absolute target, 17.5 dB** — the `setup` skill writes
    it into `normalization.target_db` with its provenance (no CLI verb does;
    the file is hand-managed). A profile without it makes every run
@@ -1217,7 +1230,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.39.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.40.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

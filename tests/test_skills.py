@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.39.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.40.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -1083,3 +1083,18 @@ def test_setup_skill_copies_the_stimulus_out_of_the_versioned_plugin_dir() -> No
     assert re.search(r"COPY it to", flat)
     assert re.search(r"never write the plugin path itself", flat)
     assert re.search(r"contains the plugin VERSION", flat)
+
+
+def test_device_skill_drives_calibration_as_a_user_action() -> None:
+    """Calibration is something a USER asks for in their own words, not a
+    developer chore. The skill must own the verb and never send anyone to
+    hand-edit preferences.json."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    flat = " ".join(text.split())
+    assert "Calibration is a USER action, driven from here" in flat
+    assert re.search(r"calibrate my rig", flat)
+    assert re.search(r"Never send someone to hand-edit `preferences.json`",
+                     flat)
+    # the uncalibrated note is relayed once and is not a blocker
+    assert re.search(r"relay it plainly ONCE", flat)
+    assert re.search(r"an uncalibrated run is useful, not\s+broken", flat)
