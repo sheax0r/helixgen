@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI verbs (including the reference-based `device sync <setlist>` / `device sync --all`). Also covers finding the device on the LAN (`device discover`), level-matching loudness across snapshots or a setlist (`device normalize`), and on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "find my Helix's IP", "level-match my snapshots", "clean up my IRs", "delete/duplicate a setlist".
+description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI verbs (including the reference-based `device sync <setlist>` / `device sync --all`). Also covers finding the device on the LAN (`device discover`), level-matching loudness across snapshots or a setlist (`device normalize`, plus the `device calibrate` source-level setup and the `normalization` protocol profile it writes), and on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "find my Helix's IP", "level-match my snapshots", "normalize my tones", "calibrate my rig", "make my presets the same loudness", "clean up my IRs", "delete/duplicate a setlist".
 ---
 
 # device
@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.30.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.35.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -612,14 +612,138 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
 
-### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0; library recording 0.26.0, loop source 0.27.0)
+### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0; library recording 0.26.0, loop source 0.27.0, USB capture + protocol profile 0.35.0)
 
 ```bash
 helixgen device measure [--seconds N] [--min-playing N] [--source input|loop] [--json]   # read-only
+helixgen device calibrate [--stimulus FILE] [--volume N] [--guitar SLUG] [--json]        # sample mode setup
 helixgen device normalize <preset.hsp> [--json]                      # snapshot scope, DRY-RUN
 helixgen device normalize --setlist <name> [--json]                  # setlist scope, DRY-RUN
 helixgen device normalize <preset.hsp> --yes                         # write trims to the LOCAL .hsp
 ```
+
+#### The three connections — state these before anything else
+
+The single most confused part of this whole procedure. Say which link does
+what BEFORE asking the user to plug anything in.
+
+| Link | What it carries | Needed for normalization? |
+|---|---|---|
+| **LAN — WiFi or Ethernet** | Every `device` verb: mDNS `_stadiumserver._tcp` discovery, RPC control on port **2002**, ZMQ/msgpack — plus the `/dspEvent` telemetry burst on port **2003**, which is where **the loudness meters arrive**. Both are this one link. | **ALWAYS.** There is no USB control transport in helixgen. |
+| **Analog audio out → 1/4" Inst 1** | A recorded stimulus played from the computer into the instrument jack. | Only in **`sample`** mode. |
+| **USB audio** | The Stadium's processed output recorded back to the computer (ch 1/2 processed, ch 7 DI tap, ch 3–6 silent). | Only for **`--measure-via capture`**. Never for control. |
+
+Both natural wrong guesses are wrong:
+
+- **USB cannot replace the LAN.** Measurement telemetry and every preset
+  recall are network operations. A USB cable alone measures nothing.
+- **USB is a poor substitute for the analog cable.** Feeding a stimulus over
+  USB means repointing every preset's input block away from Inst 1 — invasive,
+  and it defeats `--source input`, whose gate reads the instrument-input meter.
+
+#### Which mode — decide this with the user first
+
+The measurement is always the same; what varies is the **stimulus**. The
+configured mode lives in `normalization.mode` in `~/.helixgen/preferences.json`
+and `device normalize` reads it, so this is a once-per-rig decision, not a
+per-run one.
+
+| Mode | Stimulus | Physically needs | Cost |
+|---|---|---|---|
+| **`play`** (default) | the user plays the guitar | LAN only | ~10 s of steady playing per target — 31 tones is ~5 minutes of playing (longer in wall clock, with the loads between targets), and consistency across that span is on the human |
+| **`sample`** | a recorded loop from the computer into Inst 1 | LAN + analog cable + `sox` | one calibration (`device calibrate`), then unattended: **`device normalize` plays the stimulus itself** (0.35.0), one pass around each window. `--no-stimulus` opts out |
+| **`looper`** | an on-device looper block replaying a recorded riff | LAN only | recording the loop first; implies `--source loop` (`gain_db` is null — compare `output_db`) |
+
+Recommend `play` for a one-off (a tone the user just authored, a couple of
+snapshots) and `sample` for anything library-sized or anything meant to be
+comparable between sessions.
+
+#### First run — no `normalization` block yet
+
+1. Read `~/.helixgen/preferences.json`. No `normalization` block means nothing
+   is configured: mode defaults to `play` and every `normalize` flag falls back
+   to its built-in default.
+2. Ask which mode the user wants (table above). `play` needs no setup at all —
+   go straight to normalizing.
+3. For `sample`, run **`helixgen device calibrate`** (below) — it does the
+   two-step procedure and writes the whole block, including the stimulus and
+   the volume that reached the reference.
+4. Pick and persist an absolute `--target-db`. **17.5 dB** is the sane
+   default, and it comes from exactly one measurement: the factory *Stadium
+   Rock Rig* read a total of **17.51 dB** ([MEASURED] 2026-07-29, Stadium XL;
+   factory presets all carry output level 0.0 dB, so total == chain gain).
+   It is that one reference rounded — **not** an average of anything.
+   Separately, four category representatives were measured to test whether
+   per-category targets were worth having (German Lead 19.17, Modern Metal
+   17.77, Quiet Time 15.54, Jazzy Jazz 9.21) and the answer was **no**:
+   lead-over-rhythm is only 1.4 dB and the two cleans disagree by 6.3 dB, so
+   no defensible per-category offset exists from that sample. One absolute
+   target, reused everywhere. Corroboration: an already-normalized library
+   tone measured 17.69 against a +17.9 output level.
+5. Record it in `normalization.target_db` with `target_source` provenance, so
+   a later session can tell a measured target from a guess.
+
+#### `device calibrate` — the source-level calibration (0.35.0)
+
+**Only `sample` and `looper` need this**; `play` mode's stimulus is the guitar.
+
+```bash
+helixgen device calibrate --stimulus <loop.wav> --guitar <slug>      # first time
+helixgen device calibrate                                            # re-run from prefs
+```
+
+Why it exists: a **clean** chain tracks source level ~**1:1** while a
+**saturated** one is nearly source-independent ([MEASURED] 2026-07-29,
+model/firmware not recorded: **0.16 dB/dB** on a real high-gain preset — input
+rose 36.6 dB, output moved 6). So the clean-to-saturated spread, and every trim
+derived from it, is a function of how hard the source drives the chain — **not
+a property of the preset**. Pick a playback level arbitrarily and the run is
+perfectly repeatable and consistently wrong (error ≈ 0.84 × the level error).
+
+What the verb does, so you can narrate it:
+
+1. Asks the user to **play by hand** for one window and records the jack level
+   `input_db` as the reference.
+2. Plays the stimulus and steps the system output volume until it reads within
+   `--tolerance-db` (default 1.0) of that reference. On macOS it sets the
+   volume itself via `osascript`; elsewhere it reports the value to set by hand
+   and stops.
+3. Writes `normalization.mode = "sample"` (a profile already set to `looper`
+   is PRESERVED — it needs the same calibration, and demoting it would flip
+   the implied `--source` back to `input`), `normalization.sample` (path,
+   volume, playback command) and `normalization.calibration` (reference and
+   achieved `input_db`, the guitar, the date) into `preferences.json`,
+   merging key-by-key so nothing else in the file is disturbed.
+4. **Restores the output volume it found** on every exit path, success or
+   failure — the loop drives the system volume, and a machine left at
+   whatever the search reached, with a loop cabled into an amp, is not an
+   acceptable exit state.
+
+Two profile keys are **recorded but not acted on**: `sample.loop_seconds`
+(documentation of the loop's length, for the whole-cycle rule below) and
+`sample.output_device` (echoed back at you during calibration — helixgen
+cannot select an output device, which is exactly why that step is a human
+instruction). Don't tell a user that setting `output_device` fixes the
+stolen-default problem; only changing it in the OS does.
+
+**It nulls against `input_db`, never `gain_db`** — `gain_db` on a clean chain
+is precisely the quantity that does *not* move with source level, so nulling
+against it "converges" instantly at any arbitrary level and calibrates nothing.
+**The reference guitar is recorded** because instruments differ by 10+ dB
+(active EMG vs P-90); calibrating with a different guitar is a legitimate
+reason to re-run, and `normalize` warns when the recorded guitar isn't the
+user's `default_guitar`, or when the calibration is over 90 days old.
+
+**A run that does not converge writes NOTHING.** The usual cause is the most
+likely first-run failure of the whole procedure: the Stadium is itself a USB
+audio interface and often **steals the system default output**, so the stimulus
+leaves over USB, nothing reaches the jack, and the window reports "not enough
+playing" with no hint why. Pin the computer's output device to the one cabled
+to the jack before blaming anything else.
+
+Session result for reference: an ESP LTD EC-1000 (active EMG) read `input_db`
+−31.0; macOS output volume **53** produced −30.72 — 0.28 dB off, one iteration.
+
 
 `device measure` (read-only) reduces playing-gated telemetry to robust dB
 stats while the player plays — the input-invariant **chain gain** is the
@@ -646,13 +770,27 @@ compounding).
 > `device normalize`: the old docs asserted the taps were *upstream* of the
 > output gain, `normalize` added the output level on top of a `gain_db` that
 > already included it, every trim was double-counted, and the loop oscillated
-> instead of converging (core PR #51, hc-daz — engine fixed in core 0.33.0;
-> against the pinned 0.30.0 engine the trims are still double-counted, so
-> re-measure and re-run rather than trusting a single pass). Do not add an
-> untagged claim here.
+> instead of converging (core PR #51, hc-daz — fixed in core 0.33.0, and the
+> engine this plugin pins is past it). Do not add an untagged claim here.
 
 The essentials:
 
+- **Every setting falls back to the profile (0.35.0).** `--target-db`,
+  `--seconds`, `--tolerance-db`, `--source`, `--measure-via` and
+  `--capture-input` resolve as **flag > `normalization` prefs block > the
+  option's own default**. `--json` reports `settings_from`, naming each
+  setting's origin (`flag` / `prefs` / `default`) — read it back rather than
+  guessing what a run actually used. `normalization.mode: looper` implies
+  `--source loop`, and a `sample`/`looper` run warns about a stale
+  calibration before it starts measuring.
+- **The reachability preflight tells you which tones are NOT a level problem
+  (0.35.0).** A trim is the last stage of the chain, so a target can only be
+  lifted to `measured total − the output level in force + 20` (the schema
+  cap). Every measured target carries `ceiling_db` and `reachable` in
+  `--json`, and anything the target overshoots is reported before the write.
+  Those tones need **in-chain gain staging** — see "When a tone can't reach
+  the target" below. The trim is still written and lands clamped at the cap,
+  so the run is never silently partial.
 - **DRY-RUN by default — always run and show the dry-run report first.**
   Measuring happens either way, but without `--yes` trims are only reported.
   Treat `--yes` as a separate, deliberate step after the user has seen the
@@ -687,6 +825,25 @@ The essentials:
   replaying across every target of a run. Convergence is unchanged — trims are
   sized against an absolute target either way, and a re-measure reads the
   trimmed level.
+- **`--measure-via capture` (0.35.0) — LUFS instead of the meter proxy.**
+  Each target is recorded off the Stadium's **USB audio output** with `sox`
+  and reduced to **BS.1770 integrated LUFS** rather than read off the
+  telemetry meters. USB is downstream of the output gain too ([MEASURED]
+  Stadium XL fw 1.3.2: output gain 8/14/20/25 dB gave captured RMS
+  −30.20/−24.20/−18.20/−13.20 dBFS), so the same math and the same
+  convergence hold. It needs `pip install 'helixgen[analyze]'` **and** the
+  `sox` binary **and** `--capture-input NAME` — all three checked BEFORE the
+  first capture, so a missing dependency never costs a played window.
+  `--capture-input` is deliberately not defaulted: naming the device
+  (`'Helix Stadium XL'`) never touches the system default input, and
+  capturing the wrong input writes confident, wrong trims. Analysis runs over
+  the MIDDLE of the window (`--capture-skip`, default 2.5 s off each end), so
+  `--seconds` must exceed twice the skip — 30 s is the proven window.
+  `--capture-dir` keeps each WAV for A/B listening or `analyze-audio`.
+  **Whether LUFS level-matches better BY EAR than the meter median is still
+  open** (hc-3kg — needs a listening test), so the default metric is
+  unchanged. Offer it when the user cares about perceived loudness across
+  very different gain structures, not by default.
 - **An unreachable device fails fast (0.27.0).** `measure` — like `device
   tuner`/`device meters` — preflights reachability with one cheap TCP probe
   of the `--port` control port before streaming (the `--port` flag is
@@ -728,10 +885,12 @@ hardware:
   measured for roughly one window, the snapshot recalls / preset loads
   between windows happen automatically, and the preset's prior state is
   restored when the run ends. The player's only job is to keep playing.
-- **`--seconds 10` suffices in practice** — the default 20 is conservative.
-  The playing gate needs **pitched, steady playing** (roughly 4 s of
-  credited playing per window minimum); muted scratching, noodling pauses,
-  or silence don't credit the gate.
+- **`--seconds 10` is the default** (lowered from 20 in core 0.33.0 — field
+  use showed a 10 s window carries >2x margin over the playing gate: the gate
+  needs ~4 s of credited playing). The
+  gate needs **pitched, steady playing** (roughly 4 s of credited playing per
+  window minimum); muted scratching, noodling pauses, or silence don't credit
+  it.
 - **Cross-tone level matching: ALWAYS pass an explicit absolute
   `--target-db`.** The default anchor (the first target that measures ok)
   equalizes **within that scope only** — separate runs won't land on a
@@ -764,14 +923,39 @@ hardware:
   each trim is sized to put the target AT `--target-db`, not to nudge it by a
   delta, and the next run measures the tone at its new level — so an in-band
   target gets a zero trim and **nothing compounds**. Re-running with a
-  different `--target-db` is safe. Requires the corrected engine (core
-  0.33.0); the pinned 0.30.0 double-counts the output level, which oscillates
-  between two states instead of converging.
+  different `--target-db` is safe. [MEASURED] Stadium XL fw 1.3.2, 2026-07-30:
+  a held-out control tone measured 28.46 dB, was trimmed −10.90 against a 17.5
+  target, and after sync measured 17.78 — 0.28 dB off, one pass, no
+  oscillation.
 
-#### Calibrating a repeatable source — computer playback into the instrument jack
+#### When a tone can't reach the target — escalate to gain staging
 
-Replaying a recorded signal instead of playing by hand makes a run repeatable
-and unattended. Three things decide whether the numbers mean anything.
+The reachability preflight names these; this is what to do about them. Found
+on **3 of 31 tones** in a real library, so expect them.
+
+The fix is **in-chain gain staging**, normally the amp's channel volume — and
+`ChVol` is wildly non-linear in dB, so the moves are dramatic ([MEASURED]
+2026-07-29, Stadium XL):
+
+| Tone | Change | Chain gain |
+|---|---|---|
+| Warm Jazz Clean | `ChVol` 0.55 → 1.0 | **−26.01 → −1.32** (+24.7 dB) |
+| Tool – Schism | both amps' `ChVol` raised | **−15.62 → +1.69** (+17.3 dB) |
+| Tom Petty | `ChVol` 0.63 → 0.70 | **−2.56 → +13.25** (+15.8 dB) |
+
+- **Raise `ChVol`, not the output cap.** The hardware does honor a write above
+  +20 (he-b9i), but boosting a quiet chain ~40 dB at the *output* amplifies its
+  noise floor by the same amount. Raising the amp's channel volume produces
+  real signal instead.
+- **On a dual-amp preset raise BOTH amps together**, or the blend moves.
+- Hand it to the `tone` skill (that's its territory — amp/drive levels), then
+  re-run `normalize`.
+
+#### What `device calibrate` automates — and the parts still on you
+
+`device calibrate` (above) runs the level-nulling procedure and persists it.
+These facts still shape how you set the rig up and how much the numbers can be
+trusted.
 
 - **SOURCE LEVEL DETERMINES THE SPREAD — calibrate it, never just pick one.**
   A **clean** chain tracks source level roughly **1:1**; a **saturated** one is
@@ -782,9 +966,11 @@ and unattended. Three things decide whether the numbers mean anything.
   An arbitrary source level
   yields a perfectly repeatable rig producing trims that are an **artifact of
   that arbitrary choice**.
-  **Calibrate against `input_db`, not `gain_db`.** Measure with the player
-  playing **by hand** and note `input_db`; then adjust the playback volume until
-  the loop reads within **~1 dB** of it. `input_db` is the jack level itself, so
+  **`device calibrate` does exactly this** — reference by hand, then null the
+  stimulus against it — so reach for the verb rather than driving the two
+  measurements yourself. The manual equivalent: measure with the player playing
+  **by hand** and note `input_db`; then adjust the playback volume until the
+  loop reads within **~1 dB** of it. `input_db` is the jack level itself, so
   it is chain-independent and works on any preset ([INFERRED] from the cell's
   position ahead of the chain — the tap-position experiment above was run on
   the chain-out cells, not this one, so treat "input_db is pre-chain" as
@@ -807,6 +993,14 @@ and unattended. Three things decide whether the numbers mean anything.
   ```bash
   play -q helix-cal-loop.wav repeat 9999    # sox; ^C to stop
   ```
+
+  Since 0.35.0 you do **not** run this yourself at all: both `device
+  calibrate` and `device normalize` own the playback
+  (`helixgen.device.stimulus`), starting the loop around each measurement
+  window and stopping it on every exit path — including when the window
+  raises. A `sample` profile with no `sample.path` is a usage error rather
+  than a silent measurement of nothing, and a shell-looped `afplay` is
+  refused outright. Drive playback yourself only with `--no-stimulus`.
 
 - **Measure whole loop cycles.** For a periodic stimulus, a window of exactly
   *k* cycles covers the same set of signal values regardless of where it starts,
@@ -996,7 +1190,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.30.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.35.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
@@ -1025,6 +1219,9 @@ Tightly:
 | Re-measuring to confirm a trim **before syncing it** | `--yes` writes the local `.hsp` only, so the hardware is still at the old level and the re-measure reads "no change" — sync/install first, *then* re-measure (the taps ARE downstream of the output gain, so a landed trim moves `gain_db` by the written amount) |
 | Level-matching across presets/setlists with the default anchor (no `--target-db`) | The anchor equalizes within one scope only, and on snapshot scope can drag a preset to its quietest snapshot's level — always pass one explicit absolute `--target-db` and reuse it across runs (see the field-proven guidance above) |
 | Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | The clipping happened inside the chain, upstream of the output block the trim moves — a level trim pulls the reading down without undoing the distortion; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
+| Calibrating in `sample` mode and never checking which output device the audio leaves by | The Stadium is itself a USB interface and steals the system default output — the stimulus never reaches the jack and every window reports "not enough playing". It is the most likely first-run failure; pin the output device before debugging anything else |
+| Running a `sample`-mode normalize on someone else's calibration (different guitar, moved knob, new cable) | The trims become an artifact of the wrong source level — instruments differ by 10+ dB. `normalize` warns; re-run `device calibrate` rather than dismissing it |
+| Chasing an unreachable target with more level | The preflight already said it: `measured + 20` is the ceiling, and above it the fix is the amp's `ChVol`, not the output block (raising the output ~40 dB raises the noise floor with it) |
 | Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |
 | Measuring a looper-replayed signal with the default input gate | The input jack is silent while a front-of-chain looper replays, so the default gate credits nothing and the window fails — pass `--source loop` (and compare raw `output_db`, not `gain_db`, across targets) |
 | Reaching for `slots restore --force` to overwrite an occupied setlist position | `--force` only covers an occupied **pool** slot; an occupied named-setlist position is refused (the error identifies the incumbent by cid) — `device delete <cid> --setlist <name>` the incumbent reference first, then re-run |

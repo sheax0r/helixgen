@@ -240,7 +240,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.30.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.35.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -428,9 +428,9 @@ def test_device_skill_documents_normalize_field_guidance() -> None:
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     # the playing protocol: one riff, played steadily, through the whole run
     assert re.search(r"same riff", text, re.IGNORECASE)
-    # --seconds 10 suffices; the default 20 is conservative
+    # --seconds 10 IS the default since core 0.32.1 (was 20)
     assert "--seconds 10" in text
-    assert re.search(r"default\s+20.{0,40}conservative", text, re.DOTALL | re.IGNORECASE)
+    assert re.search(r"lowered from 20", text, re.IGNORECASE)
     # the gate needs pitched, steady playing (~4 s credited per window)
     assert "pitched" in text
     assert re.search(r"4\s?s\b", text)
@@ -774,3 +774,198 @@ def test_tone_skill_scopes_the_output_level_actuator_claim() -> None:
         text,
         re.DOTALL | re.IGNORECASE,
     ), "tone: `device normalize` output-level exception not stated"
+
+
+# --- core 0.35.0 vocabulary (the normalization protocol, he-xth) -------------
+
+
+def _section(text: str, heading: str) -> str:
+    """The body of one `#### heading` section, so an assertion can be scoped
+    to the passage that must carry the claim -- a whole-file grep passes on a
+    keyword sitting anywhere, including inside its own contradiction."""
+    start = text.index(heading)
+    rest = text[start + len(heading):]
+    end = rest.find("\n#### ")
+    return rest if end < 0 else rest[:end]
+
+
+def test_device_skill_states_the_three_connections() -> None:
+    """The most-confused part of the procedure: which link does what. A skill
+    that can't answer "does USB replace the LAN?" sends users cabling the
+    wrong thing."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    body = _section(text, "#### The three connections")
+    assert "_stadiumserver._tcp" in body
+    # the meters ride the LAN, on the telemetry port -- 2002 is RPC
+    assert "2003" in body
+    # POLARITY, not vocabulary: the wrong-way-round claims must be absent
+    assert re.search(r"USB cannot replace the LAN", body)
+    assert not re.search(r"USB replaces the LAN", body)
+    assert re.search(r"no USB control transport", body, re.IGNORECASE)
+    # the analog cable belongs to sample mode only
+    sample_row = [ln for ln in body.splitlines() if "Inst 1" in ln]
+    assert sample_row and "sample" in sample_row[0]
+
+
+def test_device_skill_carries_the_mode_decision_tree() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    body = _section(text, "#### Which mode")
+    for mode in ("`play`", "`sample`", "`looper`"):
+        assert mode in body, mode
+    assert "normalization.mode" in body
+    # each mode's row must state its own requirement, in its own row
+    rows = {ln.split("|")[1].strip(): ln
+            for ln in body.splitlines() if ln.startswith("| **`")}
+    assert "LAN only" in rows["**`play`** (default)"]
+    assert "analog cable" in rows["**`sample`**"]
+
+
+def test_device_skill_says_normalize_plays_the_sample_stimulus() -> None:
+    """The engine plays the stimulus itself in `sample` mode (0.35.0). A skill
+    that omits this leaves an agent expecting to orchestrate sox -- or worse,
+    running a sample-mode normalize with nothing playing, which measures
+    silence and skips every target."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"`device normalize` plays the stimulus itself", text)
+    assert "--no-stimulus" in text
+    # and the old "you drive playback yourself" reading must be gone
+    assert not re.search(r"you do \*\*not\*\* run this yourself for a "
+                         r"calibration", text)
+
+
+def test_device_skill_does_not_claim_helixgen_sets_the_output_device() -> None:
+    # `sample.output_device` is recorded, never applied: telling a user it
+    # fixes the stolen-default problem sends them back to the same silence.
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"recorded but not acted on", text)
+    assert re.search(r"only changing it in the OS", text)
+
+
+def test_device_skill_documents_calibrate() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    body = _section(text, "#### `device calibrate`")
+    assert "helixgen device calibrate" in body
+    # the crux, scoped to the section that teaches it
+    assert re.search(r"nulls? against `?input_db`?", body, re.IGNORECASE)
+    assert re.search(r"never `?gain_db`?", body, re.IGNORECASE)
+    assert not re.search(r"nulls? against `?gain_db`?", body, re.IGNORECASE)
+    assert "0.16 dB/dB" in body
+    assert re.search(r"does not converge writes NOTHING", body, re.IGNORECASE)
+    assert re.search(r"steals the system default", body, re.IGNORECASE)
+    # a looper profile keeps its mode (demoting it breaks the next run)
+    assert "already set to `looper` is PRESERVED" in " ".join(body.split())
+    # the reference guitar matters -- asserted inside this section, not from
+    # the unrelated instruments line in the Common Mistakes table
+    assert re.search(r"10\+ dB", body)
+
+
+def test_device_skill_documents_prefs_driven_defaults() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"flag > `normalization` prefs block > the", text)
+    assert "settings_from" in text
+
+
+def test_device_skill_documents_the_reachability_escalation() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "ceiling_db" in text and "reachable" in text
+    # the fix is ChVol, not a bigger output trim
+    assert re.search(r"ChVol", text)
+    assert re.search(r"noise floor", text, re.IGNORECASE)
+    assert re.search(r"both amps", text, re.IGNORECASE)
+
+
+def test_device_skill_documents_capture_measurement() -> None:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "--measure-via capture" in text
+    assert "BS.1770" in text
+    assert "--capture-input" in text
+    # the dependencies are checked before the first capture, and the default
+    # metric is deliberately unchanged (hc-3kg owns that call)
+    # whitespace-insensitive: a semantics-preserving reflow must not fail
+    flat = " ".join(text.split())
+    assert "BEFORE the first capture" in flat
+    assert "default metric is unchanged" in flat
+
+
+def test_setup_skill_owns_the_normalization_keys() -> None:
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    body = _section(text, "#### The `normalization` block")
+    assert "target_source" in body
+    assert re.search(r"device calibrate`?\s+(owns|writes)\s+it", body,
+                     re.IGNORECASE | re.DOTALL)
+    assert re.search(r"HELIXGEN_NORMALIZE_", body)
+    # POLARITY: an absent block leaves the CLI defaults in force. The inverse
+    # claim ("you MUST scaffold it / it disables normalize") is the dangerous
+    # one, so assert it is absent rather than grepping for the word.
+    assert re.search(r"[Aa]dditive", body)
+    assert not re.search(r"NOT additive|DISABLES", body)
+    assert re.search(r"absent block means every `device normalize` flag keeps",
+                     body, re.DOTALL)
+
+
+def test_tone_skill_offers_the_measured_level_match() -> None:
+    """he-xth's user-facing point: after authoring a tone, the skill asks
+    whether to level-match, says what to connect, and runs it -- IN THAT
+    ORDER. This test asserts sequence, not vocabulary: a step 9 that says the
+    opposite would use all the same words."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    step9 = text[text.index("### 9. Offer to level-match"):
+                 text.index("### 10. Iterate on feedback")]
+
+    # the mode is read BEFORE the ask -- the cost differs per mode
+    assert step9.index("normalization` FIRST") < step9.index(
+        "Want me to level-match")
+    # install/select comes before the dry run, which comes before --yes,
+    # which comes before the re-sync
+    order = [step9.index(m) for m in (
+        "Put it on the Helix and SELECT it",
+        "Dry run first",
+        "re-run the same command with `--yes`",
+        "Re-sync")]
+    assert order == sorted(order), order
+    # the abort this sequence exists to avoid is named
+    assert "device load" in step9
+    assert re.search(r"leaves the active tone untouched", step9)
+    # POLARITY on the two claims that would break a real run
+    assert not re.search(r"[Ss]kip the dry run", step9)
+    assert not re.search(r"USB only", step9)
+    assert "There is no per-target prompt" in " ".join(step9.split())
+    # sample mode's own ordering: calibrate with the guitar STILL PLUGGED IN
+    assert re.search(r"with the guitar still plugged in", step9,
+                     re.IGNORECASE)
+    assert "--target-db" in step9 and "17.5" in text
+
+
+def test_tone_skill_gain_staging_loop_resyncs_before_remeasuring() -> None:
+    # a ChVol edit lands in the local .hsp; without a sync the hardware is
+    # still on the old chain and the re-measure reads "no change".
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    step9 = text[text.index("### 9. Offer to level-match"):
+                 text.index("### 10. Iterate on feedback")]
+    assert re.search(r"Re-sync before re-measuring", step9, re.IGNORECASE)
+
+
+def test_tone_skill_states_the_snapshot_scope_requirement() -> None:
+    # 0 named snapshots cannot be normalized in snapshot scope at all, and 1
+    # needs an absolute target -- the engine errors on both.
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    step9 = text[text.index("### 9. Offer to level-match"):
+                 text.index("### 10. Iterate on feedback")]
+    assert re.search(r"≥2 named snapshots.{0,120}--target-db", step9,
+                     re.DOTALL)
+    assert re.search(r"no named snapshots.{0,120}setlist", step9, re.DOTALL)
+
+
+def test_tone_skill_step_numbering_is_consistent() -> None:
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    headings = re.findall(r"^### (\d+)\. ", text, re.MULTILINE)
+    # every step number appears once, in ascending order
+    assert headings == sorted(headings, key=int), headings
+    assert len(headings) == len(set(headings)), headings
+    assert "### 10. Iterate on feedback" in text
+    assert "### 9. Iterate on feedback" not in text
+    # every "step N" cross-reference to a WORKFLOW step resolves to a heading
+    # that exists (step 0/0.5/-1 are the setup skill's provisioning steps,
+    # which this skill legitimately points at by name)
+    referenced = {n for n in re.findall(r"step (\d+)", text) if n != "0"}
+    assert referenced <= set(headings), referenced - set(headings)
