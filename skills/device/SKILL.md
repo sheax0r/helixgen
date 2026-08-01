@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.38.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.39.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -641,7 +641,19 @@ Both natural wrong guesses are wrong:
   USB means repointing every preset's input block away from Inst 1 — invasive,
   and it defeats `--source input`, whose gate reads the instrument-input meter.
 
-#### Which mode — decide this with the user first
+#### Which mode — don't ask; `sample` already works
+
+**Since core 0.39.0 the stimulus ships INSIDE the engine**
+(`helixgen/assets/helix-cal-loop.wav`) and `sample` is the DEFAULT mode, so a
+user who has configured nothing still gets an unattended run. **Do not open a
+mode conversation.** Just normalize: the verb plays the loop itself, and if it
+cannot (no `sox`, missing asset) it says so and measures the user's playing
+instead — no run is ever blocked on this choice.
+
+Raise modes only when the user brings them up, or when the run itself reports
+it could not replay the stimulus. The table below is for those cases.
+
+#### The modes, for when it does come up
 
 The measurement is always the same; what varies is the **stimulus**. The
 configured mode lives in `normalization.mode` in `~/.helixgen/preferences.json`
@@ -654,26 +666,28 @@ per-run one.
 | **`sample`** (default) | a recorded loop from the computer into Inst 1 | LAN + analog cable + `sox` | one calibration (`device calibrate`), then unattended: **`device normalize` plays the stimulus itself** (0.35.0), one pass around each window. `--no-stimulus` opts out |
 | **`looper`** | an on-device looper block replaying a recorded riff | LAN only | recording the loop first; implies `--source loop` (`gain_db` is null — compare `output_db`) |
 
-**Default to `sample`.** The plugin ships the stimulus, so the only thing
-between a user and an unattended run is an analog cable and one calibration —
-whereas `play` costs ~10 s of steady playing per target on EVERY run, forever
-(two 3-snapshot tones is six windows; a 31-tone library is minutes of
-continuous playing each time). Reach for `play` only when there is no
-stimulus or no player binary, and say so rather than presenting it as the
-normal path.
+**`sample` is the default and needs no setup** — the engine carries the
+stimulus. What the user still has to do physically is cable their computer's
+analog output into Inst 1; without it the loop plays into nothing and the run
+reports "measured nothing — pin the OUTPUT DEVICE". That is a thing to fix
+when it happens, not a question to ask up front.
+
+`play` costs ~10 s of steady playing per target on EVERY run, forever (two
+3-snapshot tones is six windows; a 31-tone library is minutes of continuous
+playing each time). It is the fallback for a machine with no player binary —
+never the recommended path.
 
 #### First run — no `normalization` block yet
 
-1. Read `~/.helixgen/preferences.json`. No `normalization` block means nothing
-   is configured: mode defaults to `play` and every `normalize` flag falls back
-   to its built-in default.
-2. Point the profile at the bundled stimulus and run **`helixgen device
-   calibrate`** (below). Don't ask whether the cable is in — calibrate says
-   so itself, precisely, when the stimulus isn't reaching the jack.
-3. If calibration succeeds you are in `sample` mode and no further playing is
-   needed on any run. If it fails, report what to cable (analog out → Inst 1,
-   guitar unplugged, and pin the computer's output device) and fall back to
-   `play` so the user is never blocked.
+1. Read `~/.helixgen/preferences.json`. No `normalization` block is FINE —
+   mode defaults to `sample`, the stimulus resolves to the packaged one, and
+   the target to 17.5. Nothing needs writing before a first run.
+2. Just run the normalize dry-run. If the stimulus reaches the jack you are
+   done deciding anything.
+3. Only if the run reports it measured nothing: say what to cable (analog out
+   → Inst 1, guitar unplugged, and pin the computer's output device — the
+   Stadium steals the system default). Offer `device calibrate` to pin the
+   source level, which is what makes runs comparable BETWEEN sessions.
 4. **Use the shipped absolute target, 17.5 dB** — the `setup` skill writes
    it into `normalization.target_db` with its provenance (no CLI verb does;
    the file is hand-managed). A profile without it makes every run
@@ -1203,7 +1217,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.38.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.39.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

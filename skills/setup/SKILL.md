@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.38.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.39.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -166,13 +166,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.38.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.39.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.38.0'
+  uv tool install 'helixgen[device]==0.39.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -410,7 +410,12 @@ failure this rule exists to prevent.
 
 So, in order:
 
-1. **Always give the profile a stimulus.** The plugin ships one at
+0. **Nothing here is required for a working normalize run** — since core
+   0.39.0 the engine ships the stimulus and defaults to replaying it, so an
+   absent `normalization` block is a working configuration, not a gap. Write
+   the block to RECORD choices, never to make normalization possible.
+1. **Give the profile a stimulus only if you are overriding the packaged
+   one.** The plugin ships one at
    `${CLAUDE_PLUGIN_ROOT}/docs/superpowers/specs/assets/helix-cal-loop.wav`
    (10 guitar-DI notes, exactly 5.00 s at 48 kHz, 24-bit mono, CC0).
    **COPY it to `~/.helixgen/stimulus/helix-cal-loop.wav` and point
