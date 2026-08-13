@@ -28,11 +28,11 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 - `docs/superpowers/specs/` — **design specs** (`YYYY-MM-DD-<topic>-design.md`), written before implementation and kept as the record of *why*. Distinct from `docs/plans/`, which holds ralphex implementation plan files. Spec assets (calibration audio, fixtures) live under `docs/superpowers/specs/assets/`.
 - `tests/` — skill-doc frontmatter + content checks (`python3 -m pytest`, needs only pytest)
 
-**Plugin backlog lives at `BACKLOG.md` in coordination workspace** (repos' shared backlog; entries #57–#59 cover repo split) — file plugin-only work there.
+**Plugin work is tracked in beads** (`bd ready` / `bd create`; see Beads block below) — file plugin-only work there, not in TodoWrite or markdown TODO lists. `BACKLOG.md` in the coordination workspace remains the cross-repo shared backlog (entries #57–#59 cover the repo split); it is historical for plugin-only items.
 
 ## Development workflow
 
-- **Worktrees, branched from fresh `github/main`.** All non-trivial work in git worktree whose branch starts from freshly-fetched `github/main` (GitHub remote named **`github`**, not `origin`) — never commit directly on local `main`. Fetch again before picking release version number.
+- **Worktrees, branched from fresh `origin/main`.** All non-trivial work in git worktree whose branch starts from freshly-fetched `origin/main` — never commit directly on local `main`. Fetch again before picking release version number.
 - **Adversarial review before shipping.** Before merging PR, dispatch at least one independent review subagent prompted to *break* change. Confirmed findings fixed or explicitly deferred to backlog.
 - **Agent-facing surfaces ship in sync — across repos.** Skills describe CLI behavior implemented in helixgen-core. Core behavior change that skills describe needs companion PR here updating `skills/*` + synced `docs/` copies (`CLI.md`, `recipe-reference.md`, `helix-protocol.md`); land two PRs together, cross-reference.
 - **Skills operate through CLI, not source.** Skills must let agent work purely via `helixgen` CLI; behavioral contracts live in CLI's per-verb `--help` (pinned by core's `tests/test_cli_parity.py`) + synced docs. Running engine = uv-tool-installed package — reading local checkout source can mislead about running version.
@@ -52,4 +52,4 @@ Do **not** manually `git branch -f stable …`, push `stable`, or push `helixgen
 
 ## ralphex
 
-Implementation tasks driven from helix coordination workspace run via [ralphex](https://github.com/umputun/ralphex) plan files in `docs/plans/` (scaffold: `docs/plans/TEMPLATE.md`); completed plans move to `docs/plans/completed/`. Launcher syncs local `main` from `github/main` before run. Review = ralphex built-in pipeline (`external_review_tool = none`). `default_branch = main` pinned in `.ralphex/config` — remote named `github`, so no `origin/HEAD` auto-detect. `.ralphex/config` tracked; `.ralphex/worktrees/` + `.ralphex/progress/` runtime state, gitignored.
+Implementation tasks driven from helix coordination workspace run via [ralphex](https://github.com/umputun/ralphex) plan files in `docs/plans/` (scaffold: `docs/plans/TEMPLATE.md`); completed plans move to `docs/plans/completed/`. Launcher syncs local `main` from `origin/main` before run. Review = ralphex built-in pipeline (`external_review_tool = none`). `default_branch = main` pinned in `.ralphex/config`. `.ralphex/config` tracked; `.ralphex/worktrees/` + `.ralphex/progress/` runtime state, gitignored.
