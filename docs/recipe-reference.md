@@ -36,7 +36,7 @@ are case-sensitive and `generate` rejects unknown ones.
 
 - `paths` is 1–2 entries (each maps to one DSP). Parallel splits inside a path use `split`/`join` entries (see "parallel splits" below).
 - `block` matches the display_name from `list-blocks` (e.g. "Brit Plexi Brt") — case-sensitive. If ambiguous, use the model_id in brackets (e.g. "HD2_AmpBritPlexiBrt").
-- `params` values are floats 0.0–1.0 for most knobs; some are ints/bools/Hz. Verify ranges with `show-block`.
+- `params` values are in **each param's own units** — many knobs are 0.0–1.0, but others are dB (an Agoura amp's `Level`, `-40..10`), Hz, ms, seconds, inches (cab `Distance`), degrees (cab `Angle`) or an enum index (cab `Mic`). Never assume 0.0–1.0. `show-block` prints the real range, the unit and the enum labels — read it before writing any value.
 
 ## Optional: per-path input routing + input block params
 
