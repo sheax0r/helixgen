@@ -23,9 +23,9 @@ there on 66 presets.
 
 **Amp model family:** {'Agoura': 69, 'legacy': 20}
 
-**Blocks per preset:** {'n': 66, 'min': 9, 'p25': 12, 'median': 15.0, 'p75': 18, 'max': 24}
+**Blocks per preset:** {'n': 66, 'min': 6, 'p25': 9, 'median': 11.5, 'p75': 14, 'max': 19}
 
-**Snapshots per preset:** {'n': 66, 'min': 8, 'p25': 8, 'median': 8.0, 'p75': 8, 'max': 8}
+**Named snapshots per preset:** {'n': 66, 'min': 4, 'p25': 4, 'median': 5.0, 'p75': 8, 'max': 8}
 
 ## amp
 

@@ -9,6 +9,7 @@ Output: <out>/hsp/*.hsp        converted presets
 Run:    python3 harvest.py <sbe-dir> <out-dir>
 """
 import json
+import re
 import subprocess
 import sys
 import statistics
@@ -68,12 +69,19 @@ def harvest(hsp_files, idx):
             v = json.loads(r.stdout)
         except json.JSONDecodeError:
             continue
-        info = {"file": Path(f).name, "blocks": 0, "paths": 0, "snapshots":
-                len(v.get("snapshots") or [])}
+        # the device always stores 8 snapshot slots; only NAMED ones are a
+        # design choice (unnamed default to "SNAPSHOT <n>" / "Snap <n>")
+        named = [s for s in (v.get("snapshots") or [])
+                 if not re.fullmatch(r"(SNAPSHOT|Snap)\s*\d+", (s.get("name") or "").strip(),
+                                     re.I)]
+        info = {"file": Path(f).name, "blocks": 0, "paths": 0,
+                "snapshots": len(named)}
         for p in v.get("paths", []):
             info["paths"] += 1
             for b in p.get("blocks", []):
                 name = b.get("block", "")
+                if not name:          # empty grid slot, not a block
+                    continue
                 mid, cat = idx.get(name, (None, "unknown"))
                 info["blocks"] += 1
                 model_use[f"{cat}:{name}"] += 1
@@ -120,7 +128,7 @@ def main():
         "amp_family_use": dict(family_use),
         "model_use": dict(sorted(model_use.items(), key=lambda kv: -kv[1])),
         "preset_shape": dist([p["blocks"] for p in presets]) if presets else {},
-        "snapshot_count": dist([p["snapshots"] for p in presets]) if presets else {},
+        "named_snapshot_count": dist([p["snapshots"] for p in presets]) if presets else {},
         "by_category": {c: {k: dist(v) for k, v in sorted(ps.items())}
                         for c, ps in sorted(by_cat.items())},
         "by_model": {m: {k: dist(v) for k, v in sorted(ps.items())}
@@ -143,7 +151,7 @@ def main():
              "distributions the tone skill's defaults should sit inside.", "",
              f"**Amp model family:** {dict(family_use)}", "",
              f"**Blocks per preset:** {corpus['preset_shape']}", "",
-             f"**Snapshots per preset:** {corpus['snapshot_count']}", ""]
+             f"**Named snapshots per preset:** {corpus['named_snapshot_count']}", ""]
     for cat, params in KEY.items():
         if cat not in corpus["by_category"]:
             continue
