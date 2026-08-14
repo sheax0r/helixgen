@@ -21,6 +21,20 @@ it should be a deliberate choice the tone's write-up explains. A value outside
 min–max is almost certainly a mistake — Line 6's own preset designers never went
 there on 66 presets.
 
+**These distributions are CONDITIONAL — read `n` carefully.** A preset only
+stores a param that differs from the model's default, so a param appears here
+only on the blocks where a designer *moved that knob*. Two consequences:
+
+- `n` is "how many blocks they adjusted it on", not "how many blocks have it".
+  A low `n` means the knob is usually left alone — which is itself a finding.
+  `Hype` (n=17) is not unpopular; it is used **selectively**, and when used it
+  lands around 0.23.
+- The bands say *where they put a knob when they chose to move it*. They say
+  nothing about the models' defaults. So "cab `HighCut` median 8000" means:
+  on the minority of cabs where they reached for it at all, they cut to 8–10 kHz.
+  A rule that cuts to 6500–7000 on **every** preset is wrong twice over — more
+  often than they do, and further than they ever do.
+
 **Amp model family:** {'Agoura': 69, 'legacy': 20}
 
 **Blocks per preset:** {'n': 66, 'min': 6, 'p25': 9, 'median': 11.5, 'p75': 14, 'max': 19}
