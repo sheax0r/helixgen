@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants to put helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist of tones to the device, or back up / restore. Drives the `helixgen device` CLI verbs (including the reference-based `device sync <setlist>` / `device sync --all`). Also covers finding the device on the LAN (`device discover`), level-matching loudness across snapshots or a setlist (`device normalize`, plus the `device calibrate` source-level setup and the `normalization` protocol profile it writes), and on-device library housekeeping — create/rename/delete/duplicate setlists, delete/rename/prune IRs, preset color + notes. Runs after `tone` has authored the `.hsp` file(s) on disk. Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "find my Helix's IP", "level-match my snapshots", "normalize my tones", "calibrate my rig", "make my presets the same loudness", "clean up my IRs", "delete/duplicate a setlist".
+description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — install a tone, sync a whole setlist, back up / restore. Drives the `helixgen device` CLI verbs (including `device sync <setlist>` / `device sync --all`). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, the `device calibrate` source-level setup, the `normalization` profile), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`) for presets made on the hardware or in HX Edit. Runs after `tone` authored the `.hsp` file(s). Triggers on "put this on my Helix", "sync my library to the device", "install these presets", "find my Helix's IP", "level-match my snapshots", "normalize my tones", "calibrate my rig", "make my presets the same loudness", "clean up my IRs", "delete/duplicate a setlist", "I edited this on the amp, get it back into my library", "convert this preset to a .hsp".
 ---
 
 # device
@@ -16,7 +16,7 @@ install one tone, **sync a whole setlist**, and back up / restore.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.43.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.44.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -269,6 +269,45 @@ splits**, **snapshots** (per-scene bypass + param deltas), and **footswitch/EXP
 assignments** all transcode faithfully (hardware-validated byte-for-byte vs HX
 Edit's own import). There is no serial-only limit any more.
 
+### The other direction: `device to-hsp` (device content -> `.hsp`)
+
+The transcoder now runs **backwards** too, so a preset the user made **on the
+hardware or in HX Edit** is no longer a dead end:
+
+```bash
+helixgen device to-hsp <file.sbe|CID> -o <out.hsp> [--name "..."] [--author "..."]
+```
+
+The source is either a local `.sbe` (from `device backup` / `device pull` —
+**wholly offline**, no device and no lease) or a device **CID** (a
+non-activating read, so the user's live tone is never disturbed; the preset's
+device name becomes `meta.name`). The result is an ordinary `.hsp`: `view` it,
+`patch` it, `library import` it, re-`install` it.
+
+**When to reach for it:**
+- "I tweaked this on the amp — bring it back into my library."
+- "What's actually in this factory preset?" — convert, then `view`.
+- The user wants to edit a preset they never authored through helixgen.
+
+**What to tell the user about fidelity.** Models, params, snapshots,
+footswitch/EXP assignments, IR references, base bypass, input routing and the
+full signal graph (dual-DSP, splits, dual-amp) all come back. `--verify` (on by
+default) re-transcodes and reports:
+- `verify: byte-exact round trip` — the normal result for anything helixgen
+  installed. Nothing to say.
+- a "re-transcode differs" line — **expected** when the *device* re-saved the
+  preset. It is serialization convention and internal id numbering, **not
+  tone**. Do NOT report it to the user as damage or data loss, and do not
+  retry: the conversion is a fixed point, so converting again changes nothing.
+
+**Two things are dropped, with a warning on stderr:** Command Center commands
+and MIDI CC controller bindings. If you see those warnings, tell the user
+plainly that those assignments did not survive and will need re-authoring.
+
+Float values read back **widened from the device's float32** (`0.15` arrives as
+`0.15000000596046448`). That is the value the device actually held — it is not
+drift, and it re-encodes identically. Don't "fix" it.
+
 ## The default path: manage membership, then `device sync <setlist>`
 
 For "get my tones onto the Helix":
@@ -330,6 +369,9 @@ protocol — re-run first, reboot second.
   "sync my tone library to the Stadium", "load these onto the device").
 - User wants to **back up** or **restore** device slots.
 - A generated preset "isn't loading on the device" and you need to (re)install it.
+- User wants a preset they made **on the amp or in HX Edit** brought back into
+  their library as an editable `.hsp` — `device to-hsp` (see "The other
+  direction" above).
 
 When NOT to use:
 - Designing or editing a tone — that's `tone` / the surgical-edit verbs. Author
@@ -1237,6 +1279,9 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   --setlist <name>`), then re-run. A re-authored
   `.hsp` is a local file change — see **Git-commit local artifact changes**
   above.
+- **Recover a preset the user edited on the amp:** `helixgen device to-hsp <CID>
+  -o <name>.hsp` (or point it at the `.sbe` a `device backup` already wrote).
+  See "The other direction" above for what survives and what doesn't.
 
 ### 6. Report back
 
@@ -1263,7 +1308,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.43.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.44.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
