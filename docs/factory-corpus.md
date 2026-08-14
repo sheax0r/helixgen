@@ -1,102 +1,148 @@
 # Factory preset corpus — 66 Line 6 Stadium factory presets
 
-What Line 6's own preset designers actually do. These distributions are
-the reference the tone skill's defaults should sit inside.
+What Line 6's own preset designers actually do, measured from the
+Stadium's factory setlist. Engine: `helixgen, version 0.45.0`.
 
-**Method.** Parsed from the `.hsp` directly, NOT from `helixgen view`.
-Every param the model declares is counted, defaulted when the designer
-left it alone — `view` omits any param equal to the model default, so a
-projection-based corpus silently drops every knob the designer was happy
-to leave alone (about half of all values) and reports only deliberate moves.
-Aggregated by **model id**: display names collide (`Mono` and `Stereo` each
-name six different models).
+## How to read a row — this matters more than the numbers
 
-**A category row is published only where every contributing model declares
-the same type and range.** The same param name carries different units in
-different models — reverb `Decay` is a 0..1 knob on HD2 models and SECONDS
-on VIC ones; amp `Level` is dB on Agoura amps and a 0..1 knob elsewhere.
-Pooling those would produce a median no amp can take. Suppressed rows are
-listed per category; use `data/factory-corpus.json` `by_model` for those.
+**`at_default` is half the answer.** Each row counts every instance of the
+param, including the ones nobody touched. A median over that pool describes
+no real preset: cab `HighCut` pools 29 cabs left wide open at 20100 with 13
+deliberately cut to 8000, and the resulting median (11750) occurs **zero**
+times in the corpus. So each row also carries:
 
-**Quartiles are omitted below n=8** — at n=2 or 3 an IQR is just the data
-points wearing a disguise.
+- **`at_default`** — how many of the `n` instances sit on the model's own
+  default. High `at_default` means the factory answer is *leave it alone*.
+- **`moved`** — the distribution over the instances a designer actually
+  changed. **This is the design signal.** Use it when you have decided to
+  set the param at all.
+- **`enabled_only`** — for effect blocks, the distribution over instances
+  that are ON in the preset's base state. Most factory drive and delay
+  blocks are bypassed at load (engaged by snapshot or footswitch), and
+  their values differ by ~20% from the bypassed ones.
 
-**Amp model family:** {'Agoura': 69, 'legacy': 22} — Agoura is what the factory
-presets are built on; the legacy HX models exist for preset compatibility.
+Integer and switch params report **mode + frequencies**, never a median —
+a median mic index is meaningless and a fractional one is unsettable.
+Quartiles are omitted below n=8.
 
-**Blocks per preset:** median 11.5 (min 6, max 19, p25-p75 9-14, n=66)
+A category row appears only where every contributing model declares the
+same type and range; the rest are listed as suppressed, because the same
+param name carries different units in different models (reverb `Decay` is
+a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for
+those live in `data/factory-corpus.json` under `by_model`.
 
-**Named snapshots per preset:** median 5 (min 4, max 8, p25-p75 4-7.75, n=66)
+**Known gaps.** `device to-hsp` drops the second model slot of every
+two-slot cab block; 48 of those hold `NoCab` and lose nothing, but ~30 real
+second cabs are missing (bead hgc-q38). Rows are BASE values — snapshot
+arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 21
+of 60 amps, so a single number can be one end of a designed range.
+Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.
 
-**Known gaps.** `device to-hsp` drops the B-cab of every dual-cab block (78 occurrences here), so the cab rows are the A-mic half of the truth (bead
-hgc-q38). Per-snapshot values are also partly dropped, so these are BASE
-values. Infrastructure blocks (inputs, outputs, splits, joins, looper) are
-excluded by design.
+**Amp model family:** Agoura 69 vs legacy 22 amp instances.
+
+**Blocks per preset:** median 11.5 (min 6, max 19)
+
+**Named snapshots per preset:** median 5 (min 4, max 8)
 
 ## amp
 
-| param | n | min | p25 | median | p75 | max |
+| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Drive | 60 | 0.2 | 0.395 | 0.5 | 0.6 | 1 |
-| Master | 83 | 0.21 | 0.575 | 0.9895 | 1 | 1 |
-| Hype | 69 | 0 | 0 | 0 | 0.07 | 1 |
-| ZPrePost | 62 | 0 | 0.3 | 0.3 | 0.77 | 1 |
-| Bass | 78 | 0.19 | 0.375 | 0.5 | 0.595 | 1 |
-| Mid | 48 | 0.28 | 0.43 | 0.510528 | 0.63 | 1 |
-| Treble | 75 | 0.3 | 0.495 | 0.6 | 0.7 | 1 |
-| Presence | 35 | 0.02 | 0.41 | 0.55 | 0.685 | 1 |
+| Drive | 60 | 7 | 0.5 | 0.5 | 0.41-0.61 | 0.2..1 |
+| Master | 83 | 41 | 0.9895 | 0.645 | 0.415-0.85 | 0.21..1 |
+| MasterVol | 4 | 4 | 1 | - | - | 1..1 |
+| Hype | 69 | 51 | 0 | 0.275 | 0.2075-0.385 | 0..1 |
+| ZPrePost | 62 | 58 | 0.3 | 0.339 | - | 0..1 |
+| Bass | 78 | 20 | 0.5 | 0.5 | 0.3525-0.6225 | 0.19..1 |
+| Mid | 48 | 11 | 0.510528 | 0.53 | 0.43-0.63 | 0.28..1 |
+| Treble | 75 | 20 | 0.6 | 0.62 | 0.495-0.69 | 0.3..1 |
+| Presence | 35 | 7 | 0.55 | 0.595 | 0.465-0.72 | 0.02..1 |
 
-Suppressed in amp (unit mixture — see `by_model`): `AmpCabZUpdate`, `Boost`, `Bright`, `Channel`, `Level`, `Ripple`, `Sag`
+Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
+
+| param | n on | median (on) |
+|---|---|---|
+| Drive | 53 | 0.5 |
+| Master | 76 | 0.92475 |
+| Hype | 67 | 0 |
+| ZPrePost | 61 | 0.3 |
+| Bass | 71 | 0.5 |
+| Mid | 42 | 0.510528 |
+| Treble | 68 | 0.605 |
+| Presence | 29 | 0.59 |
+
+Suppressed in amp (unit mixture — see `by_model`): `Boost`, `Bright`, `Channel`, `Jack`, `Level`, `Ripple`, `Sag`
 
 ## cab
 
-| param | n | min | p25 | median | p75 | max |
+| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Distance | 78 | 1 | 1 | 1.75 | 3.5 | 9 |
-| Position | 78 | 0 | 0.24 | 0.3 | 0.4 | 0.77 |
-| HighCut | 78 | 3600 | 8000 | 11750 | 20100 | 20100 |
-| LowCut | 78 | 19 | 19.9 | 19.9 | 60 | 90 |
-| Level | 78 | -5.2 | 0 | 0 | 0 | 6 |
-| Pan | 78 | 0 | 0.5 | 0.5 | 0.5 | 1 |
-
-Categorical (an index or a switch — mode, not median):
-
-| param | n | min | max | mode | most common |
-|---|---|---|---|---|---|
-| Angle | 78 | 0 | 45 | mode 0 | 0x57, 45x21 |
-| Mic | 78 | 0 | 11 | mode 11 | 11x17, 0x14, 10x13 |
+| Distance | 78 | 43 | 1.75 | 3 | 1-3.875 | 1..9 |
+| Angle | 78 | 60 | 0 | 0 | 0-0 | 0..45 |
+| Position | 78 | 33 | 0.3 | 0.3 | 0.29-0.39 | 0..0.77 |
+| Mic | 78 | 30 | mode 11 | mode 0 | - | 0..11 |
+| HighCut | 78 | 51 | 11750 | 9100 | 8000-10000 | 3600..20100 |
+| LowCut | 78 | 57 | 19.9 | 54 | 39-74 | 19..90 |
+| Level | 78 | 58 | 0 | 6 | 1.75-6 | -5.2..6 |
+| Pan | 78 | 67 | 0.5 | 0.35 | 0-1 | 0..1 |
 
 ## drive
 
-| param | n | min | p25 | median | p75 | max |
+| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Gain | 56 | 0 | 0.124725 | 0.365 | 0.46 | 0.76 |
-| Tone | 50 | 0.08 | 0.3725 | 0.54 | 0.7 | 0.88 |
+| Gain | 56 | 5 | 0.365 | 0.32 | 0.12-0.48 | 0..0.76 |
+| Tone | 50 | 7 | 0.54 | 0.58 | 0.37-0.71 | 0.08..0.88 |
 
-Suppressed in drive (unit mixture — see `by_model`): `Attack`, `Bass`, `Level`, `Treble`
+Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
+
+| param | n on | median (on) |
+|---|---|---|
+| Gain | 21 | 0.3 |
+| Tone | 20 | 0.525 |
+
+Suppressed in drive (unit mixture — see `by_model`): `Attack`, `Bass`, `Bright`, `Clipping`, `Fuzz`, `Level`, `Treble`
 
 ## delay
 
-| param | n | min | p25 | median | p75 | max |
+| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Mix | 70 | 0.13 | 0.29 | 0.335 | 0.42 | 1 |
-| Feedback | 70 | 0 | 0.2925 | 0.375 | 0.486 | 0.77 |
+| Mix | 70 | 5 | 0.335 | 0.33 | 0.29-0.42 | 0.13..1 |
+| Feedback | 70 | 6 | 0.375 | 0.39 | 0.29-0.5 | 0..0.77 |
 
-Suppressed in delay (unit mixture — see `by_model`): `Bass`, `LowCut`, `Pitch`, `Ramp`, `Speed`, `Time`, `Treble`
+Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
+
+| param | n on | median (on) |
+|---|---|---|
+| Mix | 20 | 0.3605 |
+| Feedback | 20 | 0.305 |
+
+Suppressed in delay (unit mixture — see `by_model`): `Bass`, `LowCut`, `Mode`, `Pitch`, `Ramp`, `Speed`, `Time`, `Treble`
 
 ## reverb
 
-| param | n | min | p25 | median | p75 | max |
+| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Mix | 69 | 0.13 | 0.24 | 0.32 | 0.39 | 0.92 |
+| Mix | 69 | 4 | 0.32 | 0.31 | 0.24-0.37 | 0.13..0.92 |
+
+Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
+
+| param | n on | median (on) |
+|---|---|---|
+| Mix | 48 | 0.285 |
 
 Suppressed in reverb (unit mixture — see `by_model`): `Decay`, `HighCut`, `LowCut`, `PreDelay`
 
 ## dynamics
 
-| param | n | min | p25 | median | p75 | max |
+| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Mix | 58 | 0.3205 | 0.6775 | 0.7 | 1 | 1 |
+| Mix | 58 | 17 | 0.7 | 0.7 | 0.61-0.7 | 0.3205..1 |
+
+Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
+
+| param | n on | median (on) |
+|---|---|---|
+| Mix | 57 | 0.7 |
 
 Suppressed in dynamics (unit mixture — see `by_model`): `Attack`, `Decay`, `Gain`, `Level`, `Ratio`, `Release`, `Threshold`
 

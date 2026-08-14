@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Harvest Line 6 factory Stadium presets into a parameter-distribution corpus.
 
-Reads the converted `.hsp` files DIRECTLY (8-byte `rpshnosj` magic + JSON) and
-back-fills every param the model declares from helixgen's vendored device defs,
-so a knob the designer left alone still counts. That distinction is the whole
-point: `helixgen view` omits any param equal to the model default, which makes
-its projection a record of *deliberate moves*, not of typical values.
+Reads the converted `.hsp` files directly (8-byte `rpshnosj` magic + JSON). Param
+metadata comes from `helixgen show-block --json` — the public CLI, so this runs
+anywhere the pinned engine is installed, with no engine-internal imports.
 
-Aggregates by MODEL ID (display names collide: "Mono" and "Stereo" each name six
-different models). A category-level roll-up is published only for params whose
-type and declared range are identical across every contributing model — the same
-param name carries different units in different models (reverb `Decay` is a 0..1
-knob on HD2 models and SECONDS on VIC ones; `Level` is dB on some, 0..1 on others).
+THE THING THAT MAKES THIS USABLE: every row separates values the designer LEFT AT
+THE MODEL DEFAULT from values they deliberately MOVED. Pool them and you get
+medians that describe nobody — factory `cab HighCut` "median 11750" is the
+midpoint between 29 cabs left wide open at 20100 and 13 cut to 8000, and occurs
+zero times in the corpus. `moved_*` is the design signal; `at_default` is how
+often the answer is "leave it alone".
+
+Also recorded: bypass state (most factory drive/delay blocks are OFF at load, and
+their values run ~20% different), integer/enum params as mode+frequencies rather
+than medians, and the conversion warnings.
 
 Run:    python3 harvest-factory-corpus.py <sbe-dir> <out-dir>
 """
@@ -25,28 +28,23 @@ from pathlib import Path
 from collections import defaultdict, Counter
 
 LIB = Path(os.environ.get("HELIXGEN_LIBRARY", Path.home() / ".helixgen" / "library"))
-CORE_SRC = Path.home() / "git" / "helixgen-core" / "src"
-MIN_N_QUANTILE = 8      # below this, publish n/min/max but no quartiles
+HELIXGEN = os.environ.get("HELIXGEN_BIN", "helixgen")
+MIN_N_QUANTILE = 8      # below this, no quartiles — an IQR over 3 points is theatre
+MIN_N_PUBLISH = 3       # below this, a by_model row is one preset's values verbatim
+EPS = 1e-5              # params are float32; 0.3 reads back as 0.30000001
 HSP_MAGIC = b"rpshnosj"
+# effects whose base bypass state changes what a value means
+BYPASSABLE = {"drive", "delay", "reverb", "modulation", "pitch", "filter", "dynamics"}
 
-sys.path.insert(0, str(CORE_SRC))
-from helixgen.device import defs           # noqa: E402
-try:
-    from helixgen.device import modelmap    # noqa: E402
-except ImportError:
-    modelmap = None
 
-# params that are an enum/index, not a quantity — a median mic is meaningless
-CATEGORICAL = {"Mic", "Channel", "Angle", "Polarity", "IrData", "Jack",
-               "SyncSelect1", "SyncSelect2", "TempoSync1",
-               "TempoSync2", "WaveShape", "VolumeTaper"}
+def sh(args):
+    return subprocess.run(args, capture_output=True, text=True, timeout=180,
+                          env={**os.environ, "HELIXGEN_LIBRARY": str(LIB)})
 
 
 def read_hsp(path: Path):
     raw = path.read_bytes()
-    if raw.startswith(HSP_MAGIC):
-        raw = raw[len(HSP_MAGIC):]
-    return json.loads(raw)
+    return json.loads(raw[len(HSP_MAGIC):] if raw.startswith(HSP_MAGIC) else raw)
 
 
 def convert(sbe_dir: Path, hsp_dir: Path):
@@ -55,165 +53,211 @@ def convert(sbe_dir: Path, hsp_dir: Path):
     ok, failed, warnings = [], [], Counter()
     for sbe in sorted(sbe_dir.glob("*.sbe")):
         out = hsp_dir / (sbe.stem + ".hsp")
-        r = subprocess.run(
-            ["helixgen", "device", "to-hsp", str(sbe), "-o", str(out),
-             "--library", str(LIB), "--no-verify"],
-            capture_output=True, text=True, timeout=180)
+        r = sh([HELIXGEN, "device", "to-hsp", str(sbe), "-o", str(out),
+                "--library", str(LIB), "--no-verify"])
         if r.returncode != 0 or not out.exists():
-            failed.append((sbe.name, (r.stderr or "").strip()[:200]))
+            failed.append({"file": sbe.name, "error": (r.stderr or "").strip()[:200]})
             continue
         ok.append(out)
         for line in (r.stderr or "").splitlines():
             if line.startswith("warning:"):
-                # collapse "grid slot 7:" style specifics into a class
                 warnings[re.sub(r"\b\d+\b", "N", line)] += 1
     return ok, failed, warnings
 
 
 def category_index():
-    """model_id -> category, from the block library (display names collide)."""
     idx = {}
     for cat_dir in (LIB / "blocks").iterdir():
         if cat_dir.is_dir():
             for f in cat_dir.glob("*.json"):
-                d = json.loads(f.read_text())
-                idx[d.get("model_id")] = (cat_dir.name, d.get("display_name"))
+                idx[json.loads(f.read_text()).get("model_id")] = cat_dir.name
     return idx
 
 
-def resolve_meta(model_id, _cache={}):
-    """Param metadata for a model: exact -> modelmap -> Stereo/Mono sibling."""
-    if model_id in _cache:
-        return _cache[model_id]
-    meta = defs.model_params_for(model_id) or {}
-    if not meta and modelmap is not None:
+def model_meta(model_id, _cache={}):
+    """{param: {min,max,default,type,internal}} straight from the CLI."""
+    if model_id not in _cache:
+        r = sh([HELIXGEN, "show-block", model_id, "--json"])
         try:
-            alt = modelmap.device_model_id(model_id)
-            if alt:
-                meta = defs.model_params_for(alt) or {}
-        except Exception:
-            pass
-    if not meta:
-        for a, b in (("Stereo", "Mono"), ("Mono", "Stereo")):
-            if model_id.endswith(a):
-                meta = defs.model_params_for(model_id[: -len(a)] + b) or {}
-                if meta:
-                    break
-    _cache[model_id] = meta
-    return meta
+            _cache[model_id] = json.loads(r.stdout).get("params", {})
+        except (json.JSONDecodeError, ValueError):
+            _cache[model_id] = {}
+    return _cache[model_id]
+
+
+def enabled_of(obj):
+    e = (obj or {}).get("@enabled")
+    return bool(e.get("value", True)) if isinstance(e, dict) else True
 
 
 def harvest(hsp_files, cat_idx):
-    by_model = defaultdict(lambda: defaultdict(list))    # model -> param -> values
-    changed = defaultdict(Counter)                       # model -> param -> n moved
+    # key -> param -> list of (value, at_default, enabled)
+    obs = defaultdict(lambda: defaultdict(list))
+    kinds = defaultdict(dict)          # key -> param -> "int"/"float"
     model_use, family_use = Counter(), Counter()
-    unresolved = Counter()
+    skipped = Counter()
     presets = []
 
     for f in hsp_files:
-        d = read_hsp(Path(f))
-        preset = d.get("preset") or {}
+        preset = read_hsp(Path(f)).get("preset") or {}
         nblocks = 0
         for flow in preset.get("flow") or []:
-            for key, entry in flow.items():
-                if not (isinstance(entry, dict) and key.startswith("b")):
+            for bkey, entry in flow.items():
+                if not (isinstance(entry, dict) and bkey.startswith("b")):
                     continue
+                block_on = enabled_of(entry)
                 for slot in entry.get("slot") or []:
                     mid = slot.get("model")
                     if not mid:
                         continue
-                    cat, disp = cat_idx.get(mid, (None, None))
+                    cat = cat_idx.get(mid)
                     if cat is None:
-                        unresolved[mid] += 1
+                        skipped[mid] += 1
                         continue
                     nblocks += 1
                     model_use[f"{cat}:{mid}"] += 1
                     if cat == "amp":
                         family_use["Agoura" if mid.startswith("Agoura")
                                    else "legacy"] += 1
-                    meta = resolve_meta(mid)
-                    stored = {k: v.get("value") for k, v in
-                              (slot.get("params") or {}).items()
-                              if isinstance(v, dict)}
-                    # every param the MODEL declares, defaulted when untouched
-                    for pname, pmeta in meta.items():
-                        val = stored.get(pname, pmeta.get("def"))
-                        if isinstance(val, bool) or not isinstance(val, (int, float)):
+                    on = block_on and enabled_of(slot)
+                    stored = slot.get("params") or {}
+                    key = f"{cat}|{mid}"
+                    for pname, pmeta in model_meta(mid).items():
+                        if pmeta.get("internal"):
                             continue
-                        by_model[f"{cat}|{mid}"][pname].append(float(val))
-                        if pname in stored and stored[pname] != pmeta.get("def"):
-                            changed[f"{cat}|{mid}"][pname] += 1
+                        raw = stored.get(pname)
+                        val = raw.get("value") if isinstance(raw, dict) else None
+                        if val is None:
+                            val = pmeta.get("default")
+                        if val is None:
+                            continue
+                        if isinstance(val, bool):     # a switch: count it as 0/1
+                            val, is_int = float(val), True
+                        elif isinstance(val, (int, float)):
+                            is_int = pmeta.get("type") == "int" or isinstance(val, int)
+                            val = float(val)
+                        else:
+                            continue
+                        dflt = pmeta.get("default")
+                        dflt = float(dflt) if isinstance(dflt, (int, float, bool)) else None
+                        at_default = dflt is not None and abs(val - dflt) <= EPS * max(1.0, abs(dflt))
+                        obs[key][pname].append((val, at_default, on))
+                        kinds[key][pname] = "int" if is_int else "float"
         named = [s for s in (preset.get("snapshots") or [])
                  if isinstance(s, dict) and not re.fullmatch(
                      r"(SNAPSHOT|Snap)\s*\d+", str(s.get("name", "")).strip(), re.I)]
         presets.append({"file": Path(f).name, "blocks": nblocks,
                         "named_snapshots": len(named)})
-    return by_model, changed, model_use, family_use, presets, unresolved
+    return obs, kinds, model_use, family_use, presets, skipped
 
 
-def dist(vals, categorical=False):
+def summarise(vals, categorical):
+    """vals: list of floats. -> n/min/max plus median+quartiles or mode+freqs."""
+    if not vals:
+        return None
     vals = sorted(vals)
-    n = len(vals)
-    out = {"n": n, "min": vals[0], "max": vals[-1]}
+    out = {"n": len(vals), "min": vals[0], "max": vals[-1]}
     if categorical:
         top = Counter(vals).most_common(4)
         out["mode"] = top[0][0]
         out["frequencies"] = [[v, c] for v, c in top]
-        return out
-    out["median"] = statistics.median(vals)
-    if n >= MIN_N_QUANTILE:
-        q = statistics.quantiles(vals, n=4, method="inclusive")
-        out["p25"], out["p75"] = q[0], q[2]
+    else:
+        out["median"] = statistics.median(vals)
+        if len(vals) >= MIN_N_QUANTILE:
+            q = statistics.quantiles(vals, n=4, method="inclusive")
+            out["p25"], out["p75"] = q[0], q[2]
     return out
 
 
-def rollup(by_model, cat_idx):
-    """Category-level stats, ONLY where every contributing model agrees on
-    type and declared range. Otherwise the pooled number is a unit mixture."""
+def row(entries, categorical):
+    """One published row: everything, plus the MOVED subset and the ON subset."""
+    allv = [v for v, _, _ in entries]
+    moved = [v for v, d, _ in entries if not d]
+    on = [v for v, _, o in entries if o]
+    r = summarise(allv, categorical)
+    r["at_default"] = len(allv) - len(moved)
+    if moved:
+        r["moved"] = summarise(moved, categorical)
+    if on and len(on) != len(allv):
+        r["enabled_only"] = summarise(on, categorical)
+    return r
+
+
+def main():
+    if len(sys.argv) < 3:
+        sys.exit("usage: harvest-factory-corpus.py <sbe-dir> <out-dir>")
+    sbe_dir, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ok, failed, warnings = convert(sbe_dir, out_dir / "hsp")
+    print(f"converted {len(ok)}, failed {len(failed)}")
+    cat_idx = category_index()
+    obs, kinds, model_use, family_use, presets, skipped = harvest(ok, cat_idx)
+
+    by_model, by_cat = {}, {}
     pooled = defaultdict(lambda: defaultdict(list))
     shapes = defaultdict(lambda: defaultdict(set))
-    for key, params in by_model.items():
+    for key, params in obs.items():
         cat, mid = key.split("|", 1)
-        meta = resolve_meta(mid)
-        for pname, vals in params.items():
+        meta = model_meta(mid)
+        for pname, entries in params.items():
+            cat_flag = kinds[key][pname] == "int"
+            if len(entries) >= MIN_N_PUBLISH:
+                by_model.setdefault(key, {})[pname] = row(entries, cat_flag)
             m = meta.get(pname, {})
-            shapes[cat][pname].add((m.get("type"), m.get("min"), m.get("max")))
-            pooled[cat][pname].extend(vals)
-    out, suppressed = {}, {}
+            shapes[cat][pname].add((m.get("type"), m.get("min"), m.get("max"),
+                                    cat_flag))
+            pooled[cat][pname].extend(entries)
+    suppressed = {}
     for cat, params in pooled.items():
-        for pname, vals in params.items():
-            if len(shapes[cat][pname]) > 1:
+        for pname, entries in params.items():
+            if len({s[:1] + s[1:3] for s in shapes[cat][pname]}) > 1:
                 suppressed.setdefault(cat, {})[pname] = (
-                    f"{len(shapes[cat][pname])} incompatible declared ranges "
-                    f"across models — pooled value would be a unit mixture")
+                    f"{len(shapes[cat][pname])} incompatible declared ranges across "
+                    f"models — a pooled value would be a unit mixture")
                 continue
-            out.setdefault(cat, {})[pname] = dist(vals, pname in CATEGORICAL)
-    return out, suppressed
+            by_cat.setdefault(cat, {})[pname] = row(
+                entries, any(s[3] for s in shapes[cat][pname]))
+
+    ver = sh([HELIXGEN, "--version"]).stdout.strip()
+    corpus = {
+        "source": "Line 6 Helix Stadium factory setlist",
+        "engine": ver,
+        "presets": len(presets),
+        "inputs": sorted(p["file"] for p in presets),
+        "failed_conversions": failed,
+        "method": ("parsed from the .hsp directly (to-hsp writes every param the "
+                   "model declares); each row separates values left at the model "
+                   "default from values the designer moved"),
+        "conversion_warnings": dict(warnings.most_common()),
+        "skipped_models": dict(skipped.most_common()),
+        "amp_family_use": dict(family_use),
+        "model_use": dict(model_use.most_common()),
+        "blocks_per_preset": summarise([p["blocks"] for p in presets], False),
+        "named_snapshots_per_preset": summarise(
+            [p["named_snapshots"] for p in presets], False),
+        "by_category": {c: dict(sorted(ps.items())) for c, ps in sorted(by_cat.items())},
+        "by_category_suppressed": suppressed,
+        "by_model": {k: dict(sorted(v.items())) for k, v in sorted(by_model.items())},
+    }
+    (out_dir / "factory-corpus.json").write_text(json.dumps(corpus, indent=1))
+    (out_dir / "factory-corpus.md").write_text(render_md(corpus))
+    print(f"models={len(by_model)} skipped={sum(skipped.values())} "
+          f"warnings={sum(warnings.values())} engine={ver}")
 
 
-def fmt(d):
-    def g(k):
-        v = d.get(k)
-        return "-" if v is None else f"{v:g}"
+def cell(d, key="median"):
+    if d is None:
+        return "-"
     if "mode" in d:
-        freq = ", ".join(f"{v:g}x{c}" for v, c in d["frequencies"][:3])
-        return f"| {d['n']} | {g('min')} | {g('max')} | mode {g('mode')} | {freq} |"
-    return (f"| {d['n']} | {g('min')} | {g('p25')} | {g('median')} | {g('p75')} | "
-            f"{g('max')} |")
+        return f"mode {d['mode']:g}"
+    v = d.get(key)
+    return "-" if v is None else f"{v:g}"
 
 
-def span(d):
-    q = (f", p25-p75 {d['p25']:g}-{d['p75']:g}" if "p25" in d else "")
-    return f"median {d['median']:g} (min {d['min']:g}, max {d['max']:g}{q}, n={d['n']})"
-
-
-def dualcab(c):
-    return sum(v for k, v in c["conversion_warnings"].items() if "dual-cab" in k)
-
-
-def render_md(c, cat_idx):
-    KEY = {"amp": ["Drive", "Master", "Level", "Hype", "Channel", "Sag", "ZPrePost",
-                   "Bass", "Mid", "Treble", "Presence"],
+def render_md(c):
+    KEY = {"amp": ["Drive", "Master", "MasterVol", "Level", "Hype", "Channel",
+                   "Sag", "ZPrePost", "Bass", "Mid", "Treble", "Presence"],
            "cab": ["Distance", "Angle", "Position", "Mic", "HighCut", "LowCut",
                    "Level", "Pan"],
            "drive": ["Gain", "Level", "Tone"],
@@ -221,97 +265,79 @@ def render_md(c, cat_idx):
            "reverb": ["Mix", "Decay", "PreDelay"],
            "dynamics": ["Level", "Threshold", "Mix"]}
     L = [f"# Factory preset corpus — {c['presets']} Line 6 Stadium factory presets", "",
-         "What Line 6's own preset designers actually do. These distributions are",
-         "the reference the tone skill's defaults should sit inside.", "",
-         "**Method.** Parsed from the `.hsp` directly, NOT from `helixgen view`.",
-         "Every param the model declares is counted, defaulted when the designer",
-         "left it alone — `view` omits any param equal to the model default, so a",
-         "projection-based corpus silently drops every knob the designer was happy",
-         "to leave alone (about half of all values) and reports only deliberate moves.",
-         "Aggregated by **model id**: display names collide (`Mono` and `Stereo` each",
-         "name six different models).", "",
-         "**A category row is published only where every contributing model declares",
-         "the same type and range.** The same param name carries different units in",
-         "different models — reverb `Decay` is a 0..1 knob on HD2 models and SECONDS",
-         "on VIC ones; amp `Level` is dB on Agoura amps and a 0..1 knob elsewhere.",
-         "Pooling those would produce a median no amp can take. Suppressed rows are",
-         "listed per category; use `data/factory-corpus.json` `by_model` for those.", "",
-         "**Quartiles are omitted below n=8** — at n=2 or 3 an IQR is just the data",
-         "points wearing a disguise.", "",
-         f"**Amp model family:** {c['amp_family_use']} — Agoura is what the factory",
-         "presets are built on; the legacy HX models exist for preset compatibility.", "",
-         "**Blocks per preset:** " + span(c["blocks_per_preset"]), "",
-         "**Named snapshots per preset:** " + span(c["named_snapshots_per_preset"]), "",
-         "**Known gaps.** `device to-hsp` drops the B-cab of every dual-cab block "
-         f"({dualcab(c)} occurrences here), so the cab rows are the A-mic half "
-         "of the truth (bead",
-         "hgc-q38). Per-snapshot values are also partly dropped, so these are BASE",
-         "values. Infrastructure blocks (inputs, outputs, splits, joins, looper) are",
-         "excluded by design.", ""]
+         "What Line 6's own preset designers actually do, measured from the",
+         f"Stadium's factory setlist. Engine: `{c['engine']}`.", "",
+         "## How to read a row — this matters more than the numbers",
+         "",
+         "**`at_default` is half the answer.** Each row counts every instance of the",
+         "param, including the ones nobody touched. A median over that pool describes",
+         "no real preset: cab `HighCut` pools 29 cabs left wide open at 20100 with 13",
+         "deliberately cut to 8000, and the resulting median (11750) occurs **zero**",
+         "times in the corpus. So each row also carries:",
+         "",
+         "- **`at_default`** — how many of the `n` instances sit on the model's own",
+         "  default. High `at_default` means the factory answer is *leave it alone*.",
+         "- **`moved`** — the distribution over the instances a designer actually",
+         "  changed. **This is the design signal.** Use it when you have decided to",
+         "  set the param at all.",
+         "- **`enabled_only`** — for effect blocks, the distribution over instances",
+         "  that are ON in the preset's base state. Most factory drive and delay",
+         "  blocks are bypassed at load (engaged by snapshot or footswitch), and",
+         "  their values differ by ~20% from the bypassed ones.",
+         "",
+         "Integer and switch params report **mode + frequencies**, never a median —",
+         "a median mic index is meaningless and a fractional one is unsettable.",
+         "Quartiles are omitted below n=8.",
+         "",
+         "A category row appears only where every contributing model declares the",
+         "same type and range; the rest are listed as suppressed, because the same",
+         "param name carries different units in different models (reverb `Decay` is",
+         "a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for",
+         "those live in `data/factory-corpus.json` under `by_model`.", "",
+         "**Known gaps.** `device to-hsp` drops the second model slot of every",
+         "two-slot cab block; 48 of those hold `NoCab` and lose nothing, but ~30 real",
+         "second cabs are missing (bead hgc-q38). Rows are BASE values — snapshot",
+         "arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 21",
+         "of 60 amps, so a single number can be one end of a designed range.",
+         "Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.",
+         "", f"**Amp model family:** Agoura {c['amp_family_use'].get('Agoura', 0)} vs "
+         f"legacy {c['amp_family_use'].get('legacy', 0)} amp instances.", "",
+         f"**Blocks per preset:** median {c['blocks_per_preset']['median']:g} "
+         f"(min {c['blocks_per_preset']['min']:g}, max {c['blocks_per_preset']['max']:g})", "",
+         f"**Named snapshots per preset:** median "
+         f"{c['named_snapshots_per_preset']['median']:g} "
+         f"(min {c['named_snapshots_per_preset']['min']:g}, "
+         f"max {c['named_snapshots_per_preset']['max']:g})", ""]
     for cat, params in KEY.items():
-        if cat not in c["by_category"]:
+        rows = c["by_category"].get(cat)
+        if not rows:
             continue
         L += [f"## {cat}", "",
-              "| param | n | min | p25 | median | p75 | max |",
+              "| param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |",
               "|---|---|---|---|---|---|---|"]
-        cats = []
         for p in params:
-            d = c["by_category"][cat].get(p)
+            d = rows.get(p)
             if not d:
                 continue
-            if "mode" in d:
-                cats.append((p, d))
-            else:
-                L.append(f"| {p} {fmt(d)}")
+            mv = d.get("moved")
+            iqr = (f"{mv['p25']:g}-{mv['p75']:g}"
+                   if mv and "p25" in mv else "-")
+            L.append(f"| {p} | {d['n']} | {d['at_default']} | {cell(d)} | "
+                     f"{cell(mv)} | {iqr} | {d['min']:g}..{d['max']:g} |")
         L.append("")
-        if cats:
-            L += ["Categorical (an index or a switch — mode, not median):", "",
-                  "| param | n | min | max | mode | most common |",
-                  "|---|---|---|---|---|---|"]
-            L += [f"| {p} {fmt(d)}" for p, d in cats]
+        on_rows = [(p, rows[p]["enabled_only"]) for p in params
+                   if p in rows and "enabled_only" in rows[p]]
+        if on_rows:
+            L += ["Blocks that are ON at load (the rest are engaged by a snapshot "
+                  "or footswitch):", "",
+                  "| param | n on | median (on) |", "|---|---|---|"]
+            L += [f"| {p} | {d['n']} | {cell(d)} |" for p, d in on_rows]
             L.append("")
         sup = c["by_category_suppressed"].get(cat, {})
         if sup:
             L += [f"Suppressed in {cat} (unit mixture — see `by_model`): "
                   + ", ".join(f"`{k}`" for k in sorted(sup)), ""]
     return "\n".join(L) + "\n"
-
-
-def main():
-    sbe_dir, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
-    out_dir.mkdir(parents=True, exist_ok=True)
-    ok, failed, warnings = convert(sbe_dir, out_dir / "hsp")
-    print(f"converted {len(ok)}, failed {len(failed)}")
-    for f in failed:
-        print("  FAILED", f)
-
-    cat_idx = category_index()
-    by_model, changed, model_use, family_use, presets, unresolved = harvest(ok, cat_idx)
-    by_cat, suppressed = rollup(by_model, cat_idx)
-
-    corpus = {
-        "source": "Line 6 Helix Stadium factory setlist",
-        "presets": len(presets),
-        "method": ("parsed .hsp directly; every param the model declares is "
-                   "counted, defaulted when the designer left it alone"),
-        "conversion_warnings": dict(warnings.most_common()),
-        "infrastructure_models_skipped": dict(unresolved.most_common()),
-        "amp_family_use": dict(family_use),
-        "model_use": dict(model_use.most_common()),
-        "blocks_per_preset": dist([p["blocks"] for p in presets]),
-        "named_snapshots_per_preset": dist([p["named_snapshots"] for p in presets]),
-        "by_category": by_cat,
-        "by_category_suppressed": suppressed,
-        "by_model": {k: {p: dist(v, p in CATEGORICAL) for p, v in sorted(ps.items())}
-                     for k, ps in sorted(by_model.items())},
-        "params_moved_by_designer": {k: dict(c.most_common())
-                                     for k, c in sorted(changed.items())},
-    }
-    (out_dir / "factory-corpus.json").write_text(json.dumps(corpus, indent=1))
-    (out_dir / "factory-corpus.md").write_text(render_md(corpus, cat_idx))
-    print(f"models={len(by_model)} unresolved={sum(unresolved.values())} "
-          f"warnings={sum(warnings.values())}")
-    return corpus
 
 
 if __name__ == "__main__":
