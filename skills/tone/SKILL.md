@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.45.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.47.2'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -163,8 +163,8 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --cat
   | python3 -c 'import json,sys; [print(b["display_name"]) for b in json.load(sys.stdin) if b["model_id"].startswith("Agoura")]'
 ```
 
-Common swaps: legacy `USDouble Nrm` → Agoura **`USDouble Black`** (Fender Twin);
-legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203 MV`** / **`Brit Plexi`**.
+Common swaps: legacy `US Double Nrm` → Agoura **`US Double Black`** (Fender Twin);
+legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**.
 Say in the report when you had to fall back to a legacy model, and why.
 
 #### Cabs
@@ -182,7 +182,7 @@ Say in the report when you had to fall back to a legacy model, and why.
 - Parse the wav filenames in the output — commercial IR packs encode cab + mic + position (e.g. `YA VX30 212 BLU Mix 01.wav` → Vox AC30-style 2x12 Blue, mix-position).
 - If a match exists, use an IR block instead of a stock cab:
   ```json
-  {"block": "With Pan", "ir": "YA VX30 212 BLU Mix 01.wav",
+  {"block": "IR", "ir": "YA VX30 212 BLU Mix 01.wav",
    "params": {"Mix": 1.0}}
   ```
 - The cab voicing baseline (step 5) applies to the IR block too — but note an IR
@@ -211,9 +211,9 @@ Minimal shape:
       "blocks": [
         {"block": "Compulsive Drive", "params": {"Gain": 0.45}},
         {"block": "Brit Plexi",       "params": {"NormDrv": 0.5, "Master": 1.0, "Level": -8.0}},
-        {"block": "Mic Ir_4x12 Greenback 25 With Pan", "params": {}},
-        {"block": "Tape Echo Stereo", "params": {"Mix": 0.33}},
-        {"block": "Plate Stereo",     "params": {"Mix": 0.32}}
+        {"block": "4x12 Greenback 25", "params": {}},
+        {"block": "Tape Echo", "params": {"Mix": 0.33}},
+        {"block": "Plate",     "params": {"Mix": 0.32}}
       ]
     }
   ]
@@ -350,7 +350,7 @@ certainly a mistake (the envelope check in step 7b catches it).
 | Drive `Gain` | **0.12–0.48, median 0.32 when set** (almost always set: 5 of 56 at default) | Factory drives run LOW and push the amp. The ones actually ON at load sit at 0.30 — most factory drives are bypassed and engaged by a snapshot/footswitch |
 | Drive `Gain` (pedal AS the distortion) | up to 0.76 | The top of the same distribution, not a separate factory practice — use when the pedal is the gain source |
 | Amp `Drive` | **0.41–0.61** (median 0.50) | The most reliably-dialled amp param — only 7 of 60 sit at default. Far lower than you would guess; saturation comes from the power amp, not from piling on preamp gain |
-| Amp power-amp volume | **41 of 83 sit at the model default** (usually 1.0). Of the 42 moved, median **0.645** (p25–p75 0.42–0.85) | The knob's NAME varies — `Master` on most, **`MasterVol` on `USDouble Black`**, `Output Volume` on `Who Watt 103`, absent on `Mandarin Rocker Mk 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`, `Agua 751`) sit at 0.36–0.55 |
+| Amp power-amp volume | **41 of 83 sit at the model default** (usually 1.0). Of the 42 moved, median **0.645** (p25–p75 0.42–0.85) | The knob's NAME varies — `Master` on most, **`MasterVol` on `US Double Black`**, `Output Volume` on `WhoWatt 103`, absent on `Mandarin Rock 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`, `Agua 751`) sit at 0.36–0.55 |
 | Amp channel volume | `ChVol` is 0..1; Agoura `Level` is **dB** | Also seen: `Ch Vol`, `Ch Level` (alongside a separate `Level`!), `Output`, `ODLevel`. See the level-units box below and read `show-block` every time |
 | Amp `Hype` | **leave at 0** | 51 of 69 factory amps never touch it. The 18 that do sit at **0.21–0.39 (median 0.275)**. A seasoning, not a baseline |
 | Amp `Sag` / `Ripple` | **−1..1 default 0 on Agoura; 0..1 default 0.5 on legacy** | Different scales entirely — the corpus suppresses this row for exactly that reason. On a legacy amp, 0 is not neutral, it is the extreme. `show-block` before writing |
@@ -368,7 +368,7 @@ volume under two different names *with two different units*:
 - `Level` — **decibels**, typically `-40..10`, default around `-10`
   (Agoura amps).
 
-`show-block` prints the unit and range explicitly since engine 0.45.0
+`show-block` prints the unit and range explicitly since engine 0.47.2
 (`Level  float -40..10 dB (default -10)`). Writing `Level: 0.5` on an Agoura amp
 is not "half volume" — it is **+10.5 dB over the model default**, and it clips.
 Factory amps sit around −11 to −6 dB. Always read the unit off `show-block`
@@ -402,7 +402,7 @@ Recipe extension (top-level `snapshots` array, up to 8 entries):
 "snapshots": [
   {"name": "Rhythm"},
   {"name": "Lead",  "params": {"Brit Plexi": {"NormDrv": 0.7, "Level": -5.0},
-                               "Tape Echo Stereo": {"Mix": 0.30}}},
+                               "Tape Echo": {"Mix": 0.30}}},
   {"name": "Clean", "disable": ["Compulsive Drive"],
                     "params": {"Brit Plexi": {"NormDrv": 0.25}}}
 ]
@@ -440,7 +440,7 @@ By default, wire the chain for live use: give every toggle-able effect a footswi
 - A switch can also toggle a **param** between two values instead of a bypass — add `"param"` + numeric `"min"`/`"max"` (raw param units) to the entry (e.g. FS kicks amp `Drive` 0.45→0.7). Use it when the user asks for a single-knob stomp (a multi-param change is a snapshot, 5.5).
 
 **Expression pedals — wah/whammy → EXP1, volume → EXP2:**
-- Detect a pedal-controllable block by running `show-block` and checking for a **`Pedal`** float param (0..1) — that's the real sweep param for every wah, `Pitch Wham`, and volume pedal in the library (e.g. `Teardrop 310 Mono`). Wah/expression blocks have **no `Position` param** (don't confuse it with the mic-`Position` knob on IR-cab `With Pan` blocks) — always confirm with `show-block` before writing the recipe. Poly-pitch/int-`Interval` blocks are out of EXP v1 scope.
+- Detect a pedal-controllable block by running `show-block` and checking for a **`Pedal`** float param (0..1) — that's the real sweep param for every wah, `Pitch Wham`, and volume pedal in the library (e.g. `Teardrop 310 Mono`). Wah/expression blocks have **no `Position` param** (don't confuse it with the mic-`Position` knob on IR-cab `IR` blocks) — always confirm with `show-block` before writing the recipe. Poly-pitch/int-`Interval` blocks are out of EXP v1 scope.
 - Route a wah or whammy's `Pedal` to **EXP1**; route a volume block's `Pedal` to **EXP2**. If only a volume pedal is present (no wah/whammy), put it on EXP1 instead. Full `min: 0.0, max: 1.0` sweep by default.
 - **Wah ships bypassed, engaged by the toe switch** — set `"enabled": false` on the wah block and assign its bypass to `"switch": "EXP1Toe"` (the real expression-pedal toe switch — push the pedal fully forward to click it on, then sweep with EXP1). This is the standard Helix wah behavior. Do **not** spend a regular `FS` slot on the wah, and do not count it against the FS budget. Unless research says the reference keeps the wah always inline.
 - If the user already claimed a pedal (e.g. "EXP2 sweeps amp Master"), that wins; auto-routing only fills what's left, and skips a target it can't place — telling the user — rather than overriding the user's mapping.
@@ -947,12 +947,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.45.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.47.2'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.45.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.47.2'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1016,7 +1016,7 @@ touching the tone:
 | Hand-formatting the old `"<Tone> — <Guitar>"` title in the recipe | Identity comes from `generate`'s `--artist`/`--song` or `--descriptor` + `--guitar` flags, not the recipe `"name"` (step 5 naming) |
 | Picking a legacy HX amp when an Agoura model exists | Agoura is the Stadium's own engine (SIC amp/cab interaction, real touch response) and is what all 66 factory presets are built on, 69 uses to 22. Legacy models exist for backward compatibility — reaching for one by name-similarity is how a preset ends up feeling flat (step 3) |
 | Writing an Agoura amp's `Level` as if it were a 0..1 knob | `Level` is **dB** (`-40..10`, default ~`-10`); `ChVol` is the 0..1 one. `Level: 0.5` is +10.5 dB and clips. `show-block` prints the unit — read it (step 5 level-units box) |
-| Overriding the amp's power-amp volume by habit | Half of factory amps sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.645), and the high-gain Agouras sit at 0.36–0.55. Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `USDouble Black`, absent on `Mandarin Rocker Mk 3` — `show-block` first (step 5) |
+| Overriding the amp's power-amp volume by habit | Half of factory amps sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.645), and the high-gain Agouras sit at 0.36–0.55. Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `US Double Black`, absent on `Mandarin Rock 3` — `show-block` first (step 5) |
 | Setting `Hype` on every Agoura amp | 51 of 69 factory amps leave it at 0. The 18 that use it sit at 0.21–0.39. A seasoning, not a baseline (step 5) |
 | Shipping without running the envelope check | Step 7b is the only automatic check that the preset is voiced like a real one; a FAIL is a recipe bug, not a formality |
 | Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.32 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
@@ -1039,8 +1039,8 @@ regenerate round-trip.
 
    ```bash
    HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen patch "<dir>/<slug>.hsp" - --json <<'EOF'
-   [{"op": "set_param", "block": "Mic Ir_4x12 Greenback 25 With Pan", "param": "HighCut", "value": 9000},
-    {"op": "set_enabled", "block": "Plate Stereo", "enabled": false}]
+   [{"op": "set_param", "block": "4x12 Greenback 25", "param": "HighCut", "value": 9000},
+    {"op": "set_enabled", "block": "Plate", "enabled": false}]
    EOF
    ```
 
@@ -1065,7 +1065,7 @@ only and is not read back as truth.
 
 ### Addressing duplicate blocks
 
-When a preset has two blocks with the same name (e.g. two IR "With Pan" blocks,
+When a preset has two blocks with the same name (e.g. two IR "IR" blocks,
 one per lane, or a volume block per split lane), reference the specific one by
 its coordinate: add `"pos": N` (and `"lane": 0|1`, `"path": 0|1`) to the
 patch operation or the snapshot/footswitch/expression reference. A bare
