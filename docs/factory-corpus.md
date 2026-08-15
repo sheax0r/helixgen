@@ -1,7 +1,7 @@
 # Factory preset corpus — 66 Line 6 Stadium factory presets
 
 What Line 6's own preset designers actually do, measured from the
-Stadium's factory setlist. Engine: `helixgen, version 0.45.0`.
+Stadium's factory setlist. Engine: `helixgen, version 0.46.0`.
 
 ## How to read a row — this matters more than the numbers
 
@@ -31,16 +31,16 @@ param name carries different units in different models (reverb `Decay` is
 a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for
 those live in `data/factory-corpus.json` under `by_model`.
 
-**Known gaps.** `device to-hsp` drops the second model slot of every
-two-slot cab block; 48 of those hold `NoCab` and lose nothing, but ~30 real
-second cabs are missing (bead hgc-q38). Rows are BASE values — snapshot
+**Known gaps.** Rows are BASE values — snapshot
 arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 21
 of 60 amps, so a single number can be one end of a designed range.
 Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.
+Both cabs of a dual-cab block are counted as of engine 0.46.0 (hgc-q38); the
+cab rows here are n=108, not the 78 A-mics an earlier harvest saw.
 
 **Amp model family:** Agoura 69 vs legacy 22 amp instances.
 
-**Blocks per preset:** median 11.5 (min 6, max 19)
+**Blocks per preset:** median 12.5 (min 7, max 21)
 
 **Named snapshots per preset:** median 5 (min 4, max 8)
 
@@ -77,14 +77,14 @@ Suppressed in amp (unit mixture — see `by_model`): `Boost`, `Bright`, `Channel
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Distance | 78 | 43 | 1.75 | 3 | 1-3.875 | 1..9 |
-| Angle | 78 | 60 | 0 | 0 | 0-0 | 0..45 |
-| Position | 78 | 33 | 0.3 | 0.3 | 0.29-0.39 | 0..0.77 |
-| Mic | 78 | 30 | mode 11 | mode 0 | - | 0..11 |
-| HighCut | 78 | 51 | 11750 | 9100 | 8000-10000 | 3600..20100 |
-| LowCut | 78 | 57 | 19.9 | 54 | 39-74 | 19..90 |
-| Level | 78 | 58 | 0 | 6 | 1.75-6 | -5.2..6 |
-| Pan | 78 | 67 | 0.5 | 0.35 | 0-1 | 0..1 |
+| Distance | 108 | 56 | 1.25 | 2.875 | 1-3.5625 | 1..9 |
+| Angle | 108 | 87 | 0 | 0 | 0-0 | 0..45 |
+| Position | 108 | 44 | 0.3 | 0.3 | 0.24-0.39 | 0..0.77 |
+| Mic | 108 | 36 | mode 11 | mode 5 | - | 0..11 |
+| HighCut | 108 | 61 | 10500 | 9500 | 8000-10000 | 3600..20100 |
+| LowCut | 108 | 71 | 19.9 | 50 | 39-69 | 19..99 |
+| Level | 108 | 68 | 0 | 2.5 | -3-6 | -6.9..6 |
+| Pan | 108 | 86 | 0.5 | 0.5 | 0-1 | 0..1 |
 
 ## drive
 
