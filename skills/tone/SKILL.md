@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.44.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.45.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -141,11 +141,41 @@ State your call briefly so the user can redirect before you commit:
 
 For each slot, run `helixgen list-blocks --category <cat>` and scan the output for display names that read closest to the reference gear. Categories are amp / cab / drive / delay / reverb / modulation / filter / eq / dynamics / pitch / volume / send.
 
-Cab pick matters a lot for "is this fizzy or musical":
+#### Amps: Agoura first — this is the single biggest choice in the preset
 
-- **V30-style cabs** (`4x12 V30`, `Cali V30`, etc.) are bright, aggressive, and great for tight modern rhythm — but harsh-by-default for cleans, leads, and classic-rock. **Greenback** or **Silver Bell** variants are smoother and feel more like "amp in the room." Prefer them for clean, blues, classic-rock, and lead chains when the library has them.
-- Cab variants with a **ribbon mic** in the name (`R121`, `R84`, `121 Ribbon`, `160 Ribbon`) or with `Off-Axis` / `Edge` in the position are much smoother than the default `SM57 On-Axis Cap` rendering. Prefer them for anything that should sound polished.
-- The fine-grained Hi Cut / Low Cut / mic moves live in step 5 — picking the right cab here saves you from fighting it later.
+The Stadium ships **23 Agoura amps** (17 guitar, 6 bass). Everything else in the
+amp category is the ported **HX/legacy** set, kept so presets from older Helix
+hardware still load — Line 6 files them under `LEGACY` on the device itself.
+
+**Pick an Agoura amp unless no Agoura model fits the reference.** Agoura is a
+different engine, not a re-voice: component + behavioural modelling, real touch
+response, and **SIC** — the cab's speaker-impedance curve feeds back into the
+amp's power section (that's what `ZPrePost` and the `AmpCabZ*` / `AmpCabPeak*`
+params on the amp block are). Legacy models get none of it, and they are why a
+generated preset can feel flat and lifeless next to a factory one.
+
+Line 6's own 66 factory presets use **69 Agoura amp instances to 22 legacy**
+(`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md`). Tell them apart by model id — Agoura models are
+`Agoura_Amp*`, legacy are `HD2_Amp*`/`HD2_Preamp*`:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --category amp --json \
+  | python3 -c 'import json,sys; [print(b["display_name"]) for b in json.load(sys.stdin) if b["model_id"].startswith("Agoura")]'
+```
+
+Common swaps: legacy `USDouble Nrm` → Agoura **`USDouble Black`** (Fender Twin);
+legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203 MV`** / **`Brit Plexi`**.
+Say in the report when you had to fall back to a legacy model, and why.
+
+#### Cabs
+
+- **Pick the mic deliberately, and know that ribbons are the factory habit.**
+  Across the corpus, when Line 6 chooses a mic rather than leaving the default,
+  the picks are `121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (11),
+  `47 Cond FET` (7) — ribbons lead, and often sit on the second cab of a
+  dual-cab pair. Angle is **0° on-axis on 87 of 108 cabs**.
+- Mic, distance, position and the cut frequencies are all step-5 decisions now,
+  and they have measured starting points — see the **cab voicing baseline**.
 
 **Check for user IRs (preference-gated).** Run `helixgen list-irs --json`. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
 
@@ -153,9 +183,11 @@ Cab pick matters a lot for "is this fizzy or musical":
 - If a match exists, use an IR block instead of a stock cab:
   ```json
   {"block": "With Pan", "ir": "YA VX30 212 BLU Mix 01.wav",
-   "params": {"HighCut": 6500, "LowCut": 90, "Mix": 1.0}}
+   "params": {"Mix": 1.0}}
   ```
-- Anti-fizz baseline (Hi Cut 6500–7000, Low Cut 80–100) still applies — set on the IR block itself.
+- The cab voicing baseline (step 5) applies to the IR block too — but note an IR
+  block's `Level` defaults to **−18 dB**, not 0, and its `HighCut`/`LowCut`
+  default wide open. Leave the cuts alone unless the tone needs them.
 - New users (no `favor_irs` preference and no feedback memory) get stock cabs by default. The preference flips on when the user explicitly says "from now on, prefer IRs when I have them" — record it in `~/.helixgen/preferences.json`'s `favor_irs` key if you can write there, otherwise as a feedback memory.
 
 ### 4. Get exact param names — REQUIRED step
@@ -178,10 +210,10 @@ Minimal shape:
     {
       "blocks": [
         {"block": "Compulsive Drive", "params": {"Gain": 0.45}},
-        {"block": "Brit Plexi Brt",   "params": {"Drive": 0.7, "Master": 0.5}},
-        {"block": "Mic Ir_4x12 Greenback 25 With Pan", "params": {"HighCut": 6800, "LowCut": 90}},
-        {"block": "Tape Echo Stereo", "params": {"Mix": 0.18}},
-        {"block": "Plate Stereo",     "params": {"Mix": 0.12}}
+        {"block": "Brit Plexi",       "params": {"NormDrv": 0.5, "Master": 1.0, "Level": -8.0}},
+        {"block": "Mic Ir_4x12 Greenback 25 With Pan", "params": {}},
+        {"block": "Tape Echo Stereo", "params": {"Mix": 0.33}},
+        {"block": "Plate Stereo",     "params": {"Mix": 0.32}}
       ]
     }
   ]
@@ -258,35 +290,89 @@ the **same** artist/song/descriptor (see step 6's variant offer).
 (Guitar resolution happens in step 6; build the recipe in step 5 without
 worrying about the title — the naming flags stamp identity at `generate` time.)
 
-#### Anti-fizz baseline — bake these into nearly every preset
+#### Cab voicing baseline — measured, not folklore
 
-The Helix gives raw modeling and trusts you to voice it. A Spark/JC-120/etc. sounds "nice" out of the box because it's doing fixed cab voicing, EQ-curve baking, and mild compression for you. Without those, default Helix presets sound fizzy and thin compared to a real amp pushing real air. The cab block is where you fix this — verify exact param names with `show-block` (older cabs may use `Hi Cut` / `Lo Cut`; newer ones `High Cut` / `Low Cut`).
+**Read `${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md` before you set a cab
+param.** It is the measured distribution of what Line 6's own designers do
+across the 66 factory presets, and it replaced a set of invented "anti-fizz"
+numbers that were making every generated preset dark and dry.
 
-- **Cab `Hi Cut`** at **6500–7000 Hz** for amped tones; 7500–8000 Hz for sparkling cleans. Real V30s/Greenbacks have nothing above ~6 kHz; modeled cabs let fizz through to 10 kHz+. This single move kills ~70% of "modeller harshness."
-- **Cab `Low Cut`** at **80–100 Hz** to clear out flub (60 Hz for bass / 7-string).
-- **Mic choice** (cab `Mic` param): the default is usually `57 Dynamic` on-axis at the cap — engineered to slice through a live mix, not to sound pleasant solo. For "amp in the room" smoothness, prefer a ribbon (`121 Ribbon`, `160 Ribbon`) or any cab variant whose display name calls out a ribbon mic or an off-axis position.
-- **Optional Parametric EQ** cutting **2–4 dB around 3–4 kHz** (medium Q) if Hi Cut alone doesn't kill the "ice pick" zone. A small cut around 800 Hz–1 kHz helps with boxiness.
-- **Optional front-of-chain comp** (an LA-style studio comp — find the exact display name via `list-blocks --category dynamics`; light setting, only ~1–2 dB of gain reduction, **before** the amp) gives the "polished, baked-in" feel modeled presets often lack. Skip if the user wants pure raw dynamics.
+Read its rows the way that file explains: **`at_default` first, then `moved`.**
+A high `at_default` means the factory answer is *leave this knob alone* — and
+for most cab params it is. `moved` is where to land IF you have decided to set
+the param at all. A median over both together describes no real preset.
 
-If the cab the user picked has no Hi/Low Cut params (rare on Stadium), do the cuts with a Simple EQ block placed right after the cab.
+The failure mode this fixes is real but it is **not** fizz — it is a preset that
+sounds muffled and lifeless next to a factory one. The old baseline cut the top
+off at 6500–7000 Hz and the bottom at 80–100 Hz on *every* preset. Line 6 does
+neither.
 
-**"It sounds fine while I play but harsh in the recording."** Common and not a patch-specific bug. Many interfaces (e.g. Focusrite 2i2) have a *direct monitor* that feeds the pre-A/D analog signal to the player's ears — it flatters and smooths the source. The recorded track is the honest signal; direct monitoring was hiding harshness that was always there. Don't chase it as a recording/DAW problem — **bake the fix into the patch**: apply the anti-fizz baseline (Hi Cut 6500–7000, prefer pre-balanced **Mix** IRs over Singles/Raw and over bright stock cabs), and judge by the recording, not the live monitor. A patch sitting at ~10 kHz Hi Cut with a stock V30 is the classic offender.
+| Cab param | Factory practice (n=108 cabs) | What to do |
+|---|---|---|
+| `HighCut` | **61 of 108 left at the model default.** Of the 47 moved, median 9500 (p25–p75 8000–10000) | Default is the majority answer. If you do cut, 8000–10000 is the factory window — **6500–7000 is below anything they shipped** |
+| `LowCut` | **71 of 108 left at default.** Of the 37 moved, median 50 (p25–p75 39–69) | Mostly untouched. When they do move it they land around 40–70, not 80–100 |
+| `Distance` | 56 at default. Of the 52 moved, median 2.9" (p25–p75 1–3.6), max 9 | 1–3.5" is the working range. Close-micing is normal; distance is not a mud cure |
+| `Position` | 44 at default — the most-adjusted cab param. Moved median 0.30 (p25–p75 0.24–0.39) | This is what they actually voice with. Toward 0 brighter, toward 1 darker |
+| `Angle` | 87 at default. When moved, they move it **to 0°** | On-axis. Several cabs already default to 45°, so "try 45°" may be a no-op — `show-block` first |
+| `Mic` | 36 at default. Deliberate picks: **`121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (11), `47 Cond FET` (7)** | Pick by label — `show-block` prints them. When Line 6 chooses a mic at all, a **ribbon** is the most common choice, and it often lives on the second cab of a dual-cab pair |
+| `Level` | 68 at default (0 dB). Of the 40 moved, median +2.5 (p25–p75 −3…+6) | Leave at 0 on a single cab; it is the balance knob between the two halves of a dual cab. An **IR block defaults to −18 dB** — a different reference; don't compare the two |
 
-#### Tuning heuristics (good starting points, not laws)
+Still true, and still worth doing:
+
+- **Optional Parametric EQ** cutting 2–4 dB around 3–4 kHz (medium Q) if a
+  specific tone has an ice-pick peak. This is a targeted fix for one preset —
+  **not** a baseline move.
+- **Where the tone is going matters, and the corpus can't see it.** These are
+  base `.hsp` values with no knowledge of output destination. Into FRFR or
+  studio monitors, a wide-open cab plus a near-1.0 master is the classic
+  too-bright complaint — that is the case for a *targeted* `HighCut` (8000+) or
+  a darker mic, decided by ear, not for restoring the old blanket rule.
+- **Optional front-of-chain comp** (an LA-style studio comp — exact display name
+  via `list-blocks --category dynamics`; ~1–2 dB of gain reduction, before the
+  amp) for a polished, "produced" feel. Skip for raw dynamics.
+
+**"It sounds fine while I play but harsh in the recording."** Not a patch bug.
+Many interfaces (e.g. Focusrite 2i2) have a *direct monitor* feeding the pre-A/D
+analog signal to your ears, which flatters the source; the recorded track is the
+honest one. Judge by the recording. But fix it with a **targeted** move — a
+narrow EQ cut, a different mic, `Angle` 45° — not by clamping `HighCut` down to
+7 kHz, which trades harshness for mud.
+
+#### Tuning heuristics — factory-measured starting points
+
+Ranges below are the factory corpus's p25–p75 unless noted. A value outside
+p25–p75 is allowed but should be a deliberate choice you can justify in the
+write-up; a value outside the corpus min–max for that **same model** is almost
+certainly a mistake (the envelope check in step 7b catches it).
 
 | Knob | Range | Notes |
 |------|-------|-------|
-| Drive `Gain` (pedal as boost) | 0.30–0.50 | Pushes amp into more saturation |
-| Drive `Gain` (pedal as distortion) | 0.60–0.85 | Drive does most of the work |
-| Amp `Drive` | 0.40–0.60 rhythm clean-edge, 0.60–0.80 crunch, 0.80+ lead | |
-| Amp `Master` | 0.40–0.60 | Higher = more power-amp sag |
-| Cab `Hi Cut` / `High Cut` | 6500–7000 Hz amped, 7500–8000 Hz clean | The single biggest anti-fizz move; see baseline above |
-| Cab `Low Cut` / `Lo Cut` | 80–100 Hz (60 for bass / 7-string) | Clears flub without thinning the body |
-| Cab `Mic` | ribbon for smooth, `57 Dynamic` for cut | Default 57 on-axis is the harshest sane choice |
-| Delay `Mix` | 0.10–0.20 rhythm, 0.20–0.35 lead | |
-| Delay `Feedback` | 0.20–0.35 | Higher = longer repeats |
-| Reverb `Mix` | 0.08–0.15 (up to 0.20 for sterile DI-feel rescues) | Stadium plates sit louder than they look |
-| Comp before amp (optional) | ~1–2 dB gain reduction | Polished/Spark-like feel; skip for raw dynamics |
+| Drive `Gain` | **0.12–0.48, median 0.32 when set** (almost always set: 5 of 56 at default) | Factory drives run LOW and push the amp. The ones actually ON at load sit at 0.30 — most factory drives are bypassed and engaged by a snapshot/footswitch |
+| Drive `Gain` (pedal AS the distortion) | up to 0.76 | The top of the same distribution, not a separate factory practice — use when the pedal is the gain source |
+| Amp `Drive` | **0.41–0.61** (median 0.50) | The most reliably-dialled amp param — only 7 of 60 sit at default. Far lower than you would guess; saturation comes from the power amp, not from piling on preamp gain |
+| Amp power-amp volume | **41 of 83 sit at the model default** (usually 1.0). Of the 42 moved, median **0.645** (p25–p75 0.42–0.85) | The knob's NAME varies — `Master` on most, **`MasterVol` on `USDouble Black`**, `Output Volume` on `Who Watt 103`, absent on `Mandarin Rocker Mk 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`, `Agua 751`) sit at 0.36–0.55 |
+| Amp channel volume | `ChVol` is 0..1; Agoura `Level` is **dB** | Also seen: `Ch Vol`, `Ch Level` (alongside a separate `Level`!), `Output`, `ODLevel`. See the level-units box below and read `show-block` every time |
+| Amp `Hype` | **leave at 0** | 51 of 69 factory amps never touch it. The 18 that do sit at **0.21–0.39 (median 0.275)**. A seasoning, not a baseline |
+| Amp `Sag` / `Ripple` | **−1..1 default 0 on Agoura; 0..1 default 0.5 on legacy** | Different scales entirely — the corpus suppresses this row for exactly that reason. On a legacy amp, 0 is not neutral, it is the extreme. `show-block` before writing |
+| Amp `ZPrePost` | **58 of 62 at the model default** | Effectively never touched. Leave it unless research names a specific sag/feel behaviour |
+| Cab params | see the voicing baseline above | |
+| Delay `Mix` | **0.29–0.42** (median 0.33; set on 65 of 70) | Factory delays are much wetter than the old 0.10–0.20 guidance. ON-at-load delays sit slightly wetter still (0.36) |
+| Delay `Feedback` | **0.29–0.50** (median 0.39 when set) | |
+| Reverb `Mix` | **0.24–0.39** (median 0.32, max 0.92) | Factory reverb is wet. The old 0.08–0.15 was a third of real practice |
+| Comp before amp (optional) | ~1–2 dB gain reduction | Polished feel; skip for raw dynamics |
+
+**Level units — the bug this table exists to prevent.** Amps expose channel
+volume under two different names *with two different units*:
+
+- `ChVol` — a **0..1 knob** (legacy amps).
+- `Level` — **decibels**, typically `-40..10`, default around `-10`
+  (Agoura amps).
+
+`show-block` prints the unit and range explicitly since engine 0.45.0
+(`Level  float -40..10 dB (default -10)`). Writing `Level: 0.5` on an Agoura amp
+is not "half volume" — it is **+10.5 dB over the model default**, and it clips.
+Factory amps sit around −11 to −6 dB. Always read the unit off `show-block`
+before writing a level.
 
 Amp-EQ tweaks for the user's specific guitar (apply to whichever amp params actually exist — check `show-block` first):
 
@@ -315,10 +401,10 @@ Recipe extension (top-level `snapshots` array, up to 8 entries):
 ```json
 "snapshots": [
   {"name": "Rhythm"},
-  {"name": "Lead",  "params": {"Brit Plexi Brt": {"Drive": 0.85, "Master": 0.7},
+  {"name": "Lead",  "params": {"Brit Plexi": {"NormDrv": 0.7, "Level": -5.0},
                                "Tape Echo Stereo": {"Mix": 0.30}}},
   {"name": "Clean", "disable": ["Compulsive Drive"],
-                    "params": {"Brit Plexi Brt": {"Drive": 0.30}}}
+                    "params": {"Brit Plexi": {"NormDrv": 0.25}}}
 ]
 ```
 
@@ -380,9 +466,17 @@ both default on:
 - `volume_normalize_snapshots: false` → skip forces 2–3 (between-snapshot
   leveling). If both are false, skip this step and say so in the report.
 
-**The knob:** `show-block` the amp and use its channel-volume param (`ChVol`, or
-the amp's `Level` — the name varies, so confirm). Do **not** use `Master` (it
-also changes power-amp sag/feel). Only if the amp has no channel-volume param,
+**The knob:** `show-block` the amp and use its channel-volume param — and read
+the **unit** off that output, because there are two:
+
+- `ChVol` — a 0..1 knob (legacy amps). A 0.05–0.10 nudge is roughly a couple dB.
+- `Level` — **decibels** (Agoura amps), typically `-40..10`, default about `-10`.
+  Here you set dB directly: `-8.0` is 2 dB up from a `-10` default. A "0.5" on
+  this param means +10.5 dB and clips. Factory amps sit around **-11 to -6 dB**.
+
+Do **not** use `Master` for level (it sets power-amp saturation, and the factory
+runs it near 1.0 — turning it down to balance a level throws away the feel the
+Agoura models are for). Only if the amp has no channel-volume param,
 add one end-of-chain volume block (from `list-blocks --category volume`) and
 automate that. In a layered two-amp preset, level whichever amp is active in
 each snapshot via that amp's own channel volume.
@@ -461,7 +555,8 @@ Apply three forces, in order:
    **clean = perceptually matched** (via force 2). When step-1b research reveals
    the source's actual part-to-part dynamics, those override these conventions.
 
-**dB → param:** the knobs are 0–1 and we can't measure — use *a small channel-vol
+**dB → param:** on a `Level` (dB) amp, an intended dB delta IS the value — add
+it to the current dB. On a `ChVol` (0..1) amp we can't measure, so use *a small
 nudge (~0.05–0.10) ≈ a couple dB* to turn intended dB deltas into starting
 values. Per-snapshot moves become `params` overrides on the channel-volume param
 (alongside the gain/EQ/effect deltas from 5.5); a base preset gets the anchor on
@@ -596,6 +691,10 @@ If the validator errors with `Unknown param(s) [...]`, re-run `show-block` on th
 
 #### 7a. Author the description into the tone metadata — REQUIRED
 
+(Run the envelope check in 7b **first** if you want to avoid rewriting
+this section — a finding there changes the settings you are about to
+document.)
+
 The durable, human-readable record of the tone is **not** a `.md` sidecar
 anymore — it's the tone metadata's `description_md`, authored with
 `helixgen library doc`. Write it after `generate`:
@@ -629,7 +728,35 @@ Read it back any time with `helixgen describe "<tone>"` (identity + variants
 table + `description_md` verbatim) or `helixgen library show "<name>" [--json]`
 (compact/JSON metadata).
 
-#### 7b. Do NOT git-commit library paths yourself
+#### 7b. Check it against the factory envelope — REQUIRED
+
+Before you report, run the envelope check. It reads the generated `.hsp`
+directly, back-fills every param the model declares, and compares each value —
+base and per-snapshot — against `${CLAUDE_PLUGIN_ROOT}/data/factory-corpus.json`,
+the measured distributions from Line 6's own 66 factory presets. It is the only
+automatic check that the tone is voiced like a real preset rather than like a
+plausible-sounding guess:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" \
+  python3 "${CLAUDE_PLUGIN_ROOT}/tools/envelope-check.py" <path-to>/<variant-slug>.hsp
+```
+
+Reading the result:
+
+- **FAIL** — the value is outside anything Line 6 shipped **for that same
+  model**. Treat as a bug in the recipe: fix it, or state in the write-up why
+  this tone genuinely needs it. Exit code is 1 when any FAIL is present.
+- **NOTE** — outside the typical p25–p75 band, or outside a category-level
+  reference. Fine when deliberate; each one should be a choice you can name.
+- Silence means every param sits inside factory practice.
+
+Do not "fix" a FAIL by nudging the number just inside the band — check the
+reason. The common causes are the ones this skill exists to prevent: a legacy
+amp where an Agoura model exists, a dB `Level` written as if it were 0..1, a
+`Master` parked at 0.5, or a cab clamped dark.
+
+#### 7c. Do NOT git-commit library paths yourself
 
 Core **auto-commits** library changes to the `~/.helixgen` git repo after every
 library-mutating verb (the no-`-o` `generate`, `library doc`, …), advisory and
@@ -797,15 +924,15 @@ ear-language table).
 
 ### 10. Iterate on feedback (when the user loads it and says it's not quite right)
 
-After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. If the change is worth recording, refresh the tone's `description_md` with `helixgen library doc` (7a). Don't git-commit library paths yourself — core auto-commits (7b).
+After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. If the change is worth recording, refresh the tone's `description_md` with `helixgen library doc` (7a). Don't git-commit library paths yourself — core auto-commits (7c).
 
 Rules of thumb for translating ear-language to param moves:
 - **"Too compressed"** on a lead → back amp `Drive` off ~0.10, raise `Master`; or back drive pedal `Gain` off ~0.10
 - **"Too dark"** → raise `Treble` 0.05–0.10, raise `Presence` 0.05; or change to a brighter amp variant if the EQ is already at ceiling
-- **"Too bright / harsh"** → mirror of above (drop Treble/Presence), or pull cab `Hi Cut` down (e.g. 8000 → 6500)
-- **"Fizzy / digital / not amp-in-the-room"** → most common Helix-vs-Spark complaint. In order: (1) cab `Hi Cut` to 6500–7000 and `Low Cut` to 80–100 if not already there; (2) switch the cab `Mic` to a ribbon variant or pick a smoother cab (V30 → Greenback / Silver Bell); (3) add a Parametric EQ cutting 2–4 dB at 3–4 kHz medium Q; (4) add a subtle comp (~1–2 dB GR) at the front of the chain. Apply in that order — usually step 1 alone fixes most of it
-- **"Not enough body"** → raise `Bass` 0.05–0.10 or `Mid` 0.05; consider cab `Low Cut` 80 → 60
-- **"Boomy / flubby"** → raise cab `Low Cut` (60 → 100), back `Bass` off
+- **"Too bright / harsh"** → drop `Treble`/`Presence` first; then try cab `Angle` 45°, a darker `Mic`, or `Position` toward 0.4. Pull `HighCut` down only as a last resort, and not below 8000 — that is already at the aggressive end of factory practice
+- **"Fizzy / digital / not amp-in-the-room"** → in order: (1) confirm the amp is an **Agoura** model, not a legacy HX one — that is the biggest single difference in feel, and no EQ move substitutes for it; (2) raise the amp's power-amp volume (`Master`/`MasterVol` — check `show-block`) toward its factory value for that model and back `Drive` off to ~0.5, so the saturation comes from the power amp; (3) try a different cab `Mic` and `Angle` 45°; (4) a Parametric EQ cutting 2–4 dB at 3–4 kHz medium Q; (5) a subtle comp (~1–2 dB GR) at the front. Do NOT reach for a big `HighCut` — a dark preset is the more common failure here
+- **"Not enough body"** → raise `Bass` 0.05–0.10 or `Mid` 0.05; if a `LowCut` was set, lower it back toward the 19.9 default
+- **"Boomy / flubby"** → raise cab `LowCut` toward 60–90 (factory's upper range), back `Bass` off
 - **"Lead doesn't sing / cut"** → raise `Mid` 0.05–0.10 in the lead snapshot, raise delay `Mix` 0.05
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
@@ -817,15 +944,15 @@ a WAV capture of the tone and wants measurements instead of ear-language,
 `helixgen analyze-audio <capture.wav> --json` (0.23.0) reports LUFS, crest
 factor, peak/true-peak/RMS, a clipping flag, spectral centroid, and 5-band
 energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
-above (e.g. a fat `high` band → the anti-fizz Hi Cut move). **It needs the
+above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.44.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.45.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.44.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.45.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -865,8 +992,8 @@ touching the tone:
 | Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
-| Cab with no `Hi Cut` / `Low Cut` set | Default modeled cabs let fizz through to 10 kHz+; set Hi Cut 6500–7000 and Low Cut 80–100 on nearly every preset (see step 5 anti-fizz baseline) |
-| Trusting the default cab mic (SM57 on-axis at the cap) | Engineered to slice a live mix, harsh solo; prefer ribbon-mic variants for smoothness |
+| Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory median is HighCut 11750 / LowCut 19.9 — mostly untouched (step 5 cab voicing baseline) |
+| Leaving cab `Mic` unset and calling it neutral | The default is a per-cab accident, not a choice. When Line 6 picks, the most common pick is `121 Ribbon`, then `57 Dynamic` and `160 Ribbon`, at 0° on-axis. Choose by label — `show-block` prints them (step 5) |
 | Heavy reverb defaults | Stadium plates run hot; start at 0.10 |
 | Asking 5 clarifying questions | Cap at 3, only what's actually missing |
 | Reporting only amp settings, not the instrument recommendation | Selector + volume + tone (+ coil-split/pick-attack where relevant) are part of the tone; include them in the report (step 6, step 8 item 4) |
@@ -887,7 +1014,13 @@ touching the tone:
 | Writing a companion `.md` next to the `.hsp` | Gone — descriptions live in `description_md` via `library doc` (per-variant notes → `notes_md`); read back with `helixgen describe` |
 | Naming a tone without its target guitar | Pass `--guitar <label>` so the display name/slug carry the guitar (`"$Artist - $Song - $Guitar"` / `"$Descriptor - $Guitar"`, step 5); omit it only when the tone is explicitly guitar-agnostic |
 | Hand-formatting the old `"<Tone> — <Guitar>"` title in the recipe | Identity comes from `generate`'s `--artist`/`--song` or `--descriptor` + `--guitar` flags, not the recipe `"name"` (step 5 naming) |
-| Git-committing the generated `.hsp`/library files yourself | Core auto-commits library changes (gated by `git_commit_tones`); the skill must not add/commit library paths (step 7b) |
+| Picking a legacy HX amp when an Agoura model exists | Agoura is the Stadium's own engine (SIC amp/cab interaction, real touch response) and is what all 66 factory presets are built on, 69 uses to 22. Legacy models exist for backward compatibility — reaching for one by name-similarity is how a preset ends up feeling flat (step 3) |
+| Writing an Agoura amp's `Level` as if it were a 0..1 knob | `Level` is **dB** (`-40..10`, default ~`-10`); `ChVol` is the 0..1 one. `Level: 0.5` is +10.5 dB and clips. `show-block` prints the unit — read it (step 5 level-units box) |
+| Overriding the amp's power-amp volume by habit | Half of factory amps sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.645), and the high-gain Agouras sit at 0.36–0.55. Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `USDouble Black`, absent on `Mandarin Rocker Mk 3` — `show-block` first (step 5) |
+| Setting `Hype` on every Agoura amp | 51 of 69 factory amps leave it at 0. The 18 that use it sit at 0.21–0.39. A seasoning, not a baseline (step 5) |
+| Shipping without running the envelope check | Step 7b is the only automatic check that the preset is voiced like a real one; a FAIL is a recipe bug, not a formality |
+| Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.32 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
+| Git-committing the generated `.hsp`/library files yourself | Core auto-commits library changes (gated by `git_commit_tones`); the skill must not add/commit library paths (step 7c) |
 
 ## Adjusting an existing tone (surgical edits)
 
@@ -906,7 +1039,7 @@ regenerate round-trip.
 
    ```bash
    HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen patch "<dir>/<slug>.hsp" - --json <<'EOF'
-   [{"op": "set_param", "block": "Mic Ir_4x12 Greenback 25 With Pan", "param": "HighCut", "value": 7500},
+   [{"op": "set_param", "block": "Mic Ir_4x12 Greenback 25 With Pan", "param": "HighCut", "value": 9000},
     {"op": "set_enabled", "block": "Plate Stereo", "enabled": false}]
    EOF
    ```
