@@ -169,12 +169,11 @@ Say in the report when you had to fall back to a legacy model, and why.
 
 #### Cabs
 
-- The cab choice matters, but **don't pick a mic by reflex in either direction**.
-  Measured across the factory corpus the top choices are `67 Cond` (17 of 78),
-  `57 Dynamic` (14), `47 Cond FET` (13) and `160 Ribbon` (12) — condensers lead,
-  but ribbons are in regular use. The old "always prefer a ribbon for smoothness"
-  rule was wrong; banning them would be equally wrong. Pick deliberately. The
-  angle is **0° on-axis on 57 of 78 cabs**.
+- **Pick the mic deliberately, and know that ribbons are the factory habit.**
+  Across the corpus, when Line 6 chooses a mic rather than leaving the default,
+  the picks are `121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (11),
+  `47 Cond FET` (7) — ribbons lead, and often sit on the second cab of a
+  dual-cab pair. Angle is **0° on-axis on 87 of 108 cabs**.
 - Mic, distance, position and the cut frequencies are all step-5 decisions now,
   and they have measured starting points — see the **cab voicing baseline**.
 
@@ -308,20 +307,15 @@ sounds muffled and lifeless next to a factory one. The old baseline cut the top
 off at 6500–7000 Hz and the bottom at 80–100 Hz on *every* preset. Line 6 does
 neither.
 
-| Cab param | Factory practice (n=78 cabs) | What to do |
+| Cab param | Factory practice (n=108 cabs) | What to do |
 |---|---|---|
-| `HighCut` | **51 of 78 left at the model default.** Of the 27 moved, median 9100 (p25–p75 8000–10000) | Default is the majority answer. If you do cut, 8000–10000 is the factory window — **6500–7000 is below anything they shipped** |
-| `LowCut` | **57 of 78 left at default.** Of the 21 moved, median 54 (p25–p75 39–74) | Mostly untouched. When they do move it they move it **up** to ~40–75, not to 80–100 |
-| `Distance` | 43 at default. Of the 35 moved, median 3" (p25–p75 1–3.9), max 9 | 1–4" is the working range. Close-micing is normal; distance is not a mud cure |
-| `Position` | 33 at default — the most-adjusted cab param. Moved median 0.30 (p25–p75 0.29–0.39) | This is the one they actually voice with. 0.29–0.39 cap-to-cone; toward 0 brighter, toward 1 darker |
-| `Angle` | 60 at default. When moved, they move it **to 0°** | On-axis. Several cabs already default to 45°, so "try 45°" may be a no-op — `show-block` first |
-| `Mic` | 30 at default (often `67 Cond`). When they pick one, the most common pick is **`57 Dynamic`** | Choose deliberately by label — `show-block` prints them. Ribbons (`160 Ribbon`) are in regular use too; neither "always ribbon" nor "never ribbon" is the factory habit |
-| `Level` | 58 at default (0 dB). Of the 20 moved, median **+6 dB** | Leave at 0 unless balancing a dual-cab. An **IR block defaults to −18 dB** — a different reference; don't compare the two |
-
-These are **A-mic, base-value** numbers: `device to-hsp` currently drops the
-B-cab of every dual-cab block (bead hgc-q38) and per-snapshot overrides are
-partly lost, so a factory preset that pairs a bright A mic with a dark B mic
-reads here as one bright cab. Treat the cab rows as directional, not exact.
+| `HighCut` | **61 of 108 left at the model default.** Of the 47 moved, median 9500 (p25–p75 8000–10000) | Default is the majority answer. If you do cut, 8000–10000 is the factory window — **6500–7000 is below anything they shipped** |
+| `LowCut` | **71 of 108 left at default.** Of the 37 moved, median 50 (p25–p75 39–69) | Mostly untouched. When they do move it they land around 40–70, not 80–100 |
+| `Distance` | 56 at default. Of the 52 moved, median 2.9" (p25–p75 1–3.6), max 9 | 1–3.5" is the working range. Close-micing is normal; distance is not a mud cure |
+| `Position` | 44 at default — the most-adjusted cab param. Moved median 0.30 (p25–p75 0.24–0.39) | This is what they actually voice with. Toward 0 brighter, toward 1 darker |
+| `Angle` | 87 at default. When moved, they move it **to 0°** | On-axis. Several cabs already default to 45°, so "try 45°" may be a no-op — `show-block` first |
+| `Mic` | 36 at default. Deliberate picks: **`121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (11), `47 Cond FET` (7)** | Pick by label — `show-block` prints them. When Line 6 chooses a mic at all, a **ribbon** is the most common choice, and it often lives on the second cab of a dual-cab pair |
+| `Level` | 68 at default (0 dB). Of the 40 moved, median +2.5 (p25–p75 −3…+6) | Leave at 0 on a single cab; it is the balance knob between the two halves of a dual cab. An **IR block defaults to −18 dB** — a different reference; don't compare the two |
 
 Still true, and still worth doing:
 
@@ -999,7 +993,7 @@ touching the tone:
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
 | Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory median is HighCut 11750 / LowCut 19.9 — mostly untouched (step 5 cab voicing baseline) |
-| Picking a ribbon mic "for smoothness" by reflex | Not what Line 6 does: the factory mode is `67 Cond`, then `57 Dynamic`, at 0° on-axis. Pick the mic deliberately — `show-block` prints the labels |
+| Leaving cab `Mic` unset and calling it neutral | The default is a per-cab accident, not a choice. When Line 6 picks, the most common pick is `121 Ribbon`, then `57 Dynamic` and `160 Ribbon`, at 0° on-axis. Choose by label — `show-block` prints them (step 5) |
 | Heavy reverb defaults | Stadium plates run hot; start at 0.10 |
 | Asking 5 clarifying questions | Cap at 3, only what's actually missing |
 | Reporting only amp settings, not the instrument recommendation | Selector + volume + tone (+ coil-split/pick-attack where relevant) are part of the tone; include them in the report (step 6, step 8 item 4) |
