@@ -1,7 +1,7 @@
 # Factory preset corpus — 66 Line 6 Stadium factory presets
 
 What Line 6's own preset designers actually do, measured from the
-Stadium's factory setlist. Engine: `helixgen, version 0.47.2`.
+Stadium's factory setlist. Engine: `helixgen, version 0.49.0`.
 
 ## How to read a row — this matters more than the numbers
 
@@ -35,7 +35,7 @@ those live in `data/factory-corpus.json` under `by_model`.
 arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 21
 of 60 amps, so a single number can be one end of a designed range.
 Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.
-Both cabs of a dual-cab block are counted as of engine 0.47.2 (hgc-q38); the
+Both cabs of a dual-cab block are counted as of engine 0.49.0 (hgc-q38); the
 cab rows here are n=108, not the 78 A-mics an earlier harvest saw.
 
 **Amp model family:** Agoura 69 vs legacy 22 amp instances.
