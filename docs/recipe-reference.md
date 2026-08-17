@@ -40,6 +40,11 @@ are case-sensitive and `generate` rejects unknown ones.
   - **The model_id is the stable handle** — it never changes and never needs disambiguating. Prefer it when you already have it, and always when scripting. An ambiguous name errors with every candidate model id listed.
   - A recipe written against a **pre-fix** library still resolves: the old name survives as a legacy alias (`"Tape Echo Stereo"` → `Tape Echo`, `"With Pan"` → `IR`). Aliases never outrank a real display name.
 - `params` values are in each param's own units. Many knobs are floats 0.0–1.0, but plenty are dB, Hz, seconds, or enum ints — and the same param name can be 0..1 on one block and dB on the next (a legacy amp's `ChVol` is 0..1; an Agoura amp's `Level` is -40..10 **dB**). **Always read the range and unit from `show-block "<block>"`** before writing a value; never assume 0.0–1.0.
+- `lane` (0 or 1) and `pos` are optional per-block **grid coordinates**. Omit them and blocks fill their lane in list order — the normal way to author. Give them (as `view` does when it projects an existing preset) and the block lands on exactly that slot, gaps included. Two rules are enforced, and both used to be silent data loss (hgc-x9g):
+  - **Auto-placement never rewinds.** The next free position only moves forward, so an explicit `pos` raises the floor for every later block in that lane — `pos: 9` followed by four unpositioned blocks puts them at 10, 11, 12, 13, and the last one is off the grid even though the lane has room below. Position them all, or none.
+  - **A lane has 12 user slots, `pos` 1..12** (lane 0 → `b01`..`b12`, lane 1 → `b15`..`b26`). `pos` 0 and 13 are the path's own input/output endpoints — a block aimed at one used to replace it, so `generate` wrote a preset with no input block and said nothing. Anything outside 1..12 is refused by name, including a 13th block or a full lane plus a `split`/`join` pair. (`structural` entries are exempt: a verbatim endpoint IS pos 0 or 13.)
+  - **One slot holds one block.** Two entries of a path resolving to the same `(lane, pos)` — both explicit, or an auto-assigned block landing on a later explicit one — is refused, naming both; the device's block instance id IS the grid coordinate, so there is no id to assign around it. Before the check the second entry overwrote the first and the preset came out a block short.
+- **`params` is a sparse override list.** Every param you omit is written at that model's own device default — `show-block`'s `default`, not its `sighted` (hgc-x7i). So omitting a knob genuinely means "leave it where Line 6 put it", and `view` correspondingly lists only the params that differ from the default.
 
 ## Optional: per-path input routing + input block params
 
@@ -246,7 +251,9 @@ pedal fully forward to click it).
   param units — a Level is in dB, a knob 0..1) and the switch toggles that
   param between the two values instead of the block's bypass. A single-knob
   stomp is a param toggle; a multi-param change is a snapshot.
-- **Scribble strip**: `label` (device shows ≤12 chars; longer warns) and
+- **Scribble strip**: `label` (stored in full — Line 6's own factory presets
+  carry up to 16 chars; the strip only *displays* ~12, so a longer label
+  warns but is written verbatim) and
   `color` — one of `none auto red dkorange ltorange yellow green turquoise
   blue purple pink white`. Per switch: on a merged switch set label/color on
   one entry (or identically on all); conflicting values are a spec error.
@@ -345,8 +352,9 @@ CC# instead of pedal:
   `preset._helixgen_midi` list that the **transcoder** turns into the device
   `cg__.entt` `ctrl`/`ctm_` records on `device install`/`sync`. `view` lifts it
   back into this `midi` recipe shape. The surgical edit verbs keep the records
-  reconciled: `add-block`/`remove-block` remap their coordinates on renumbering
-  (removing a MIDI-bound block drops its binding with a warning), and
+  reconciled: `add-block` remaps the coordinates of the blocks it shifts (most
+  inserts shift nobody now — hgc-hhp), `remove-block` drops a MIDI-bound
+  block's binding with a warning and leaves every other coordinate alone, and
   `swap-model` drops a binding whose param the new model lacks (warning).
 - **EXPERIMENTAL** until hardware-validated. There is no live `device` verb for
   MIDI assignment yet (author it into the preset). Stadium-only; ignored for
