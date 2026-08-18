@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.50.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.51.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -276,7 +276,7 @@ ritually:
   physical output instead of the default `matrix` (everything). Only for a
   two-rig preset — see "Two paths" below. Valid: `matrix`, `xlr`, `qtr`,
   `phones`, `send1_2`, `send3_4`, `spdif`, `usb1_2`/`usb3_4`/`usb5_6`,
-  `path2a`/`path2b`/`path2a_b`, `none`. Needs engine ≥ 0.50.0.
+  `path2a`/`path2b`/`path2a_b`, `none`. Needs engine ≥ 0.51.0.
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:
@@ -326,9 +326,11 @@ stage. Same guitar, two destinations, one preset:
 ```
 
 A wet/dry rig is the same shape: dry amp+cab to `qtr`, ambience-only path to
-`xlr` or `send1_2`. **Not hardware-validated** — the models are the device's
-own and they transcode correctly, but no routing combination has been played
-through a Stadium. Say so in the report when you author one.
+`xlr` or `send1_2`. **Storage is hardware-validated** (Stadium XL fw 1.3.2,
+2026-08-17: a `to: xlr` / `to: qtr` preset installs and `device to-hsp` reads
+it back byte-exact) — but **how a given routing combination behaves is not**.
+Say so in the report, and tell the user to check the destination jack first if
+one feed is silent.
 
 **C. Serial cascade (`to: "path2a"`, path 2 input `"none"`).** 41 of the 66
 factory presets do this — it continues one chain onto the second DSP purely
@@ -1037,12 +1039,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.50.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.51.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.50.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.51.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is

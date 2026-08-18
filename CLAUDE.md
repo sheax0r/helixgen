@@ -9,7 +9,7 @@ Claude Code plugin + single-plugin marketplace for helixgen: generate Line 6 Hel
 No MCP server, no `.mcp.json`. Skills drive `helixgen` **CLI**, provisioned as isolated tool:
 
 ```bash
-uv tool install 'helixgen[device]==0.50.0'
+uv tool install 'helixgen[device]==0.51.0'
 ```
 
 `setup` skill step 0 performs/verifies this (`helixgen --version`), handles stale-shadow failure mode (broken `helixgen` earlier on PATH — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` — `NO_COLOR=1` matters: with `FORCE_COLOR` set, uv emits ANSI codes inside substitution — or fall back to plain `~/.local/bin/helixgen` path, never touch ambient Python), upgrades with `uv tool install --force 'helixgen[device]==X.Y.Z'`.
