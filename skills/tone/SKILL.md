@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.49.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.50.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -368,7 +368,7 @@ volume under two different names *with two different units*:
 - `Level` — **decibels**, typically `-40..10`, default around `-10`
   (Agoura amps).
 
-`show-block` prints the unit and range explicitly since engine 0.49.0
+`show-block` prints the unit and range explicitly since engine 0.50.0
 (`Level  float -40..10 dB (default -10)`). Writing `Level: 0.5` on an Agoura amp
 is not "half volume" — it is **+10.5 dB over the model default**, and it clips.
 Factory amps sit around −11 to −6 dB. Always read the unit off `show-block`
@@ -947,12 +947,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.49.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.50.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.49.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.50.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1022,60 +1022,57 @@ touching the tone:
 | Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.32 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
 | Git-committing the generated `.hsp`/library files yourself | Core auto-commits library changes (gated by `git_commit_tones`); the skill must not add/commit library paths (step 7c) |
 
-## Forking a tone — start from the `.hsp`, NEVER from its write-up
+## Forking a tone — use `library fork`
 
-"Fork this tone", "make me an EC-1000 version", "same but heavier" — all of
-these start from the **`.hsp`**, which is the only complete record of a tone.
+"Fork this tone", "make me an EC-1000 version", "same rig, different song" —
+there is a verb for this. Do NOT hand-roll it, and do NOT re-author from the
+tone's write-up.
 
 ```bash
-# 1. the .hsp -> a full recipe: every param, snapshots, footswitches, IRs
-HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen view "<src>/<slug>.hsp" > /tmp/fork.recipe.json
-
-# 2. edit that JSON for what actually differs (see the adaptation note below)
-
-# 3. generate with the NEW identity — same artist/song, different guitar
-HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/fork.recipe.json --artist "Aerosmith" --song "Dream On" --guitar "ESP LTD EC-1000"
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen library fork "<source>" --guitar "<target guitar>"
 ```
 
-That yields `Aerosmith - Dream On - EC-1000` as a **variant of the existing
-logical tone**, sharing its metadata rather than becoming a second unrelated
-tone.
+`<source>` resolves like `library show` — a logical slug, the metadata
+filename, or a variant's exact `preset_name` — or a path to an `.hsp` that
+isn't in the library yet. A slug with more than one variant is ambiguous and
+errors, naming each candidate; pass the exact `preset_name`.
 
-**Do NOT re-author from the tone's markdown.** `description_md` (what
-`helixgen describe` prints) and anything under `~/.helixgen/research/*.md` are
-**human write-ups**, not the tone. Rebuilding from them:
+What it does, and why each part matters:
 
-- **loses every param the prose didn't mention** — the write-up lists "the 2–3
-  settings that matter", not the full block state;
-- **resurrects superseded guidance.** Write-ups authored before a skill change
-  still describe the chain as it was. A real case: forking Dream On from its
-  markdown reproduced legacy HX amps, `ChVol 0.95`, and cab `HighCut 6800 /
-  LowCut 90` — all pre-rewrite values — and the result was audibly hot and
-  noisy on hot pickups. The `.hsp` next to it had the corrected chain.
+- **The `.hsp` is the source.** The fork is a verbatim copy — every block,
+  param, snapshot, footswitch, expression assignment and IR reference, including
+  anything helixgen doesn't model — with only the display name rewritten.
+- **`--guitar` alone adds a SECOND VARIANT of the same logical tone**: one
+  metadata JSON, two entries under `variants`. Pass `--artist`/`--song` or
+  `--descriptor` instead to make it a new logical tone (the "same rig, different
+  song" case).
+- **It refuses to overwrite.** An existing target variant errors, naming the
+  existing `.hsp`, and writes nothing.
+- **Provenance is recorded** — `describe` shows "forked from <variant>, <date>".
+- **The source's write-up is carried but MARKED as inherited.** Update it; it
+  describes the parent, not the fork.
+- `--dry-run` prints what would be written and writes nothing.
 
-Read the write-up for *intent* (what the tone is chasing, the reference gear,
-the sources). Take *values* from the `.hsp`.
+**Then adapt it — a fork is not a copy.** The verb prints an adaptation
+checklist when the two guitars' pickup classes differ, naming the actual params
+in *this* chain (`Soup Pro [0:b03] Drive`, `IR [0:b04] HighCut`, …). It
+deliberately re-voices nothing: apply step 6's pickup-class guidance yourself,
+then say in the write-up what you changed for the instrument and what you kept.
 
-**A fork is not a copy — adapt it to the new guitar.** `view` gives you the
-source tone verbatim, which is voiced for the source instrument. Apply step 6's
-pickup-class adjustments: active humbuckers (EC-1000) want the amp `Drive`
-backed off ~0.10 versus passives and less treble-pull; single-coils/P-90s want
-the opposite. Say in the write-up what you changed for the instrument and what
-you deliberately kept.
+**Never re-author a fork from the markdown.** `description_md` and anything in
+`~/.helixgen/research/*.md` are human write-ups: they list "the 2–3 settings
+that matter", not full block state, and older ones describe superseded chains.
+A real case — forking Dream On from its markdown reproduced legacy HX amps,
+`ChVol 0.95` and cab `HighCut 6800 / LowCut 90`, all pre-rewrite values, and
+the result was audibly hot and noisy on hot pickups. The `.hsp` beside it had
+the corrected chain. Read the write-up for *intent*; take *values* from the
+`.hsp`.
 
-**Never hand-type a display name.** Identity comes from `--artist`/`--song` or
-`--descriptor`, plus `--guitar`; the name and slug are synthesized from them
-(`"$Artist - $Song - $Guitar"`). A typed name like `"Dream On -- EC1000"`
-bypasses that: wrong separator, a guitar string that is not the profile's
-`short_name`, no artist, and a slug that will not group with the tone it forked
-from. Two specific traps:
-
-- Putting identity inside `--descriptor` (`--descriptor "Dream On -- EC1000"`)
-  is accepted and produces exactly that garbage. Use the identity flags.
-- The legacy `-o <out.hsp>` form **ignores the naming flags entirely** and
-  writes no metadata, so a fork done with `-o` silently keeps whatever `"name"`
-  the recipe carried and never joins the library. Use the default library flow
-  (no `-o`) for any tone you intend to keep.
+**Never hand-type a display name.** Identity comes from the flags; the name and
+slug are synthesized (`"$Artist - $Song - $Guitar"`). The engine now refuses
+identity smuggled into `--descriptor` (e.g. `"Dream On -- EC1000"`) and warns
+that the legacy `-o` form discards the naming flags and writes no metadata —
+but don't rely on the guards: use the flags.
 
 ## Adjusting an existing tone (surgical edits)
 
