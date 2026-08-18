@@ -190,6 +190,35 @@ Say in the report when you had to fall back to a legacy model, and why.
   default wide open. Leave the cuts alone unless the tone needs them.
 - New users (no `favor_irs` preference and no feedback memory) get stock cabs by default. The preference flips on when the user explicitly says "from now on, prefer IRs when I have them" — record it in `~/.helixgen/preferences.json`'s `favor_irs` key if you can write there, otherwise as a feedback memory.
 
+#### Mono or stereo — the block's position decides it, not taste
+
+Most effect models ship as a **Mono / Stereo pair** (`Chorus Mono` /
+`Chorus Stereo`). The variant is a real choice: a stereo block costs more DSP
+and buys nothing that a mono listener can hear.
+
+The rule Line 6 follows, measured across the 66 factory presets
+(`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md`):
+
+| where the block sits | stereo | mono | stereo share |
+|---|---|---|---|
+| **before** the amp/cab | 18 | 169 | **10%** |
+| **after** the cab | 94 | 42 | **69%** |
+
+By family, the same split, sharper: drive **1 stereo / 108 mono**, wah 0/19,
+gate 0/4, pitch 3/16, compressor 16/53 — versus delay 47/21, reverb 58/12,
+chorus 19/7, rotary 3/0, tremolo 11/7.
+
+- **Dirt, dynamics, filter, wah, pitch → Mono**, always, and they live in front
+  of the amp. A stereo fuzz is a wasted DSP block.
+- **Delay, reverb, chorus/rotary/tremolo after the cab → Stereo**, unless the
+  player is mono (below).
+- **Go all-mono when the rig is mono** — one guitar amp, one PA channel, a
+  mono IEM mix. Ask if you don't know and it matters (a big stereo ambience
+  tone is worth one question); default to stereo for FOH/headphone/DAW use,
+  which is what a Stadium usually feeds.
+- Some models exist in one variant only. `list-blocks` names are the authority:
+  if there is no `… Mono`, the model is what it is — don't hunt for a sibling.
+
 ### 4. Get exact param names — REQUIRED step
 
 For each chosen block, run `helixgen show-block "<display name>"`.
@@ -243,6 +272,11 @@ ritually:
   `device measure`: the meters tap DOWNSTREAM of the output gain — [MEASURED]
   Stadium XL fw 1.3.2, 2026-07-30; earlier revisions of this skill claimed the
   opposite.)
+- **Output destination** — `"output": {"to": "xlr"}` sends that path to one
+  physical output instead of the default `matrix` (everything). Only for a
+  two-rig preset — see "Two paths" below. Valid: `matrix`, `xlr`, `qtr`,
+  `phones`, `send1_2`, `send3_4`, `spdif`, `usb1_2`/`usb3_4`/`usb5_6`,
+  `path2a`/`path2b`/`path2a_b`, `none`. Needs engine ≥ 0.50.0.
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:
@@ -256,6 +290,62 @@ After generating, tweak these without re-authoring via a `helixgen patch`
 `set_param` op on the pseudo-blocks `input` / `output` / `split` / `join`
 (e.g. `{"op": "set_param", "block": "input", "param": "threshold",
 "value": -60.0}`).
+
+#### Two paths — the second DSP is a routing decision, not a tone knob
+
+`paths` takes **1 or 2 entries, one per DSP**. Default to **one**. A second
+path costs a whole DSP and buys nothing unless the tone genuinely needs two
+signals. Line 6 uses one in 59 of 66 factory presets, but almost always for
+reasons the recipe layer can't feel — reach for it only in these cases:
+
+**A. Two amps blended (11 factory presets do this).** Both paths take the same
+jack and sum at the matrix. This is the "layered" sound — a big clean and a
+grind stacked, or two mic'd cabs — and it is what `dual amp` means on a
+Tool-style rig. Hard-pan them for width, or leave both centred to blend:
+
+```json
+"paths": [
+  {"input": "inst1", "output": {"pan": 0.0},
+   "blocks": [{"block": "Brit Plexi"}, {"block": "4x12 Greenback 25"}]},
+  {"input": "inst1", "output": {"pan": 1.0},
+   "blocks": [{"block": "Essex A15"}, {"block": "1x12 Blue Bell"}]}
+]
+```
+
+**B. Two physical outputs — FOH + amp-in-the-room.** One path ends in a cab/IR
+and goes to the board; the other skips the cab and drives a real power amp on
+stage. Same guitar, two destinations, one preset:
+
+```json
+"paths": [
+  {"input": "inst1", "output": {"to": "xlr"},
+   "blocks": [{"block": "Brit Plexi"}, {"block": "4x12 Greenback 25"}]},
+  {"input": "inst1", "output": {"to": "qtr"},
+   "blocks": [{"block": "Brit Plexi"}]}
+]
+```
+
+A wet/dry rig is the same shape: dry amp+cab to `qtr`, ambience-only path to
+`xlr` or `send1_2`. **Not hardware-validated** — the models are the device's
+own and they transcode correctly, but no routing combination has been played
+through a Stadium. Say so in the report when you author one.
+
+**C. Serial cascade (`to: "path2a"`, path 2 input `"none"`).** 41 of the 66
+factory presets do this — it continues one chain onto the second DSP purely
+to spread processing load. **Don't reach for it.** helixgen cannot measure DSP
+cost, the device is the only authority on whether a preset fits, and it
+changes nothing you can hear. Author it only when a user asks for it by name.
+
+**Traps:**
+- `paths[1].input` defaults to **`"none"`** — a second path with blocks and no
+  input is silent. Always set it explicitly (`"inst1"`, or `"none"` on purpose
+  for a cascade).
+- **Two summed amps are louder.** Redo the volume-normalization pass (5.7)
+  across both paths, and raise both amps together when repairing level — never
+  one, or the blend moves.
+- Parallel *inside* one path (a `split`/`join` region, 17 factory presets) is
+  the cheaper tool when the two branches share an amp. Prefer it for
+  drive-blend and bi-amp work; a second DSP is for two full rigs.
 
 #### Name the tone — identity flags, not the recipe title
 
@@ -991,6 +1081,9 @@ touching the tone:
 | Recommending a block not in the user's library | Always verify with `list-blocks --category <cat>` first |
 | Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
+| A stereo drive/wah/comp in front of the amp | Pre-amp blocks are Mono — Line 6's own corpus runs 1 stereo drive to 108 mono. Stereo belongs after the cab (step 3) |
+| A mono delay/reverb after the cab on a stereo rig | 69% of factory post-cab blocks are stereo; use the Stereo variant unless the player's rig is mono |
+| A second path with blocks but no `input` | `paths[1].input` defaults to `"none"` — the path is silent. Set it explicitly (step 5, "Two paths") |
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
 | Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory median is HighCut 11750 / LowCut 19.9 — mostly untouched (step 5 cab voicing baseline) |
 | Leaving cab `Mic` unset and calling it neutral | The default is a per-cab accident, not a choice. When Line 6 picks, the most common pick is `121 Ribbon`, then `57 Dynamic` and `160 Ribbon`, at 0° on-axis. Choose by label — `show-block` prints them (step 5) |
