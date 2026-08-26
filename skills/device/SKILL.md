@@ -95,8 +95,11 @@ helixgen device discover --forget SERIAL-OR-IP [--json]
 
 One-shot discovery: mDNS first (the Stadium advertises
 `_stadiumserver._tcp.local.` and answers a one-shot multicast query itself),
-then a bounded TCP connect-probe of this machine's **own /24 only** as a
-fallback for multicast-blocked networks. Every candidate is confirmed with
+then a bounded TCP connect-probe of this machine's own subnet as a
+fallback for multicast-blocked networks. That probe range comes from the
+interface's **netmask**, not a hardcoded /24 (a /22 is probed as a /22),
+capped at 1024 addresses around this machine's address, and it refuses to
+scan any range that is not private (RFC 1918). Every candidate is confirmed with
 the read-only `/ProductInfoGet` handshake before being trusted; confirmed
 devices are **persisted** (ip, serial, model, firmware — plus the derived RPC
 `port`, recorded **only when the device advertises a nonstandard** stream port,
@@ -117,9 +120,29 @@ on the device — no lock taken, nothing on the hardware changes.
   discovered** (`ip_updated_at` desc, then serial desc) and warns when
   several records disagree. Pass `--ip` on any verb to target another
   device explicitly.
-- **Found nothing?** Ask the user for the IP and pass `--ip <addr>` (or
-  prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots above the record
-  in the resolution chain.
+- **Found nothing? Check for a VPN FIRST — backlog #77.** Both mDNS and the
+  subnet probe look at the **default-route interface**. With a VPN up that is
+  the tunnel, so discovery searches the tunnel's range and never sees a Stadium
+  sitting on the real LAN. Diagnose in one command:
+
+  ```bash
+  route -n get default | grep -E 'interface|gateway'
+  ```
+
+  If that names a `utun*`/`tun*` interface (or any gateway on a different range
+  from the user's LAN), that is the cause — **not** the device being absent, and
+  **not** the Stadium being "on a different subnet". Compare against the real
+  LAN interface (`ifconfig en0 | grep 'inet '`): the Stadium is usually on that
+  same subnet, and its netmask may well be wider than a /24.
+
+  The fix is to **disconnect the VPN and run `device discover` once** — the
+  record persists, so the VPN can go straight back up afterwards. Only if that
+  is not an option, fall back to `--ip <addr>` / `HELIXGEN_HELIX_IP=<addr>`,
+  and say plainly that it is a bypass: a hand-passed IP goes stale on the next
+  DHCP lease, where a persisted record can simply be re-discovered.
+- **Genuinely not found, no VPN?** Ask the user for the IP and pass
+  `--ip <addr>` (or prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots
+  above the record in the resolution chain.
 - **Prune a stale record: `device discover --forget SERIAL-OR-IP`.** Removes
   the persisted `devices/<serial>.json` record whose serial or `ip` matches
   the argument, instead of discovering — use it when a device left the network

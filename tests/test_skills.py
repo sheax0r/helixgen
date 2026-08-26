@@ -1197,3 +1197,30 @@ def test_librarian_import_advice_is_fallback_only() -> None:
     assert re.search(
         r"[Nn]ever emit that sentence after a successful push", text
     ), "setup: nothing stops the false post-push Librarian claim"
+
+
+def test_device_skill_does_not_claim_the_probe_is_a_slash_24() -> None:
+    """`device discover --help`: the subnet-probe range is derived from the
+    interface NETMASK ("a /22 is probed as a /22, not as a /24"), capped at 1024
+    addresses. The skill previously asserted "own /24 only", and a session read
+    that instead of the help and misdiagnosed a VPN split as the Stadium being on
+    another subnet."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert not re.search(
+        r"own\s+\*{0,2}/24\s+only", text, re.IGNORECASE
+    ), "device: stale '/24 only' probe claim contradicts discover --help"
+    assert re.search(
+        r"netmask", text, re.IGNORECASE
+    ), "device: probe range no longer explained as netmask-derived"
+
+
+def test_device_skill_names_the_vpn_default_route_discovery_trap() -> None:
+    """Backlog #77: both mDNS and the subnet probe follow the DEFAULT-ROUTE
+    interface, so a VPN tunnel hides a LAN-attached Stadium. Without this, an
+    agent reads a failed discover as "device absent" and hands the user a
+    hand-typed --ip that goes stale on the next DHCP lease."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert "VPN" in text, "device: VPN discovery trap not documented"
+    assert re.search(
+        r"default-route interface", text, re.IGNORECASE
+    ), "device: doesn't explain that discovery follows the default route"

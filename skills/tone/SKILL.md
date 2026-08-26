@@ -895,8 +895,11 @@ Note which of the two states each IR came back in — step 8 item 7 reports it.
 - **No device resolves** (no `device discover` record, no `$HELIXGEN_HELIX_IP`)
   — `push-ir` fails fast, no network stall. Fall back to the manual
   Librarian-import line in the `setup` skill's "After generating a preset that
-  uses user IRs", and offer `helixgen device discover` once if the user expects
-  their Stadium to be on the LAN.
+  uses user IRs". If the user expects their Stadium to be on the LAN, offer
+  `helixgen device discover` once — but if that finds nothing, do **not**
+  conclude the device is absent: with a VPN up, discovery searches the tunnel
+  instead of the LAN (backlog #77). The `device` skill's "Found nothing?" notes
+  have the one-command diagnosis.
 - **Network error** — the Stadium's stack is flaky; re-run once. If it still
   fails, say plainly that the IR has not reached the device yet and name
   `helixgen device push-ir` as the way to finish it.
