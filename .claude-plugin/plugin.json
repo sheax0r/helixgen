@@ -1,7 +1,7 @@
 {
   "name": "helixgen",
   "description": "Generate Line 6 Helix Stadium presets from natural-language tone requests, and control a Stadium directly over your LAN — no editor app. Provides the /tone, /setup, and /device skills which drive the self-documenting `helixgen` CLI for preset authoring and editing, impulse-response management, and full device control (preset CRUD, backup/restore, and installing or bulk-syncing authored tones onto the hardware). The engine (the helixgen-core package) is provisioned as an isolated CLI tool via `uv tool install` — requires `uv` on your PATH.",
-  "version": "4.25.0",
+  "version": "4.26.0",
   "author": {
     "name": "Michael Shea",
     "email": "mike.shea@gmail.com"
