@@ -75,7 +75,8 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen library doc <name> (--from-file <md> \| -) [--variant <guitar-slug>]` | author/update the tone's `description_md` (or a variant's `notes_md`) — replaces the old companion `.md` sidecar | updates metadata in place |
 | `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
 | `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolved as a TONE first — logical slug / metadata filename / variant preset_name — else a guitar profile by slug/name/short_name) | text or JSON |
-| `helixgen list-irs [--json]` | locally registered user IRs | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
+| `helixgen list-irs [--json]` | user IRs registered **locally** (helixgen's `mapping.json`) — NOT what is on the device | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
+| `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
 | `helixgen controllers [--json]` | assignable-controller vocabulary (FS/EXP) with English names + positions | text lines or JSON array |
@@ -177,7 +178,7 @@ Say in the report when you had to fall back to a legacy model, and why.
 - Mic, distance, position and the cut frequencies are all step-5 decisions now,
   and they have measured starting points — see the **cab voicing baseline**.
 
-**Check for user IRs (preference-gated).** Run `helixgen list-irs --json`. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
+**Check for user IRs (preference-gated).** Run `helixgen list-irs --json`. This is the **local** registry only — an IR listed here is not necessarily on the user's Stadium, and one that never reached the hardware shows as a silent **"No Model"** cab. Keep the `path` for each candidate: you need it in step 7d to put the IR on the device. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
 
 - Parse the wav filenames in the output — commercial IR packs encode cab + mic + position (e.g. `YA VX30 212 BLU Mix 01.wav` → Vox AC30-style 2x12 Blue, mix-position).
 - If a match exists, use an IR block instead of a stock cab:
@@ -858,6 +859,48 @@ git-commit library files itself** — that behavior now lives in the engine.
 e.g. a project presets folder reached via an ad-hoc `-o` path — but the default
 library flow is hands-off.)
 
+#### 7d. Put any referenced user IRs on the device — REQUIRED when the chain uses one
+
+Skip entirely if the chain uses only stock cabs.
+
+An IR in the **local** registry is not an IR **on the Stadium** — two separate
+inventories joined by `irhash`, and one that never reached the hardware plays as
+a silent **"No Model"** cab. Don't warn the user about that; fix it.
+
+For each user IR the preset references, using the `path` you kept from
+`list-irs --json` in step 3, just run:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen device push-ir "<path>/<ir>.wav"
+```
+
+Run it unconditionally — **`push-ir` IS the presence check.** It resolves the
+hash through the device's point lookup, reports the IR as already present when
+it is, and otherwise uploads and registers it in ~0.1-1 s under the preset's
+exact `irhash`. It is idempotent, so there is nothing to check first and no
+state you can corrupt by running it again.
+
+**Do NOT run `device list-irs` to decide whether to push.** Three reasons: the
+point lookup is the authority on presence while the container listing is a cache
+that watched-directory imports never invalidate (so a listing can lag reality);
+enumerating is pure overhead when you already know the one hash you care about;
+and a real IR library runs to *thousands* of entries. `device list-irs` is the
+right verb when the user actually asks what is on their device — not as a gate
+here.
+
+Note which of the two states each IR came back in — step 8 item 7 reports it.
+
+**When it fails, don't block delivery.** Report the tone as normal, then:
+
+- **No device resolves** (no `device discover` record, no `$HELIXGEN_HELIX_IP`)
+  — `push-ir` fails fast, no network stall. Fall back to the manual
+  Librarian-import line in the `setup` skill's "After generating a preset that
+  uses user IRs", and offer `helixgen device discover` once if the user expects
+  their Stadium to be on the LAN.
+- **Network error** — the Stadium's stack is flaky; re-run once. If it still
+  fails, say plainly that the IR has not reached the device yet and name
+  `helixgen device push-ir` as the way to finish it.
+
 ### 8. Report back
 
 Tell the user, in this order:
@@ -867,7 +910,8 @@ Tell the user, in this order:
 4. **Instrument** — `<guitar> — <one-clause why>` (skip the "why" if the user named the guitar themselves), then `Selector: <position> · Volume: <0–10> · Tone: <0–10>` in that guitar's real switch language, plus a one-clause note for any non-obvious move (roll-off, coil-split, pick attack)
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
 6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop. Once it's on the device, offer the measured level-match (step 9).
-7. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
+7. **IRs** (only if the chain uses a user IR) — one line per IR stating the state you *observed* in step 7d, e.g. `IR: YA MRSH 412 T75 Mix 04 — already on your Stadium` or `… — uploaded to your Stadium just now`. Never tell the user to import an IR by hand once you have pushed it.
+8. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
 

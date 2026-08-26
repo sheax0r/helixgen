@@ -738,15 +738,33 @@ shell's cwd is usually **not** the catalog repo, so an unscoped
 
 ## After generating a preset that uses user IRs
 
-Tell the user, in one sentence:
+**Two inventories, one join key.** An IR registered *locally*
+(`helixgen list-irs` — helixgen's own `mapping.json`) is not the same as an IR
+*on the device* (`helixgen device list-irs`). They are separate records joined
+by `irhash`, and a locally-registered IR that never reached the hardware plays
+as a silent cab showing **"No Model"**.
+
+**Don't warn about it — fix it.** `helixgen device push-ir <wav>` is idempotent
+and *is* the presence check (point lookup, not an enumeration), so pushing a
+referenced IR unconditionally is both correct and cheap. The full procedure —
+including what to do when the push fails — lives in the `tone` skill's step 7d,
+"Put any referenced user IRs on the device"; follow it there rather than
+duplicating it here.
+
+**Manual fallback — ONLY when no device is reachable.** Tell the user, in one
+sentence:
 
 > "Make sure these IRs are loaded on your Stadium via the Librarian → Cab
 > IRs → Import before you load this preset, or the IR block will show
 > 'No Model'."
 
 …then list the IR basenames the preset references so the user can verify.
-(This applies to the HX Edit/USB loading path — if the preset instead goes
-onto the device over the LAN via the `device` skill, `device sync` /
-`device install --auto-irs` upload the referenced IRs automatically.)
+**Never emit that sentence after a successful push** — it is HX Edit/USB
+Librarian advice, and repeating it once the IR is demonstrably on the device is
+simply false. (The LAN install path covers itself separately: `device sync` and
+`device install --auto-irs` upload referenced IRs at install time. Pushing at
+generation time is what makes the IR present *before* that, so the user can load
+the preset straight from the hardware.)
+
 Use `open -R "<path-to-hsp>"` to reveal the generated preset in Finder
 (per the `feedback_reveal_file_in_finder.md` rule).

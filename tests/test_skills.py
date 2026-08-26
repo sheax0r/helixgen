@@ -1158,3 +1158,42 @@ def test_tone_skill_states_the_reachable_floor_at_authoring_time() -> None:
     # and step 9 measures before declaring the tone finished
     assert "Run the dry-run as a DESIGN CHECK" in flat
     assert re.search(r"cheap to act on right now and expensive later", flat)
+
+
+def test_tone_skill_pushes_referenced_irs_to_the_device() -> None:
+    """A locally-registered IR is not an IR on the device — separate inventories
+    joined by `irhash`, and one that never reached the hardware plays as a silent
+    "No Model" cab. The tone skill must PUSH referenced IRs (`device push-ir` is
+    idempotent and is itself the presence check) rather than telling the user to
+    import them by hand. Regressed as: agent picks an IR from `list-irs`, then
+    emits HX Edit/USB Librarian advice it never verified."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "7d" in text, "tone: no step 7d for putting IRs on the device"
+    assert "device push-ir" in text, "tone: never pushes referenced IRs"
+    assert re.search(
+        r"local.{0,80}not.{0,40}(on the (device|Stadium))", text, re.IGNORECASE | re.DOTALL
+    ), "tone: local-registry vs on-device distinction not drawn"
+
+
+def test_tone_skill_does_not_enumerate_device_irs_to_gate_the_push() -> None:
+    """`push-ir` resolves presence via the device's point lookup. The `-11`
+    container listing `device list-irs` reads is a cache watched-dir imports never
+    invalidate, so it can lag reality — and a real IR library runs to thousands of
+    entries. Enumerating to decide whether to push is both slower and less correct."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert re.search(
+        r"do NOT run `device list-irs`", text, re.IGNORECASE
+    ), "tone: doesn't forbid gating the push on a full device listing"
+
+
+def test_librarian_import_advice_is_fallback_only() -> None:
+    """The 'load it via Librarian → Cab IRs → Import or you get No Model' line is
+    HX Edit/USB-path advice. Emitting it after a successful `device push-ir` states
+    something false about the user's hardware, which is the bug this guards."""
+    text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
+    assert re.search(
+        r"ONLY when no device is reachable", text
+    ), "setup: Librarian advice not scoped to the no-device fallback"
+    assert re.search(
+        r"[Nn]ever emit that sentence after a successful push", text
+    ), "setup: nothing stops the false post-push Librarian claim"
