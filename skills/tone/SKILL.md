@@ -15,7 +15,7 @@ Turn a tone description into a `.hsp` Helix Stadium preset that's ready to load 
 - User wants a starting point to A/B against a reference
 - User mentions a guitar/bass and a role (rhythm, lead, clean, pad, solo boost)
 
-When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off. (Device-mutating verbs auto-acquire machine-local advisory locks as of core 0.22.0 — the `device` skill's "Device locks" section is the model; nothing in this skill touches the device.)
+When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off. (Device-mutating verbs auto-acquire machine-local advisory locks as of core 0.22.0 — the `device` skill's "Device locks" section is the model. This skill touches the device in exactly two places, both **offered to the user first, never automatic**: step 7d puts a referenced user IR on the Stadium, and step 9 level-matches against the hardware. Installing the preset itself is always the `device` skill's job.)
 
 ## Prerequisites
 
@@ -859,38 +859,70 @@ git-commit library files itself** — that behavior now lives in the engine.
 e.g. a project presets folder reached via an ad-hoc `-o` path — but the default
 library flow is hands-off.)
 
-#### 7d. Put any referenced user IRs on the device — REQUIRED when the chain uses one
+#### 7d. Offer to put referenced user IRs on the device
 
 Skip entirely if the chain uses only stock cabs.
 
 An IR in the **local** registry is not an IR **on the Stadium** — two separate
 inventories joined by `irhash`, and one that never reached the hardware plays as
-a silent **"No Model"** cab. Don't warn the user about that; fix it.
+a silent **"No Model"** cab. Don't hand the user unverified "import it yourself
+first" boilerplate: you can put it there in about a second.
 
-For each user IR the preset references, using the `path` you kept from
-`list-irs --json` in step 3, just run:
+**ASK FIRST — this is a hardware write.** Everything else in this skill is
+offline authoring; this is the one step that changes the user's physical device,
+so it follows step 9's pattern rather than acting on its own. One line, in the
+report:
+
+> "This tone uses <IR name>. Want me to put it on your Stadium now (about a
+> second)? Otherwise it goes up by itself when you install the preset."
+
+That last clause is true and matters — `device install --auto-irs` and
+`device sync` upload referenced IRs at install time, so declining costs the user
+nothing. Push early only because it lets them load the preset straight from the
+hardware. **Never push unasked**: an IR the user never wanted is not trivially
+reclaimable, since `device ir-prune` *protects* IRs referenced by a local
+off-device tone (they need `--force`), so an abandoned tone pins its IR on the
+device.
+
+If the user declines, say the IR will go up on install and move on.
+
+**If the user agrees**, first confirm the WAV still hashes to what the preset
+references — `push-ir` hashes the file you hand it and knows nothing about the
+preset, so a WAV edited or replaced since registration uploads under a
+*different* hash, leaving the cab silent while everything reports success:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen irhash "<path>/<ir>.wav"
+```
+
+Compare that against the `irhash` in the preset (`helixgen view`). On a
+mismatch, stop and tell the user their WAV changed since it was registered —
+`register-irs` again is the fix, not a push. Then:
 
 ```bash
 HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen device push-ir "<path>/<ir>.wav"
 ```
 
-Run it unconditionally — **`push-ir` IS the presence check.** It resolves the
-hash through the device's point lookup, reports the IR as already present when
-it is, and otherwise uploads and registers it in ~0.1-1 s under the preset's
-exact `irhash`. It is idempotent, so there is nothing to check first and no
-state you can corrupt by running it again.
+`push-ir` **is** the presence check: it resolves the hash through the device's
+point lookup, answers "already on device" when the IR is there, and otherwise
+uploads and registers it in ~0.1-1 s. Running it when the IR is already present
+is the normal, expected case.
 
-**Do NOT run `device list-irs` to decide whether to push.** Three reasons: the
-point lookup is the authority on presence while the container listing is a cache
-that watched-directory imports never invalidate (so a listing can lag reality);
-enumerating is pure overhead when you already know the one hash you care about;
-and a real IR library runs to *thousands* of entries. `device list-irs` is the
-right verb when the user actually asks what is on their device — not as a gate
-here.
+**Do NOT run `device list-irs` to decide whether to push** — but for the right
+reason. `push-ir` already takes a container listing internally (plus a rename
+nudge, which is an IR-container *write* under the `irs` lock), so gating on a
+listing just does that work twice. It is redundancy, not scale: the device holds
+far fewer IRs than the local registry, and enumerating them is fast.
+`device list-irs` stays the right verb when the user asks what is on their
+device — just not as a gate here.
 
-Note which of the two states each IR came back in — step 8 item 7 reports it.
+**Report what you saw, and no more.** `push-ir` has no `--json`; you are
+prose-matching stdout. Say "already on your Stadium" or "uploaded just now"
+only when the output says so, and don't upgrade either into a guarantee the
+cab will sound — see the wedge case below.
 
-**When it fails, don't block delivery.** Report the tone as normal, then:
+**Failure modes — none of these block delivery.** Report the tone as normal,
+then:
 
 - **No device resolves** (no `device discover` record, no `$HELIXGEN_HELIX_IP`)
   — `push-ir` fails fast, no network stall. Fall back to the manual
@@ -900,9 +932,25 @@ Note which of the two states each IR came back in — step 8 item 7 reports it.
   conclude the device is absent: with a VPN up, discovery searches the tunnel
   instead of the LAN (backlog #77). The `device` skill's "Found nothing?" notes
   have the one-command diagnosis.
+- **A lock is held** — `push-ir` takes the `irs` scope. A concurrent `/device`
+  session (a `sync` holds `library`+`irs`) makes it block for
+  `$HELIXGEN_LOCK_TIMEOUT` (default 30 s) then exit non-zero *naming the
+  holder*. A dangling `$HELIXGEN_LOCK_TOKEN` errors the same way. Read the
+  message and wait for the other session — this is **not** a reason to reach
+  for `--no-lock`, and re-running just burns another 30 s.
+- **The WAV path is gone** — moved, deleted, or on an unmounted volume, leaving
+  `mapping.json` stale. `push-ir` errors on the path, not the network. Say which
+  file is missing; don't retry it as if it were a dropped connection.
 - **Network error** — the Stadium's stack is flaky; re-run once. If it still
   fails, say plainly that the IR has not reached the device yet and name
   `helixgen device push-ir` as the way to finish it.
+- **Silent cab even though the push reported success (#93)** — `push-ir`'s
+  "already on device" answer is *deliberately trusting* when its listing refresh
+  can't be confirmed (an empty or failed listing, or a nudge that didn't
+  confirm), and it heals a wedged orphan silently in that case rather than
+  warning. So if the user later reports "No Model" on an IR you pushed, believe
+  them over the exit code: `device list-irs` to check for the hash, and
+  `device delete-ir --force-wedge` then re-push is the sure clear.
 
 ### 8. Report back
 
@@ -913,7 +961,7 @@ Tell the user, in this order:
 4. **Instrument** — `<guitar> — <one-clause why>` (skip the "why" if the user named the guitar themselves), then `Selector: <position> · Volume: <0–10> · Tone: <0–10>` in that guitar's real switch language, plus a one-clause note for any non-obvious move (roll-off, coil-split, pick attack)
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
 6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop. Once it's on the device, offer the measured level-match (step 9).
-7. **IRs** (only if the chain uses a user IR) — one line per IR stating the state you *observed* in step 7d, e.g. `IR: YA MRSH 412 T75 Mix 04 — already on your Stadium` or `… — uploaded to your Stadium just now`. Never tell the user to import an IR by hand once you have pushed it.
+7. **IRs** (only if the chain uses a user IR) — this is where step 7d's offer goes. If the user has not answered it yet, ask here: `Uses YA MRSH 412 T75 Mix 04 — want me to put it on your Stadium now? Otherwise it goes up when you install the preset.` If they already answered, report only what you actually observed — `already on your Stadium`, `uploaded just now`, or `will go up on install`. Never tell the user to import an IR by hand after a push reported success, and never promise the cab will sound — the push's "already" answer can be trusting (see 7d's wedge note).
 8. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
@@ -1166,6 +1214,11 @@ touching the tone:
 
 ## Forking a tone — use `library fork`
 
+> **If the fork's chain references a user IR, step 7d still applies.** This
+> section bypasses the numbered workflow, so nothing has offered to put that IR
+> on the device — make the same offer here before reporting the fork done.
+
+
 "Fork this tone", "make me an EC-1000 version", "same rig, different song" —
 there is a verb for this. Do NOT hand-roll it, and do NOT re-author from the
 tone's write-up.
@@ -1217,6 +1270,14 @@ that the legacy `-o` form discards the naming flags and writes no metadata —
 but don't rely on the guards: use the flags.
 
 ## Adjusting an existing tone (surgical edits)
+
+> **Patching a stock cab into an IR block reintroduces the "No Model" risk that
+> step 7d exists to prevent** — this path never runs it. After any edit that
+> adds or changes an `ir` reference, make step 7d's offer. If the hash was
+> passed through unregistered there is no `mapping.json` entry and therefore no
+> local WAV to push: `register-irs` it first, and say so rather than offering a
+> push that cannot work.
+
 
 When the user asks to *tweak* a tone you already generated (e.g. "brighter
 cab", "swap to a Plexi", "more delay", "kill the reverb"), do NOT regenerate

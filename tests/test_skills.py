@@ -1160,67 +1160,121 @@ def test_tone_skill_states_the_reachable_floor_at_authoring_time() -> None:
     assert re.search(r"cheap to act on right now and expensive later", flat)
 
 
-def test_tone_skill_pushes_referenced_irs_to_the_device() -> None:
-    """A locally-registered IR is not an IR on the device — separate inventories
-    joined by `irhash`, and one that never reached the hardware plays as a silent
-    "No Model" cab. The tone skill must PUSH referenced IRs (`device push-ir` is
-    idempotent and is itself the presence check) rather than telling the user to
-    import them by hand. Regressed as: agent picks an IR from `list-irs`, then
-    emits HX Edit/USB Librarian advice it never verified."""
+def test_tone_skill_offers_the_ir_push_rather_than_just_doing_it() -> None:
+    """Step 7d is the only hardware WRITE in an otherwise offline authoring skill,
+    and `favor_irs` seeds true — so an unconditional push would touch the user's
+    Stadium on a default install with no prompt. Every sibling side-effect here is
+    gated (git_commit_tones, reveal_in_finder), and step 9's device work is
+    offered. An IR pushed unasked is also not trivially reclaimable: `ir-prune`
+    protects IRs a local off-device tone references."""
     text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
-    assert "7d" in text, "tone: no step 7d for putting IRs on the device"
-    assert "device push-ir" in text, "tone: never pushes referenced IRs"
+    assert "7d" in text and "device push-ir" in text, "tone: no IR push step"
     assert re.search(
-        r"local.{0,80}not.{0,40}(on the (device|Stadium))", text, re.IGNORECASE | re.DOTALL
-    ), "tone: local-registry vs on-device distinction not drawn"
+        r"ASK FIRST.{0,60}hardware write", text, re.IGNORECASE | re.DOTALL
+    ), "tone: 7d does not ask before writing to the device"
+    assert re.search(
+        r"[Nn]ever push unasked", text
+    ), "tone: nothing forbids pushing without the user's agreement"
+    assert "ir-prune" in text, "tone: doesn't say why an unwanted push is costly"
+
+
+def test_tone_skill_does_not_claim_the_device_is_untouched() -> None:
+    """"When NOT to use" asserted "nothing in this skill touches the device" while
+    step 7d pushes IRs and step 9 runs `device normalize` — a flat self-
+    contradiction an agent gets no tiebreak for."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "nothing in this skill touches the device" not in text, (
+        "tone: stale claim contradicts steps 7d and 9"
+    )
+
+
+def test_tone_skill_guards_the_ir_hash_and_the_wedge() -> None:
+    """`push-ir` hashes the file it is handed and never sees the preset, so a WAV
+    changed since registration uploads under a DIFFERENT hash and the cab stays
+    silent while every exit code says success. And `push-ir --help`: an
+    "already on device" answer is deliberately trusting when its listing refresh
+    can't be confirmed, healing a wedge (#93) silently rather than warning."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "helixgen irhash" in text, "tone: no hash-drift check before pushing"
+    assert re.search(
+        r"#93", text
+    ), "tone: wedge case not named, so a silent cab reads as success"
+    assert re.search(
+        r"force-wedge", text
+    ), "tone: no recourse given for a wedged IR"
 
 
 def test_tone_skill_does_not_enumerate_device_irs_to_gate_the_push() -> None:
-    """`push-ir` resolves presence via the device's point lookup. The `-11`
-    container listing `device list-irs` reads is a cache watched-dir imports never
-    invalidate, so it can lag reality — and a real IR library runs to thousands of
-    entries. Enumerating to decide whether to push is both slower and less correct."""
+    """`push-ir` already takes a container listing plus a rename nudge internally,
+    so gating on `device list-irs` does that work twice. The reason matters: an
+    earlier draft justified this by IR-library SCALE using the 1605-entry LOCAL
+    registry, which is the exact local-vs-device conflation this change exists to
+    remove (the device held 33)."""
     text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
     assert re.search(
         r"do NOT run `device list-irs`", text, re.IGNORECASE
     ), "tone: doesn't forbid gating the push on a full device listing"
+    assert re.search(
+        r"redundancy, not scale", text
+    ), "tone: the no-enumeration rationale has drifted back to a scale argument"
 
 
 def test_librarian_import_advice_is_fallback_only() -> None:
-    """The 'load it via Librarian → Cab IRs → Import or you get No Model' line is
+    """The 'load it via Librarian -> Cab IRs -> Import or you get No Model' line is
     HX Edit/USB-path advice. Emitting it after a successful `device push-ir` states
     something false about the user's hardware, which is the bug this guards."""
     text = (SKILLS_ROOT / "setup" / "SKILL.md").read_text()
-    assert re.search(
-        r"ONLY when no device is reachable", text
-    ), "setup: Librarian advice not scoped to the no-device fallback"
-    assert re.search(
-        r"[Nn]ever emit that sentence after a successful push", text
-    ), "setup: nothing stops the false post-push Librarian claim"
+    assert re.search(r"ONLY when no device is reachable", text), (
+        "setup: Librarian advice not scoped to the no-device fallback"
+    )
+    assert re.search(r"[Nn]ever emit that sentence after a successful push", text), (
+        "setup: nothing stops the false post-push Librarian claim"
+    )
 
 
-def test_device_skill_does_not_claim_the_probe_is_a_slash_24() -> None:
-    """`device discover --help`: the subnet-probe range is derived from the
-    interface NETMASK ("a /22 is probed as a /22, not as a /24"), capped at 1024
-    addresses. The skill previously asserted "own /24 only", and a session read
-    that instead of the help and misdiagnosed a VPN split as the Stadium being on
-    another subnet."""
+def test_device_skill_describes_the_probe_range_accurately() -> None:
+    """`discover --help` documents a netmask-derived range capped at 1024 and
+    refusing non-RFC-1918. The skill once said "own /24 only" (wrong in general);
+    a later draft said "not a hardcoded /24" (wrong in particular — probe_network
+    falls back to /24 whenever the netmask can't be parsed, which is exactly what a
+    point-to-point VPN utun does). Both halves must be stated."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    assert not re.search(
-        r"own\s+\*{0,2}/24\s+only", text, re.IGNORECASE
-    ), "device: stale '/24 only' probe claim contradicts discover --help"
+    assert not re.search(r"own\s+\*{0,2}/24\s+only", text, re.IGNORECASE), (
+        "device: stale '/24 only' probe claim"
+    )
+    assert not re.search(r"not a hardcoded /24", text), (
+        "device: overcorrected — /24 IS the fallback when the netmask won't parse"
+    )
+    assert "1024" in text, "device: the 1024-address probe cap is unstated"
+    assert re.search(r"RFC ?1918", text), "device: RFC-1918 refusal unstated"
     assert re.search(
-        r"netmask", text, re.IGNORECASE
-    ), "device: probe range no longer explained as netmask-derived"
+        r"point-to-point", text, re.IGNORECASE
+    ), "device: the p2p/VPN netmask-parse fallback is unstated"
 
 
 def test_device_skill_names_the_vpn_default_route_discovery_trap() -> None:
     """Backlog #77: both mDNS and the subnet probe follow the DEFAULT-ROUTE
-    interface, so a VPN tunnel hides a LAN-attached Stadium. Without this, an
-    agent reads a failed discover as "device absent" and hands the user a
-    hand-typed --ip that goes stale on the next DHCP lease."""
+    interface, so a VPN tunnel hides a LAN-attached Stadium. A split-tunnel leaves
+    the default route looking clean while still misdirecting discovery, so the
+    default-route check alone yields false negatives."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     assert "VPN" in text, "device: VPN discovery trap not documented"
-    assert re.search(
-        r"default-route interface", text, re.IGNORECASE
-    ), "device: doesn't explain that discovery follows the default route"
+    assert re.search(r"default-route interface", text, re.IGNORECASE), (
+        "device: doesn't explain that discovery follows the default route"
+    )
+    assert re.search(r"[Ss]plit-tunnel", text), (
+        "device: no cover for the split-tunnel false negative"
+    )
+    assert not re.search(r"ifconfig en0", text), (
+        "device: hardcodes en0, wrong on Ethernet/dongle setups"
+    )
+
+
+def test_device_skill_does_not_claim_records_outlast_a_hand_passed_ip() -> None:
+    """A persisted record goes stale on a DHCP lease change exactly as a hand-typed
+    --ip does ("Run it once (and again whenever the device's DHCP lease changes)").
+    The real difference is recovery, not durability."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"both go stale on the next DHCP lease", text), (
+        "device: false durability asymmetry between --ip and the persisted record"
+    )

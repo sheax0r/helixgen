@@ -744,11 +744,14 @@ shell's cwd is usually **not** the catalog repo, so an unscoped
 by `irhash`, and a locally-registered IR that never reached the hardware plays
 as a silent cab showing **"No Model"**.
 
-**Don't warn about it — fix it.** `helixgen device push-ir <wav>` is idempotent
-and *is* the presence check (point lookup, not an enumeration), so pushing a
-referenced IR unconditionally is both correct and cheap. The full procedure —
-including what to do when the push fails — lives in the `tone` skill's step 7d,
-"Put any referenced user IRs on the device"; follow it there rather than
+**Don't warn about it blindly — offer to fix it.** `helixgen device push-ir
+<wav>` is idempotent and *is* the presence check (point lookup, not an
+enumeration), so putting a referenced IR on the Stadium takes about a second.
+But it is a **hardware write, so it is offered, never automatic** — an IR the
+user never wanted is not trivially reclaimable (`device ir-prune` protects IRs
+that a local off-device tone references). The full procedure — the ask, the
+hash check, and every failure mode — lives in the `tone` skill's step 7d,
+"Offer to put referenced user IRs on the device"; follow it there rather than
 duplicating it here.
 
 **Manual fallback — ONLY when no device is reachable.** Tell the user, in one
