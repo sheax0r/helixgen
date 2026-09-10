@@ -386,7 +386,8 @@ helixgen device move <name> --in <setlist> --to <N>
 ```
 
 `rm` drops the setlist's reference; the pool preset survives (and stays available
-to every other setlist that references it) unless you pass `--also-pool`.
+to every other setlist that references it) unless you pass `--also-pool` — and
+even then it refuses, naming the holders, if another setlist still references it.
 
 ### Names are identity, and ambiguity is an error
 
@@ -607,8 +608,9 @@ non-activating in-place content update; otherwise pool + reference at `--pos`
 `{ok, action: "created"|"updated", name, cid, pool_cid, posi, setlist, irs, errors}`.
 
 **`rm`** — drops the setlist reference. The pool preset survives unless
-`--also-pool`. Never orphans: a pool preset another setlist still references is
-kept even with `--also-pool`.
+`--also-pool`. **Never orphans:** if another setlist still references that pool
+preset, `--also-pool` **fails and names the holders** rather than deleting it —
+remove it there first. The setlist reference you asked for is still dropped.
 
 **`move`** — repositions within a setlist's reference order. This is a **device**
 reorder; it takes effect immediately and there is nothing local to update
