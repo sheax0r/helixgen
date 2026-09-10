@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — copy a tone onto the device, remove one, reorder a setlist, back up / restore. Drives the `helixgen device` CLI verbs (`device copy` / `device rm` / `device move` / `device backup` / `device restore`). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, the `device calibrate` source-level setup, the `normalization` profile), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`) for presets made on the hardware or in HX Edit. Runs after `tone` authored the `.hsp` file(s). Triggers on "put this on my Helix", "copy these presets to the device", "take this tone off my Helix", "reorder my setlist", "back up my Helix", "what changed on my device", "restore my presets", "find my Helix's IP", "level-match my snapshots", "normalize my tones", "calibrate my rig", "make my presets the same loudness", "clean up my IRs", "delete/duplicate a setlist", "I edited this on the amp, get it back into my library", "convert this preset to a .hsp".
+description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — copy a tone onto the device, remove one, reorder a setlist, back up / restore. Drives the `helixgen device` CLI verbs (`device copy` / `rm` / `move` / `backup` / `restore`). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, `device calibrate`), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`). Runs after `tone` authored the `.hsp`. Triggers on "put this on my Helix", "copy these presets to the device", "take this tone off my Helix", "reorder my setlist", "back up my Helix", "what changed on my device", "restore my presets", "find my Helix's IP", "normalize my tones", "calibrate my rig", "clean up my IRs", "delete/duplicate a setlist", "I edited this on the amp, get it back into my library".
 ---
 
 # device
@@ -218,8 +218,8 @@ Two things do persist locally, and neither is intent:
   Git-tracked, and the input to `device restore`.
 
 **The photograph is a record, not a control surface.** Hand-editing
-`setlists/Gigs.json` changes nothing on the device — order is device state, set
-with `--pos` on `device copy` and with `device move`. Reading the snapshot to
+`setlists/Gigs.json` changes nothing on the device. **Order is device state**, set with `--pos` on
+`device copy` and with `device move`. Reading the snapshot to
 answer "what did this look like last Tuesday" is exactly right; editing it to
 try to *cause* a change is the one way to misuse this design.
 
@@ -1229,8 +1229,8 @@ inaudible on-device (`set-param` warns) — keep editing per-snapshot.
 
 Most of this skill only talks to the device, but two paths write **local**
 files: registering an IR to fix an `errors[]`/`irs[]` unregistered-IR entry
-(changes `mapping.json` in the IR library) and `device slots restore`
-re-authoring a tone's `.hsp` in the preset output dir. When either happens,
+(changes `mapping.json` in the IR library) and `device to-hsp` writing a
+tone's `.hsp` back into the library. When either happens,
 commit the changed file(s) if the containing directory is git-managed:
 
 1. **Detect per-directory** — `git -C <dir> rev-parse --is-inside-work-tree`
@@ -1253,101 +1253,100 @@ Keep every git command scoped with `-C <dir>` (as in step 1) — your shell's
 cwd is usually **not** the directory that changed, so an unscoped
 `git add`/`commit` targets the wrong repo.
 
-This is separate from `device sync` itself, which only ever touches the
+This is separate from the device verbs themselves, which only ever touch the
 device — it applies just to these two local-write side paths.
 
 ## Workflow
 
-### 1. Get the tones into a setlist, confirm it exists on the device
-
-1. **Membership:** for each tone the user wants, `device setlist add <setlist>
-   <tone.hsp>` (skip any the `tone` skill already added). `device setlist list`
-   shows the current membership.
-2. **Device-side setlist:** if the target setlist isn't already on the Stadium,
-   create it right from here: `helixgen device setlist create <name>` (#8
-   shipped — no Stadium app needed). Syncing an existing setlist like a
-   factory `user` setlist needs no creation step.
-
-### 2. Sync
+### 1. Copy the tones on
 
 ```bash
-helixgen device sync <setlist> --json
+helixgen device copy <tone.hsp> --to <setlist> --json
 ```
 
-A single sync locks itself (auto-acquired `library`+`irs` lease — see
-**Device locks**). If this is a longer session — several setlists, sync plus
-IR housekeeping, expected re-runs — take a session lease first (`device lock
---scope library --scope irs --label "<what>" --ttl 900`), carry the printed
-`HELIXGEN_LOCK_TOKEN` on every verb, and release with a token-prefixed
-`device unlock` when done.
+One call per tone. No membership step, no registration, no manifest. If the
+setlist isn't on the device yet, `helixgen device setlist create <name>` first
+(the error names it).
 
-The engine reconciles the pool (install/update/skip), rebuilds the setlist's
-references in manifest order, and uploads each tone's IRs. **Order comes from the
-manifest** — `device setlist add --pos` / the manifest order sets it; a later
-sync will reorder the device right back to that recorded order. For a direct,
-immediate device-side move that bypasses the manifest entirely — e.g. reordering
-an *untracked* preset, or a quick one-off nudge you don't want `sync` to
-remember — use `helixgen device reorder <setlist> <target> --to <N>` instead.
+A single call locks itself. For a longer session — several tones, plus IR
+housekeeping — take a session lease first (`device lock --scope library --scope
+irs --label "<what>" --ttl 900`), carry the printed `HELIXGEN_LOCK_TOKEN` on
+every verb, and release with a token-prefixed `device unlock`.
 
-### 3. Read the result, fix `errors[]`, re-run
+**Order:** `--pos N` places the reference; omitting it appends. An **occupied**
+position is **refused**, not inserted — stacking two references at one position
+is uncataloged device behavior (#69). To place into an occupied spot, copy it
+(appending), then `device move <name> --in <setlist> --to N`.
 
-The result dict's `errors[]` is your analysis. Fix that subset and re-run
-(re-syncing is idempotent — installed tones are skipped):
+### 2. Read each result
 
-- **`could not resolve helixgen model 'X'`** — a block model doesn't bridge to
-  the device; that tone isn't installable as-is. Report it.
-- **unregistered IR** (cab silent / "No Model") — `register-irs` the WAV, re-sync (see **Git-commit local artifact changes** above).
-- **dropped connection / device unresponsive** — not a tone failure; **re-run**
-  the sync, and if it keeps dropping, **reboot the Helix** and re-run.
-- **If you delegate the run to a subagent, keep it tight:** sync *this* setlist;
-  report `pool`/`references`/`errors` verbatim; no improvising. Then check the
-  device yourself.
+Each call returns `{ok, action, name, cid, pool_cid, posi, setlist, irs, errors}`.
+`action` is `"created"` or `"updated"` — that's your confirmation the upsert did
+what you expected. `ok` reports the **preset** write; a failed IR shows in
+`errors[]` without failing the copy (the cab will be silent until you fix it).
 
-### 4. IRs — usually automatic
+Fixes, by failure — see "Why a copy fails" above for the full list:
 
-`device sync` uploads each tone's referenced IRs first (instant registration
+- **`could not resolve helixgen model 'X'`** — not installable as-is; report it.
+- **ambiguous name** — pass `--cid` from the listed candidates, or rename one.
+- **unregistered IR** — `register-irs` the WAV, then re-copy (see **Git-commit
+  local artifact changes**).
+- **dropped connection** — re-run the same call; reboot the Helix if it persists.
+
+### 3. IRs — usually automatic
+
+`device copy` uploads each tone's referenced IRs first (instant registration
 under the tone's exact hash), so **you normally do nothing**. Two caveats:
 
-- An IR that isn't in your local `mapping.json` can't be resolved — it shows up
-  as a per-IR note in the result (`irs[]`) and the cab will be silent. Register it
-  first (`helixgen register-irs`) or import it in HX Edit, then re-sync.
-- `--exclude-irs` skips IR upload entirely (use only if the IRs are already known
-  to be on the device and you want a faster run).
+- An IR that isn't in your local `mapping.json` can't be resolved — it appears in
+  the result's `irs[]` and the cab will be silent. Register it first
+  (`helixgen register-irs`) or import it in HX Edit, then re-copy.
+- `--no-irs` skips IR upload entirely — only when the IRs are known to be on the
+  device already and you want a faster call.
 
-### 5. Back up / restore
+### 4. Photograph the device
 
-- **Back up the pool or a named setlist:** `helixgen device backup
-  [--setlist <user|factory|NAME>]` pulls the pool (`user`, default) — or the
-  presets a named device setlist references, in setlist order — to local
-  `.sbe` files + `manifest.json` (then works offline via `device local-list`).
-- **Put a recorded tone back:** `helixgen device slots restore <name-or-slot>` —
-  re-authors an `.hsp`-sourced entry or re-pushes an `.sbe`-sourced one
-  (`--setlist` takes `user`/`factory`/a device setlist name here too). Tones
-  recorded from `save` (edit buffer) or `create` (on-device copy) have no local
-  source and can't be restored this way — back them up first. `--force` pushes
-  into an occupied **pool** slot (the occupant is not deleted), but an occupied
-  **named-setlist** position is refused even with `--force` (0.27.0) — the
-  error identifies the incumbent reference (by cid); proceeding would stack a
-  second reference at one position. Remove the incumbent reference first (`device delete <cid>
-  --setlist <name>`), then re-run. A re-authored
-  `.hsp` is a local file change — see **Git-commit local artifact changes**
-  above.
-- **Recover a preset the user edited on the amp:** `helixgen device to-hsp <CID>
-  -o <name>.hsp` (or point it at the `.sbe` a `device backup` already wrote).
-  See "The other direction" above for what survives and what doesn't.
+After a session of changes, take a backup so the state is recoverable and the
+diff is readable:
+
+```bash
+helixgen device backup --dry-run     # what drifted since the last photograph?
+helixgen device backup               # write it
+git -C ~/.helixgen diff              # read the change (textconv renders .sbe)
+git -C ~/.helixgen add -A backup && git -C ~/.helixgen commit -m "device: <what>"
+```
+
+Committing the backup is the user's call, not an automatic engine action — offer
+it, don't assume it. This is also how you answer "what changed on my Helix?":
+`backup --dry-run` against live, or `git log`/`git diff` against history.
+
+### 5. Restore
+
+```bash
+helixgen device restore --dry-run                 # always first
+helixgen device restore [--from <git-ref>] [--setlist <name>]
+```
+
+For a wiped device, a bad experiment, or "put it back the way it was Tuesday"
+(`--from HEAD~3`). Additive-and-update by default.
+
+> **`--prune` deletes device presets absent from the snapshot.** Show the user
+> the `--dry-run` plan and get explicit confirmation first. No undo.
+
+To recover a preset the user edited **on the amp**, don't restore — pull it into
+the library: `helixgen device to-hsp <CID> -o <name>.hsp`. See "The other
+direction" for what survives.
 
 ### 6. Report back
 
 Tightly:
-1. **What's on the device now** — the setlist and its tones in order (from the
-   result's `references` / `device setlist list`).
-2. **Pool changes** — installed / updated / skipped counts (and any `gc` deletions
-   if you ran `--all --gc`).
-3. **What errored and the fix** — each `errors[]` entry with its remedy
-   (unresolvable model, register an IR, or
-   re-run/reboot for a dropped connection).
+1. **What's on the device now** — the setlist and its tones in order
+   (`device setlist list`).
+2. **What you changed** — created vs updated, per tone.
+3. **What errored and the fix** — each failure with its remedy.
 4. **IRs** — uploaded vs any that couldn't be resolved (so the user registers
    them).
+5. **Whether it's backed up** — and offer to commit if not.
 
 ## Failure playbook — the exact errors
 
@@ -1368,31 +1367,31 @@ Tightly:
 
 | Mistake | Fix |
 |---|---|
-| Parsing `.hsp` files (`json.loads`, magic-strip) to classify tones | Never parse `.hsp` bytes — just run the sync; `errors[]` is the classification |
-| `view`-ing every tone / listing factory presets **before** the sync | The sync reports failures — run it, analyze `errors[]` after |
-| Looking for a "template" or checking factory-preset "coverage" | There are no templates — install is a faithful, template-free transcode; just sync |
-| Hand-rolling a per-preset install loop | Use `device sync <setlist>` — it reconciles the pool, rebuilds references, and uploads IRs in one call |
+| Parsing `.hsp` files (`json.loads`, magic-strip) to classify tones | Never parse `.hsp` bytes — just copy them; the per-call result tells you what failed |
+| `view`-ing every tone / listing factory presets **before** copying | Copy first — each call reports its own failure. Analysis up front is wasted work |
+| Looking for a "template" or checking factory-preset "coverage" | There are no templates — a copy is a faithful, template-free transcode |
+| Reaching for a whole-library sync | There isn't one. `device copy <tone.hsp> --to <setlist>` per tone — it upserts and uploads IRs in one call |
+| Looking for `device add` / `unsync` / `setlist add` / `helixgen register` to "register" a tone first | All retired. There is nothing to register — copy the file |
+| Reading or migrating `~/.helixgen/setlists/manifest.json` | It's dead. If one exists, the migration is `device backup` → commit → delete it |
+| Hand-editing `~/.helixgen/backup/<serial>/setlists/*.json` to change the device | That's a photograph, not a control surface. Use `device move` / `device rm` |
 | Telling the user to create a setlist in the Stadium app | Not needed any more — `device setlist create <name>` creates it on the device (#8 shipped) |
-| Hand-editing `~/.helixgen/setlists/manifest.json` | Manage it with `register` / `device add` / `device unsync` / `device setlist add/remove` (or the `tone` skill) |
+| Guessing which preset a duplicate name means | Ambiguity is a hard error listing the competing cids — pass `--cid`, or rename one. Never guess |
+| Passing `--pos N` at an occupied position and expecting an insert | It's refused (#69) — copy (appending), then `device move <name> --in <setlist> --to N` |
+| Assuming `device copy` leaves a cab silent unless you ask for IRs | IRs upload **by default** — `--no-irs` is the opt-out (the reverse of the retired `install --auto-irs`) |
+| Running `device restore --prune` without showing the plan | `--prune` deletes device presets absent from the snapshot and has no undo — always `--dry-run` and confirm first |
+| Re-copying a tone the user has been editing on the amp | The copy overwrites the device preset with the local `.hsp`. Pull the hardware edits back first (`device to-hsp`), or ask |
 | Passing `--no-lock` because a verb reported a lock holder | The holder message means another agent/process is mid-write on the device — wait/retry or coordinate; `--no-lock` is only ever used on the user's explicit direction |
 | Running a long multi-verb device flow (full sync session, bulk IR housekeeping) without a session lease | `device lock --scope <s> --label "<what you're doing>" --ttl <covers the flow>`, carry the printed `HELIXGEN_LOCK_TOKEN` on every verb, `device unlock` at the end |
 | Holding a session lease past the end of the flow (letting it expire on its own) | A token-prefixed `HELIXGEN_LOCK_TOKEN=<token> helixgen device unlock` releases it immediately — run it when the flow ends, including on failure paths (bare `device unlock` from a fresh shell can't prove ownership and keeps the lease) |
-| Expecting `device sync` to touch presets helixgen didn't place | It won't — sync is a managed-set mirror keyed by tone name; untracked device presets are never moved, deleted, or overwritten |
-| Pre-checking whether a tone is already in a setlist before adding it | Don't — a tone belongs in as many setlists as you want (shared, referenced once in the pool). `device setlist add` is idempotent within a setlist and only errors on a name/different-file collision. Just add it |
-| Reading helixgen **source** (`SetlistManifest`, the manifest schema, engine internals) to confirm behavior or guard against "version drift" | Don't source-dive. The engine is the uv-tool-installed helixgen-core package, **not** any checkout in the working directory — so reading cwd source can *mislead* about the actual version/schema. Per-verb `--help`, `device setlist list`, the sync **result dict**, and `docs/CLI.md` are the authoritative contract (see "Where the answers live" above); operate through them |
-| Expecting sync to wipe the setlist like the old mirror | It doesn't — it reconciles pool + references and never orphans; GC only on `--all --gc` |
-| Diagnosing a dropped connection as a coverage failure | It's the flaky network stack — re-run the sync, reboot the Helix if it persists |
-| Ignoring the `errors[]` in the sync result | That list *is* the remaining work — read it, fix each, re-sync |
-| `device install` without `--auto-irs` when the tone references IRs | The CLI flag is opt-in (unlike the old MCP default) — pass `--auto-irs`, or the cab is silent until the IR reaches the device |
-| Expecting `device install` to reconcile a whole setlist | It installs/records **one** tone but doesn't rebuild a setlist's full reference order the way `device sync <setlist>` does — use sync for batch/whole-setlist work |
+| Reading helixgen **source** to confirm behavior or guard against "version drift" | Don't source-dive. The engine is the uv-tool-installed helixgen-core package, **not** any checkout in the working directory — so reading cwd source can *mislead* about the actual version. Per-verb `--help`, `device setlist list`, the call's result dict, and `docs/CLI.md` are the authoritative contract (see "Where the answers live" above) |
+| Diagnosing a dropped connection as a coverage failure | It's the flaky network stack — re-run the same call, reboot the Helix if it persists |
 | Hunting for the device's IP by hand (router UI, arp scans) or assuming a default address exists | Run `helixgen device discover` once — it persists the record and every verb resolves it; there is no built-in default IP (0.24.0), and a missing address fails fast pointing at discover |
-| Treating `device normalize` as a device write, or skipping the sync after `--yes` | Normalize writes trims into the **local `.hsp` only** — the device copy is untouched until the next `device sync <setlist>` / `device install`; and it's dry-run by default — show the user the dry-run report before `--yes` |
-| Re-measuring to confirm a trim **before syncing it** | `--yes` writes the local `.hsp` only, so the hardware is still at the old level and the re-measure reads "no change" — sync/install first, *then* re-measure (the taps ARE downstream of the output gain, so a landed trim moves `gain_db` by the written amount) |
+| Treating `device normalize` as a device write, or skipping the copy after `--yes` | Normalize writes trims into the **local `.hsp` only** — the device preset is untouched until the next `device copy`; and it's dry-run by default — show the user the dry-run report before `--yes` |
+| Re-measuring to confirm a trim **before copying it** | `--yes` writes the local `.hsp` only, so the hardware is still at the old level and the re-measure reads "no change" — copy first, *then* re-measure (the taps ARE downstream of the output gain, so a landed trim moves `gain_db` by the written amount) |
 | Level-matching across presets/setlists with the default anchor (no `--target-db`) | The anchor equalizes within one scope only, and on snapshot scope can drag a preset to its quietest snapshot's level — always pass one explicit absolute `--target-db` and reuse it across runs (see the field-proven guidance above) |
 | Trying to fix a target whose chain-out `output_db` is over 0 dBFS with normalize | The clipping happened inside the chain, upstream of the output block the trim moves — a level trim pulls the reading down without undoing the distortion; fix the chain's gain staging (amp/drive levels, `tone` skill), then re-run |
 | Calibrating in `sample` mode and never checking which output device the audio leaves by | The Stadium is itself a USB interface and steals the system default output — the stimulus never reaches the jack and every window reports "not enough playing". It is the most likely first-run failure; pin the output device before debugging anything else |
 | Running a `sample`-mode normalize on someone else's calibration (different guitar, moved knob, new cable) | The trims become an artifact of the wrong source level — instruments differ by 10+ dB. `normalize` warns; re-run `device calibrate` rather than dismissing it |
 | Chasing an unreachable target with more level | The preflight already said it: `measured + 20` is the ceiling, and above it the fix is the amp's `ChVol`, not the output block (raising the output ~40 dB raises the noise floor with it) |
-| Running the post-normalize `device sync` without checking for hardware-side edits | Sync re-pushes every managed tone whose content hash differs and overwrites device-side edits never pulled back — warn the user first (see the WARNING above) |
 | Measuring a looper-replayed signal with the default input gate | The input jack is silent while a front-of-chain looper replays, so the default gate credits nothing and the window fails — pass `--source loop` (and compare raw `output_db`, not `gain_db`, across targets) |
-| Reaching for `slots restore --force` to overwrite an occupied setlist position | `--force` only covers an occupied **pool** slot; an occupied named-setlist position is refused (the error identifies the incumbent by cid) — `device delete <cid> --setlist <name>` the incumbent reference first, then re-run |
+| Reaching for a `--force` to overwrite an occupied setlist position | There isn't one — an occupied named-setlist position is refused (#69, the error identifies the incumbent by cid). `device rm <name> --from <setlist>` the incumbent first, or copy and `device move` |

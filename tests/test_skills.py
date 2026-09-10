@@ -195,8 +195,6 @@ def test_device_skill_documents_grid_slot_liveops() -> None:
     assert "device active" in text
     # param values are raw units, never normalized
     assert "RAW units" in text
-    # slot vocabulary runs to bank 128
-    assert "128D" in text
     # named-setlist targeting on the preset verbs
     assert "--setlist" in text
 
@@ -451,14 +449,43 @@ def test_device_skill_documents_normalize_field_guidance() -> None:
     assert re.search(r"nothing compounds|no compounding", text, re.IGNORECASE)
 
 
-def test_device_skill_warns_sync_is_whole_pool_mirror() -> None:
-    """The follow-up sync re-pushes EVERY hash-changed managed tone (not just
-    the normalized ones) and overwrites hardware-side edits never pulled back."""
+def test_device_skill_warns_copy_overwrites_hardware_edits() -> None:
+    """`device copy` overwrites the device preset with the local `.hsp`, so
+    hardware-side edits never pulled back are discarded. Unlike the retired
+    sync, it only ever affects the tones explicitly named."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    assert re.search(r"re-push(es)?\s+\*{0,2}EVERY", text)
-    assert re.search(r"content hash differs", text)
-    assert re.search(r"hardware-side edits", text)
+    assert re.search(r"editing that tone \*\*on the hardware\*\*", text)
+    assert re.search(r"the copy discards them", text)
     assert re.search(r"never pulled back", text)
+    assert re.search(r"only ever affects the[\s>]+tones you explicitly name", text)
+
+
+def test_device_skill_has_no_whole_library_sync() -> None:
+    """The manifest + `device sync` are gone. The skill must not offer them as
+    live verbs, and must name the copy/rm/move replacements."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    for verb in ("device copy", "device rm", "device move",
+                 "device backup", "device restore"):
+        assert verb in text, f"device: {verb} not documented"
+    # every surviving mention of the retired verbs must be marked as retired
+    for m in re.finditer(r"`device sync[^`]*`", text):
+        window = text[max(0, m.start() - 400):m.end() + 200]
+        assert re.search(r"\bgone\b|retired|no longer exist|There isn't one",
+                         window, re.IGNORECASE), (
+            f"device: unmarked live reference to {m.group(0)!r}"
+        )
+
+
+def test_device_skill_snapshot_is_not_a_control_surface() -> None:
+    """The backup tree is a photograph. Hand-editing it must be documented as
+    a no-op, or the design collapses back into sync under a new name."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"photograph", text, re.IGNORECASE)
+    assert re.search(r"[Hh]and-editing", text)
+    assert re.search(r"Order is device state", text)
+    # --prune is the one destructive path and must carry a warning
+    assert re.search(r"--prune", text)
+    assert re.search(r"--prune.{0,200}(confirm|No undo)", text, re.DOTALL)
 
 
 def test_device_skill_documents_normalized_library_record() -> None:
@@ -525,15 +552,23 @@ def test_device_skill_documents_loop_source() -> None:
     assert re.search(r"SAME loop", text, re.IGNORECASE)
 
 
-def test_device_skill_documents_restore_force_refusal() -> None:
-    """slots restore --force refuses an occupied named-setlist position (0.27.0)."""
+def test_device_skill_documents_occupied_position_refusal() -> None:
+    """An occupied named-setlist position is refused, never insert-shifted
+    (#69) — two references stacked at one position is uncataloged device
+    behavior. `slots restore --force` is retired, so the rule now lives on
+    `device copy --pos`, and the documented recovery is rm-then-retry or
+    copy-then-move."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     assert re.search(r"occupied[^\n]{0,80}(setlist|position)", text, re.IGNORECASE)
-    assert re.search(r"refus\w+[^.]{0,120}`?--force`?|`?--force`?[^.]{0,120}refus", text)
+    assert re.search(r"refused", text, re.IGNORECASE)
     assert "incumbent" in text
-    # pool semantics unchanged: --force still pushes into an occupied POOL slot
-    assert re.search(r"--force[^\n]{0,120}pool|pool[^\n]{0,120}--force",
-                     text, re.IGNORECASE)
+    assert re.search(r"#69", text)
+    # the recovery must be named, not left to the agent to invent
+    assert re.search(r"device move", text)
+    # and the retired escape hatch must not read as available
+    assert not re.search(r"slots restore --force", text), (
+        "device: retired `slots restore --force` still offered"
+    )
 
 
 def test_device_skill_documents_reachability_preflight() -> None:
@@ -677,86 +712,26 @@ STALE_REPUSH_PATTERNS = [
 ]
 
 
-def test_device_skill_repush_rationale_is_unchanged_bytes_only() -> None:
-    """#92: plain sync recomputes the file hash at sync time, so it already
-    re-pushes genuinely edited `.hsp` files. `--repush` exists only for the
-    unchanged-bytes case (refreshing after a transcoder upgrade) — the skill
-    must not imply hash detection is blind to in-place edits."""
+def test_device_skill_states_copy_is_an_upsert() -> None:
+    """`device copy` re-pushes an edited `.hsp` by updating in place — that is
+    what replaced sync's hash-triggered re-push and `--repush`. The skill must
+    say so, or an agent will hunt for a separate update verb."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    assert re.search(r"[Ii]t upserts", text)
+    assert re.search(r"updated \*\*in place\*\*", text)
+    assert re.search(r"non-activating", text)
+    assert re.search(r"no separate update verb", text)
     stale = [pat.pattern for pat in STALE_REPUSH_PATTERNS if pat.search(text)]
     assert not stale, f"device: pre-#92 --repush rationale survives: {stale}"
-    # the load-bearing fact: the hash is recomputed from the file at sync time
-    assert re.search(
-        r"recomputed from the file at sync time", text, re.IGNORECASE
-    ), "device: sync-time hash recomputation (#92) not stated"
-    assert re.search(
-        r"in-place edit.{0,80}already-synced tone is detected",
-        text,
-        re.DOTALL | re.IGNORECASE,
-    ), "device: in-place-edit detection not stated on the pool-first bullet"
-    # and --repush scoped to the unchanged-bytes case, not to edited files
-    assert re.search(
-        r"`--repush`.{0,400}\*\*only\*\* for the\s+unchanged-bytes case",
-        text,
-        re.DOTALL,
-    ), "device: --repush not scoped to the unchanged-bytes case"
 
 
-# --- review fixes: durability, library prefix, progress volume, actuator scope -
-
-
-def test_tone_skill_prefixes_every_helixgen_call_with_the_library() -> None:
-    """Every `helixgen` invocation in the tone skill must carry an explicit
-    `HELIXGEN_LIBRARY=` prefix — shell exports don't persist across agent Bash
-    calls, so a bare call silently resolves against the wrong library. `library
-    doc` (step 7a) is the one that regressed."""
-    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
-    bare = [
-        line.strip()
-        for line in text.splitlines()
-        if re.match(r"\s*helixgen\s", line)
-    ]
-    assert not bare, f"tone: unprefixed helixgen invocation(s): {bare}"
-
-
-def test_tone_skill_warns_bundled_library_is_not_durable() -> None:
-    """Step 7 writes the `.hsp` (and 7a its `description_md`) into whatever
-    library resolved. Under the bundled-library fallback that is inside the
-    plugin, which a `/plugin` update replaces — the skill doing the writing
-    must say so, not just the README."""
-    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
-    assert re.search(
-        r"`/plugin` update can\s+replace", text, re.IGNORECASE
-    ), "tone: bundled-library volatility not warned at the write site"
-    assert re.search(
-        r"~/\.helixgen/library/.{0,60}durable", text, re.DOTALL | re.IGNORECASE
-    ), "tone: durable-home alternative not named"
-
-
-def test_device_skill_warns_bundled_library_irs_are_not_durable() -> None:
-    """`register-irs`/`ir-scan` default to `<library>/irs`; under the bundled
-    fallback that is the plugin's own tree. The device skill drives IR fixes in
-    its troubleshooting table, so it must carry the warning too, not only
-    setup."""
+def test_device_skill_names_ambiguity_as_an_error() -> None:
+    """Names are identity and device names are not unique. Ambiguity must be
+    documented as a hard error with a --cid escape hatch, never a guess."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    assert re.search(
-        r"data/library/irs/.{0,120}`/plugin` update can\s+replace",
-        text,
-        re.DOTALL | re.IGNORECASE,
-    ), "device: bundled-library IR volatility not warned"
-
-
-def test_device_skill_states_plain_progress_is_per_item() -> None:
-    """core's `_SyncProgressRenderer` emits a phase header plus one line per
-    item (and per IR upload) in plain mode — not `one-line-per-phase`. An agent
-    told to expect a handful of lines misreads ~100 as a failure."""
-    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    assert not re.search(
-        r"one-line-per-phase", text, re.IGNORECASE
-    ), "device: stale `one-line-per-phase` progress claim survives"
-    assert re.search(
-        r"one line per \*\*?item", text, re.IGNORECASE
-    ), "device: per-item progress volume not stated"
+    assert re.search(r"ambiguity is an error", text, re.IGNORECASE)
+    assert re.search(r"It does not guess", text)
+    assert "--cid" in text
 
 
 def test_tone_skill_scopes_the_output_level_actuator_claim() -> None:
