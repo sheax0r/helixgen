@@ -35,7 +35,7 @@ brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.51.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
+The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.52.0'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
 
 **Using the Python CLI directly** (no plugin)? Same binary — see [`docs/CLI.md`](docs/CLI.md). A standalone install starts with an empty library at `~/.helixgen/library/`, so seed it first with `helixgen bootstrap` (the plugin's skills instead point `HELIXGEN_LIBRARY` at the bundled `data/library`).
 
@@ -59,7 +59,7 @@ In Claude Code, ask the skill to register an IR — it runs `helixgen register-i
 
 **Prerequisite for direct IR hashing:** computing an IR's hash from a WAV (`register-irs <wav>`, `ir-scan`) needs **libsndfile** (`brew install libsndfile` on macOS; `apt install libsndfile1` on Debian/Ubuntu). Only 48 kHz sources are supported for direct hashing.
 
-**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be on the device. Over the LAN, helixgen uploads it for you — `helixgen device sync` and `device install --auto-irs` push each referenced IR automatically (and `device push-ir` does one by hand); if you load presets via HX Edit/USB instead, import the WAV via the Stadium app's **Librarian → Cab IRs → Import**. If a slot displays "No Model" on the device after loading a preset, that IR isn't on the device yet.
+**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be on the device. Over the LAN, helixgen uploads it for you — `helixgen device copy` pushes each referenced IR automatically (and `device push-ir` does one by hand); if you load presets via HX Edit/USB instead, import the WAV via the Stadium app's **Librarian → Cab IRs → Import**. If a slot displays "No Model" on the device after loading a preset, that IR isn't on the device yet.
 
 See [`ir-hash-algorithm.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/ir-hash-algorithm.md) for the hash algorithm and the field-validated reference implementation.
 
@@ -101,7 +101,7 @@ helixgen device delete 930               # remove a preset
 helixgen device pull 904 backup.sbe      # back up a preset's raw content blob
 helixgen device backup --setlist user    # back up a whole setlist to local files
 helixgen device push backup.sbe "Clone" --pos 7   # restore/clone a backup
-helixgen device install MyTone.hsp "My Tone" --pos 7   # author a helixgen .hsp onto the device (EXPERIMENTAL)
+helixgen device copy MyTone.hsp --to Gigs --pos 7      # copy a helixgen .hsp onto the device (EXPERIMENTAL)
 helixgen device list-irs                 # impulse responses on the device (name + hash)
 helixgen device push-ir cab.wav          # upload an IR (SFTP; device auto-registers) (EXPERIMENTAL)
 helixgen device pull-ir "cab.wav" out.wav  # download an IR by on-device filename (EXPERIMENTAL)
@@ -119,7 +119,7 @@ IR transfer uses the editor's own SFTP identity (located from your installed Hel
 app, never bundled) — see [`helix-sftp-access.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/helix-sftp-access.md).
 Needs the `paramiko` from the `[device]` extra.
 
-`device install` is the **`/tone` → playable-on-your-amp** path: it transcodes
+`device copy` is the **`/tone` → playable-on-your-amp** path: it transcodes
 a helixgen-authored `.hsp` directly into device content and installs a new,
 playable preset — no editor, no file import, no template (full fidelity:
 dual-amp, parallel splits, snapshots, footswitch/EXP assignments).

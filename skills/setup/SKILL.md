@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.51.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.52.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -101,10 +101,10 @@ overrides, as does `HELIXGEN_LOCKS` (the device-lock lease root; see the
 
 **The helixgen home (`$HELIXGEN_HOME`, 0.22.0).** `$HELIXGEN_HOME` (default
 `~/.helixgen`) is the root of what the engine persists — the block library,
-IRs, the setlists manifest (now at `setlists/manifest.json`), per-device
+IRs, the device backups (`backup/<serial>/`), per-device
 observed state (`devices/`), and device-lock leases (`locks/`) all derive
 their default location from it, and the per-area env vars
-(`HELIXGEN_LIBRARY`, `HELIXGEN_IRS`, `HELIXGEN_SETLISTS`, `HELIXGEN_LOCKS`)
+(`HELIXGEN_LIBRARY`, `HELIXGEN_IRS`, `HELIXGEN_BACKUP`, `HELIXGEN_LOCKS`)
 win over the home-derived default when set. **Since core 0.29.0 it is a
 one-knob isolation switch:** `preferences.json` and the IR-hash cache follow
 `$HELIXGEN_HOME` too (they anchored to the real `~/.helixgen` in earlier
@@ -117,9 +117,12 @@ finer-grained overrides that win over the home. Two engine
 behaviors to not be surprised by: on its first write
 the engine **auto-initializes the home as a git repo** (whenever `git` is on
 PATH; a missing git only warns — nothing fails) with `devices/`, `cache/`,
-`locks/`, and IR audio gitignored, and it **auto-commits manifest saves**
-there, gated by the `git_commit_tones` preference (`"false"` skips the
-commits). That home repo is the engine's — don't hand-manage it; the
+`locks/`, and loose IR audio gitignored — with a carve-out so a device
+backup's own `backup/*/irs/*.wav` IS tracked — and it **auto-commits library
+saves** there, gated by the `git_commit_tones` preference (`"false"` skips the
+commits). Device backups are committed by the user, not automatically: `device
+backup` writes the tree, and `git -C ~/.helixgen diff` is how you read what
+changed on the Helix since the last one. That home repo is the engine's — don't hand-manage it; the
 git-commit guidance later in this skill is about the *IR library* directory,
 which is a different, user-owned location.
 
@@ -166,13 +169,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.51.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.52.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.51.0'
+  uv tool install 'helixgen[device]==0.52.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -471,9 +474,9 @@ offered `helixgen library migrate` — a one-shot, idempotent migration into the
 new layout. The stderr warning about deprecated `instruments` /
 `preset_output_dir` keys (above) is the usual trigger. It:
 
-- moves each manifest tone's `.hsp` into `library/tones/<slug>.hsp` under the
-  new naming schema, folds a sibling `.md` into `description_md`, writes
-  per-tone metadata JSON, and re-keys the manifest;
+- moves each tone's `.hsp` into `library/tones/<slug>.hsp` under the new
+  naming schema, folds a sibling `.md` into `description_md`, and writes
+  per-tone metadata JSON;
 - **copies** (never moves) each mapped IR WAV into `library/irs/<pack>/` with a
   scaffolded metadata sidecar, and rewrites `mapping.json`;
 - seeds a guitar profile from each `preferences.instruments` entry;
@@ -764,8 +767,8 @@ sentence:
 …then list the IR basenames the preset references so the user can verify.
 **Never emit that sentence after a successful push** — it is HX Edit/USB
 Librarian advice, and repeating it once the IR is demonstrably on the device is
-simply false. (The LAN install path covers itself separately: `device sync` and
-`device install --auto-irs` upload referenced IRs at install time. Pushing at
+simply false. (The LAN path covers itself separately: `device copy` uploads
+referenced IRs by default. Pushing at
 generation time is what makes the IR present *before* that, so the user can load
 the preset straight from the hardware.)
 

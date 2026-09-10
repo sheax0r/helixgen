@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.51.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.52.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -542,9 +542,9 @@ By default, wire the chain for live use: give every toggle-able effect a footswi
 
 If the user says "no footswitches" or "leave the controls alone," skip this step.
 
-**MIDI CC control (only on request):** if the user wants a param or bypass driven by an external MIDI controller / DAW, add a top-level `midi` list (see the `docs/recipe-reference.md` "MIDI CC control" section) — each `{"cc": 0-127, "targets": [...]}` sweeps a param (`{"block", "param", "min", "max"}`) or toggles a bypass (`{"block", "bypass": true}`). CC-only, EXPERIMENTAL, and realized on `device install`/`sync`. Do **not** auto-wire MIDI by default — only when asked; it does not consume the FS/EXP budget, and a `(block, param)` still gets only one controller across FS/EXP/MIDI.
+**MIDI CC control (only on request):** if the user wants a param or bypass driven by an external MIDI controller / DAW, add a top-level `midi` list (see the `docs/recipe-reference.md` "MIDI CC control" section) — each `{"cc": 0-127, "targets": [...]}` sweeps a param (`{"block", "param", "min", "max"}`) or toggles a bypass (`{"block", "bypass": true}`). CC-only, EXPERIMENTAL, and realized on `device copy`. Do **not** auto-wire MIDI by default — only when asked; it does not consume the FS/EXP budget, and a `(block, param)` still gets only one controller across FS/EXP/MIDI.
 
-**Command Center commands (only on request):** if the user wants a footswitch (or Instant slot) to **send** a MIDI message (PC/CC/Note/MMC) or a Preset/Snapshot action to the device / external gear — as opposed to toggling a block — add a top-level `commands` list (see the `docs/recipe-reference.md` "Command Center commands" section). Each `{"switch": "FS1".."FS11"|"Instant1".."Instant6", "command": <family>, ...fields}`. EXPERIMENTAL, storage-validated, realized on `device install`/`sync`. Do **not** auto-wire commands by default — only when asked. A command switch is distinct from a block-bypass footswitch (a switch can't do both in helixgen yet), so don't put a command on a switch already used in `footswitches`.
+**Command Center commands (only on request):** if the user wants a footswitch (or Instant slot) to **send** a MIDI message (PC/CC/Note/MMC) or a Preset/Snapshot action to the device / external gear — as opposed to toggling a block — add a top-level `commands` list (see the `docs/recipe-reference.md` "Command Center commands" section). Each `{"switch": "FS1".."FS11"|"Instant1".."Instant6", "command": <family>, ...fields}`. EXPERIMENTAL, storage-validated, realized on `device copy`. Do **not** auto-wire commands by default — only when asked. A command switch is distinct from a block-bypass footswitch (a switch can't do both in helixgen yet), so don't put a command on a switch already used in `footswitches`.
 
 ### 5.7. Volume-normalization pass
 
@@ -876,8 +876,8 @@ report:
 > "This tone uses <IR name>. Want me to put it on your Stadium now (about a
 > second)? Otherwise it goes up by itself when you install the preset."
 
-That last clause is true and matters — `device install --auto-irs` and
-`device sync` upload referenced IRs at install time, so declining costs the user
+That last clause is true and matters — `device copy` uploads referenced IRs
+by default, so declining costs the user
 nothing. Push early only because it lets them load the preset straight from the
 hardware. **Never push unasked**: an IR the user never wanted is not trivially
 reclaimable, since `device ir-prune` *protects* IRs referenced by a local
@@ -1016,7 +1016,7 @@ warns when it isn't).
 **The sequence** — this is the part to get right, because the tone has to be on
 the device *and selected* before anything can be measured:
 
-1. **Put it on the Helix and SELECT it.** `device install` (or `device sync
+1. **Put it on the Helix and SELECT it.** `device copy` (or `device copy
    <setlist>`) writes the preset but **leaves the active tone untouched** —
    snapshot-scope normalize verifies the active preset's name and aborts on a
    mismatch, which on a freshly installed preset is guaranteed. So follow the
@@ -1035,7 +1035,7 @@ the device *and selected* before anything can be measured:
    before you start it.
 3. **Write them:** re-run the same command with `--yes`. Trims land in the
    **local `.hsp`**, as per-snapshot output-level moves — not on the device.
-4. **Re-sync** (`device sync` / `device install`) or nothing changes audibly on
+4. **Re-copy** (`device copy`) or nothing changes audibly on
    the hardware.
 5. **Update the write-up** — the balance is now measured, so refresh the
    Levels line via `helixgen library doc` (7a), and the run itself is recorded
@@ -1061,7 +1061,7 @@ that one is a **gain-staging** problem, and unlike the rest of this step it is
 on a layered preset) and re-run. `ChVol` is wildly non-linear — 0.55 → 1.0 was
 +24.7 dB of chain gain on one measured amp — so move it in small steps.
 **Re-sync before re-measuring**: a `ChVol` edit lands in the local `.hsp`, so
-until `device sync`/`install` rebuilds the device copy the hardware is still
+until `device copy` refreshes the device preset the hardware is still
 running the old chain and the re-measure reads "no change". Do **not** solve it by raising the output block instead: that
 amplifies the chain's noise floor by the same amount.
 
@@ -1094,7 +1094,7 @@ Run it yourself; don't hand the user a list of verbs.
    (per-snapshot: it is usually ONE quiet snapshot that is short, and a base
    edit would move the whole preset).
 5. **Sync before re-measuring.** The edit is in the local `.hsp`; until
-   `device sync <setlist>` / `device install` rebuilds the device copy, a
+   `device copy` refreshes the device preset, a
    re-measure reads the OLD chain and looks like the edit did nothing. This
    is the single most common way to waste a loop.
 6. **Re-measure and repeat** until `ceiling ≥ target`. Then run the normal
@@ -1124,7 +1124,7 @@ Rules of thumb for translating ear-language to param moves:
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
 - **"Swap X for something Y"** → run `list-blocks --category <cat>`, scan for candidates, `show-block` the chosen one, then a `swap_model` op in a `helixgen patch` call
-- **Feedback about ONE snapshot** ("the lead snapshot is too loud", "clean scene needs less drive") → a per-snapshot override, not a base edit: add `"snapshot": "<name-or-0-based-index>"` to the `set_param`/`set_enabled` patch op (or the single-op form `helixgen set-param <hsp> <block> <param> <value> --snapshot <name-or-index>`, 0.23.0). The param must already carry a base value and the preset must define snapshots; overrides reach the device on the next `device install`/`sync`. Once a param varies per-snapshot, a later plain base edit of it is inaudible on-device (`set-param` warns) — keep editing that param per-snapshot.
+- **Feedback about ONE snapshot** ("the lead snapshot is too loud", "clean scene needs less drive") → a per-snapshot override, not a base edit: add `"snapshot": "<name-or-0-based-index>"` to the `set_param`/`set_enabled` patch op (or the single-op form `helixgen set-param <hsp> <block> <param> <value> --snapshot <name-or-index>`, 0.23.0). The param must already carry a base value and the preset must define snapshots; overrides reach the device on the next `device copy`. Once a param varies per-snapshot, a later plain base edit of it is inaudible on-device (`set-param` warns) — keep editing that param per-snapshot.
 
 **Objective numbers from a recording (optional).** If the user has (or makes)
 a WAV capture of the tone and wants measurements instead of ear-language,
@@ -1134,12 +1134,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.51.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.52.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.51.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.52.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
