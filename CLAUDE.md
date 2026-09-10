@@ -9,7 +9,7 @@ Claude Code plugin + single-plugin marketplace for helixgen: generate Line 6 Hel
 No MCP server, no `.mcp.json`. Skills drive `helixgen` **CLI**, provisioned as isolated tool:
 
 ```bash
-uv tool install 'helixgen[device]==0.51.0'
+uv tool install 'helixgen[device]==0.52.0'
 ```
 
 `setup` skill step 0 performs/verifies this (`helixgen --version`), handles stale-shadow failure mode (broken `helixgen` earlier on PATH — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` — `NO_COLOR=1` matters: with `FORCE_COLOR` set, uv emits ANSI codes inside substitution — or fall back to plain `~/.local/bin/helixgen` path, never touch ambient Python), upgrades with `uv tool install --force 'helixgen[device]==X.Y.Z'`.
@@ -21,7 +21,7 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 
 ## Project layout
 
-- `skills/` — three skills (plugin ROOT, which is where the loader scans; `.claude/skills/` is NOT scanned inside an installed plugin): `setup` (CLI provisioning + device/prefs onboarding), `tone` (author `.hsp` from tone request), `device` (push/sync authored tones onto hardware)
+- `skills/` — three skills (plugin ROOT, which is where the loader scans; `.claude/skills/` is NOT scanned inside an installed plugin): `setup` (CLI provisioning + device/prefs onboarding), `tone` (author `.hsp` from tone request), `device` (copy authored tones onto hardware; back up / restore the device)
 - `.claude-plugin/` — `plugin.json` + `marketplace.json`; version bump here on `main` triggers release (see Releasing)
 - `data/library/` — bundled block library (`HELIXGEN_LIBRARY`)
 - `docs/` — runtime references skills consult: `CLI.md`, `recipe-reference.md`, `helix-protocol.md` (synced FROM helixgen-core — core authoritative), plus `demo.gif`
