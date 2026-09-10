@@ -257,6 +257,26 @@ path", "The sync run IS your analysis", "Do NOT front-load analysis", the sync
 red-flags list, and "Why a tone lands in `errors[]`". The skill's spine becomes
 copy / rm / move / backup / restore.
 
+## Manifest couplings discovered during implementation
+
+The manifest is load-bearing in more places than "sync" — found by grepping core
+for `manifest` after the design was approved. Each must be re-pointed at the
+library directory or at the device, not merely deleted:
+
+| Site | Coupling today | Becomes |
+|---|---|---|
+| `tone_meta.py` | a metadata variant's `preset_name` must be registered in `manifest.tones` | the variant's `.hsp` must exist in `library/tones/` |
+| `cli_library.py` | loads `SetlistManifest`, re-keys it when tones are renamed | globs `library/tones/`; rename is a file rename |
+| `device/maintenance.py` | `local_referenced_ir_hashes(manifest)` walks `manifest.tones` to decide which IRs `ir-prune` must keep | walks `library/tones/*.hsp` |
+| `device/hss.py` | import records pathless tones into the manifest so a later sync won't strip their references | records nothing; without a reconcile there is nothing to strip |
+| `device/normalize.py` (setlist scope) | loads each tone by its **observed CID** from the per-device observations the sync rebuilt | resolves each tone **by name against the live device setlist** |
+| `device/observations.py` | per-device `cid`/`posi` observations, rebuilt wholesale by every sync | no longer rebuilt; the address record in `devices/<serial>.json` stays, placement observations go |
+| `device/reorder.py` | doc comments contrasting itself with the manifest-based reorder | doc-only fix; `reorder` already never touched the manifest |
+
+`normalize`'s setlist scope is the one with real behavior risk: resolving by name
+can fail where a stale CID silently "worked", so it must report a clear
+not-found rather than normalizing the wrong preset.
+
 ## Risks
 
 - **`pull-ir` is EXPERIMENTAL** and restore now depends on it. Mitigated by the
