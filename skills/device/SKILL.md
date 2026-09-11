@@ -347,6 +347,39 @@ is either done for you or reported by `errors[]`. Concretely:
 - **Do not `view` every tone up front** to bucket them. Run the sync;
   `errors[]` is the only bucket that matters (the tones that didn't fit).
 
+## The mic input: preset routing vs device globals
+
+A vocal mic is audible only when some path's input is re-jacked to it — there
+is no "send the mic to the outputs" global. That routing is **per preset**
+(`"input": {"source": "mic"}` in a recipe, or
+`helixgen patch <f>.hsp -` with `{"op": "set_input", "path": 1, "jack": "mic"}`),
+and on most presets the second DSP path is free for it: the stock chassis
+ships it enabled, fed from Guitar In 2, with no blocks in it.
+
+Before re-jacking a path, check it is genuinely free — `flow[1]` holding only
+`b00` + `b13`, **and** no other path routing its output into it via
+`P35_OutputPath2*`. A path carrying blocks is somebody's second amp, and
+taking its input silences that amp.
+
+What is NOT preset state, and cannot be fixed by any recipe:
+
+| Setting | Key (page `ins-outs`) |
+|---|---|
+| Mic preamp gain | `global.in.mic.gain` (0–65) |
+| Phantom power | `global.in.mic.phantom` |
+| Global low cut | `global.in.mic.lowcut` (19.9–400 Hz) |
+
+Read them with `helixgen device settings get <key>`, set with `settings set`.
+A mic path that plays silent is nearly always the gain sitting at 0.
+
+**Never turn phantom power on unprompted.** It is off by default; a condenser
+mic needs it, a dynamic (SM58-type) does not, and it can damage a ribbon mic.
+Ask which mic, and let the user flip it.
+
+If the user wants this on every preset rather than one, that is the
+`mic_input` preference in `~/.helixgen/preferences.json`, applied at generate
+time — see the `tone` skill.
+
 ## When the device gets flaky — re-run, then reboot
 
 The Helix Stadium's network stack drops connections intermittently — a sync may

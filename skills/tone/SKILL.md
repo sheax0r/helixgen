@@ -234,6 +234,23 @@ ritually:
   pickup setup calls for it (e.g. `"impedance": "230K"` to tame a fuzz the
   vintage way; `"pad": true` for hot active pickups):
   `"input": {"source": "inst1", "impedance": "230K"}`.
+- **Mic input** — a path's `source` can be `"mic"`, the XLR jack, which is how
+  a vocal gets into a preset alongside the guitar. It takes `lowcut`
+  (19.9–400 Hz, e.g. `80` against an SM58's proximity boom) and rejects `pad`,
+  which that model does not have. Mic *gain* and *phantom power* are device
+  globals (`global.in.mic.*`), NOT preset state — a mic path that plays silent
+  is nearly always the global gain sitting at 0, which no recipe can fix.
+  **Never enable phantom power on the user's behalf**: it is off by default, a
+  condenser needs it, and it can damage a ribbon mic. Ask what mic they have.
+- **The standing mic preference** — if `mic_input.enabled` is true in
+  `~/.helixgen/preferences.json`, the engine already puts the mic on that
+  user's chosen path at generate time, with their stored lowcut/gate/level.
+  Do NOT also write an `input` for that path into the recipe: an explicit
+  recipe input *overrides* the preference, so restating it is how a user's
+  saved gate settings get silently replaced by your defaults. Leave the path
+  alone and let the preference apply. If a tone genuinely needs that path for
+  a second amp, say so — the engine will refuse the mic there and print why,
+  and the user should know their vocal is missing from that preset.
 - **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim of
   the whole path; `pan` for hard-panned dual-path tones. It is **not** the
   actuator for the *authoring-time* normalization pass (5.7) — it is the

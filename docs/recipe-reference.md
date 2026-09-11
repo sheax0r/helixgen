@@ -49,6 +49,14 @@ mode string:
 - `"inst2"` — Instrument 2 jack only
 - `"both"` — both jacks (stereo) — **default on paths[0]**
 - `"none"` — input disabled — **default on paths[1]**
+- `"mic"` — the XLR mic jack
+
+The mic takes `lowcut` (19.9–400 Hz) and rejects `pad`, which that model does
+not have. Its *preamp gain* and *phantom power* are device globals
+(`global.in.mic.gain`, `global.in.mic.phantom`, settings page `ins-outs`), not
+preset state — a mic path that plays silent nearly always just has the global
+gain at 0. See also the `mic_input` preference, which applies a mic path to
+every generated preset without restating it per tone.
 
 The object form adds the Input-block params (impedance / pad / trim / gate):
 
