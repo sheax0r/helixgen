@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.52.1'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.53.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -412,6 +412,42 @@ the call itself. Concretely:
   `errors[]` is the only bucket that matters.
 - **Don't look for a template.** There are none — the transcoder is
   template-free.
+
+## The mic input: preset routing vs device globals
+
+A vocal mic is audible only when some path's input is re-jacked to it — there
+is no "send the mic to the outputs" global. That routing is **per preset**
+(`"input": {"source": "mic"}` in a recipe, or
+`helixgen patch <f>.hsp -` with `{"op": "set_input", "path": 1, "jack": "mic"}`),
+and on most presets the second DSP path is free for it: the stock chassis
+ships it enabled, fed from Guitar In 2, with no blocks in it.
+
+`"path"` is 0-based — `1` is the Stadium's "Path 2". Before re-jacking a path,
+check it is genuinely free with `helixgen view <f>.hsp`: `paths[1]` must carry
+no blocks, **and** no other path's `output.to` may name it (`path2a`,
+`path2b`, `path2a_b`). A path carrying blocks is somebody's second amp, and
+taking its input silences that amp — `set_input` itself does not check.
+`set_input` writes no `LowCut`; set it afterwards with
+`helixgen set-param <f>.hsp input lowcut 80 --path 1`.
+
+What is NOT preset state, and cannot be fixed by any recipe:
+
+| Setting | Key (page `ins-outs`) |
+|---|---|
+| Mic preamp gain | `global.in.mic.gain` (0–65) |
+| Phantom power | `global.in.mic.phantom` |
+| Global low cut | `global.in.mic.lowcut` (19.9–400 Hz) |
+
+Read them with `helixgen device settings get <key>`, set with `settings set`.
+A mic path that plays silent is nearly always the gain sitting at 0.
+
+**Never turn phantom power on unprompted.** It is off by default; a condenser
+mic needs it, a dynamic (SM58-type) does not, and it can damage a ribbon mic.
+Ask which mic, and let the user flip it.
+
+If the user wants this on every preset rather than one, that is the
+`mic_input` preference in `~/.helixgen/preferences.json`, applied at generate
+time — see the `tone` skill.
 
 ## When the device gets flaky — re-run, then reboot
 
@@ -1362,7 +1398,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.52.1'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.53.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

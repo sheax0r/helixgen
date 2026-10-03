@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.52.1'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.53.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -264,6 +264,43 @@ ritually:
   pickup setup calls for it (e.g. `"impedance": "230K"` to tame a fuzz the
   vintage way; `"pad": true` for hot active pickups):
   `"input": {"source": "inst1", "impedance": "230K"}`.
+- **Mic input** — a path's `source` can be `"mic"`, the XLR jack, which is how
+  a vocal gets into a preset alongside the guitar. It takes `lowcut`
+  (19.9–400 Hz, e.g. `80` against an SM58's proximity boom) and rejects `pad`,
+  which that model does not have. Mic *gain* and *phantom power* are device
+  globals (`global.in.mic.*`), NOT preset state — a mic path that plays silent
+  is nearly always the global gain sitting at 0, which no recipe can fix.
+  **Never enable phantom power on the user's behalf**: it is off by default, a
+  condenser needs it, and it can damage a ribbon mic. Ask what mic they have.
+- **The standing mic preference** — if `mic_input.enabled` is true in
+  `~/.helixgen/preferences.json`, the engine already puts the mic on that
+  user's chosen path at generate time, with their stored lowcut/gate/level.
+  Do NOT also write an `input` for that path into the recipe: an explicit
+  recipe input *overrides* the preference, so restating it is how a user's
+  saved gate settings get silently replaced by your defaults. Leave the path
+  alone and let the preference apply. If a tone genuinely needs that path for
+  a second amp, say so — the engine will refuse the mic there and print why,
+  and the user should know their vocal is missing from that preset.
+  **Back-off reasons go to stderr while `generate` exits 0** — read stderr
+  after every generate when the preference is on; a refusal there means the
+  vocal is missing from that preset. The preference applies only at
+  `generate`: a `library fork` copy or a `patch` edit keeps whatever input the
+  source `.hsp` already had.
+- **Writing the mic preference** — when the user asks for the mic on every
+  preset, write a `mic_input` object into the preferences file
+  (`$HELIXGEN_PREFS` if set, else `$HELIXGEN_HOME/preferences.json`, else
+  `~/.helixgen/preferences.json`), keeping the file's other keys. Exact keys —
+  any other key disables the whole preference (one stderr warning):
+  ```json
+  {"mic_input": {"enabled": true, "path": 1, "lowcut": 80,
+                 "gate": true, "threshold": -50, "decay": 0.1,
+                 "trim": 0, "level": 0}}
+  ```
+  Only `enabled` is required. **`path` is 0-based**: `1` is the second path
+  (the Stadium screen's "Path 2"), and only `0` or `1` exist — `1`, the
+  default, is the one that is usually free. `lowcut`/`trim`/`gate`/`threshold`/
+  `decay` are the mic input's own params; `level` is that path's output level
+  in dB. Generate once afterwards and read stderr to confirm it took.
 - **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim of
   the whole path; `pan` for hard-panned dual-path tones. It is **not** the
   actuator for the *authoring-time* normalization pass (5.7) — it is the
@@ -1134,12 +1171,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.52.1'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.53.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.52.1'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.53.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
