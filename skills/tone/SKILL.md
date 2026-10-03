@@ -15,12 +15,12 @@ Turn a tone description into a `.hsp` Helix Stadium preset that's ready to load 
 - User wants a starting point to A/B against a reference
 - User mentions a guitar/bass and a role (rhythm, lead, clean, pad, solo boost)
 
-When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off. (Device-mutating verbs auto-acquire machine-local advisory locks as of core 0.22.0 — the `device` skill's "Device locks" section is the model; nothing in this skill touches the device.)
+When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch` / the single-op verbs — see **Adjusting an existing tone** below); ingesting new blocks (`helixgen ingest`); answering "what blocks do I have?" — just run `helixgen list-blocks` directly without the rest of the workflow; **putting an authored preset onto the physical Helix over the LAN, or syncing a library to the device** — that's the `device` skill (install / sync / backup), which picks up where this skill's saved `.hsp` leaves off. (Device-mutating verbs auto-acquire machine-local advisory locks as of core 0.22.0 — the `device` skill's "Device locks" section is the model. This skill touches the device in exactly two places, both **offered to the user first, never automatic**: step 7d puts a referenced user IR on the Stadium, and step 9 level-matches against the hardware. Installing the preset itself is always the `device` skill's job.)
 
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.47.2'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.53.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -75,7 +75,8 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen library doc <name> (--from-file <md> \| -) [--variant <guitar-slug>]` | author/update the tone's `description_md` (or a variant's `notes_md`) — replaces the old companion `.md` sidecar | updates metadata in place |
 | `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
 | `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolved as a TONE first — logical slug / metadata filename / variant preset_name — else a guitar profile by slug/name/short_name) | text or JSON |
-| `helixgen list-irs [--json]` | locally registered user IRs | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
+| `helixgen list-irs [--json]` | user IRs registered **locally** (helixgen's `mapping.json`) — NOT what is on the device | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
+| `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
 | `helixgen controllers [--json]` | assignable-controller vocabulary (FS/EXP) with English names + positions | text lines or JSON array |
@@ -177,7 +178,7 @@ Say in the report when you had to fall back to a legacy model, and why.
 - Mic, distance, position and the cut frequencies are all step-5 decisions now,
   and they have measured starting points — see the **cab voicing baseline**.
 
-**Check for user IRs (preference-gated).** Run `helixgen list-irs --json`. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
+**Check for user IRs (preference-gated).** Run `helixgen list-irs --json`. This is the **local** registry only — an IR listed here is not necessarily on the user's Stadium, and one that never reached the hardware shows as a silent **"No Model"** cab. Keep the `path` for each candidate: you need it in step 7d to put the IR on the device. If the result is non-empty, check whether the user prefers IRs over stock cabs: read `favor_irs` from `~/.helixgen/preferences.json` if that file exists; if the file or the key is absent, fall back to the existing feedback-memory check (a saved memory saying the user prefers IRs over stock cabs). When either source says yes, look for an IR that matches the chain's tonal target:
 
 - Parse the wav filenames in the output — commercial IR packs encode cab + mic + position (e.g. `YA VX30 212 BLU Mix 01.wav` → Vox AC30-style 2x12 Blue, mix-position).
 - If a match exists, use an IR block instead of a stock cab:
@@ -189,6 +190,35 @@ Say in the report when you had to fall back to a legacy model, and why.
   block's `Level` defaults to **−18 dB**, not 0, and its `HighCut`/`LowCut`
   default wide open. Leave the cuts alone unless the tone needs them.
 - New users (no `favor_irs` preference and no feedback memory) get stock cabs by default. The preference flips on when the user explicitly says "from now on, prefer IRs when I have them" — record it in `~/.helixgen/preferences.json`'s `favor_irs` key if you can write there, otherwise as a feedback memory.
+
+#### Mono or stereo — the block's position decides it, not taste
+
+Most effect models ship as a **Mono / Stereo pair** (`Chorus Mono` /
+`Chorus Stereo`). The variant is a real choice: a stereo block costs more DSP
+and buys nothing that a mono listener can hear.
+
+The rule Line 6 follows, measured across the 66 factory presets
+(`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md`):
+
+| where the block sits | stereo | mono | stereo share |
+|---|---|---|---|
+| **before** the amp/cab | 18 | 169 | **10%** |
+| **after** the cab | 94 | 42 | **69%** |
+
+By family, the same split, sharper: drive **1 stereo / 108 mono**, wah 0/19,
+gate 0/4, pitch 3/16, compressor 16/53 — versus delay 47/21, reverb 58/12,
+chorus 19/7, rotary 3/0, tremolo 11/7.
+
+- **Dirt, dynamics, filter, wah, pitch → Mono**, always, and they live in front
+  of the amp. A stereo fuzz is a wasted DSP block.
+- **Delay, reverb, chorus/rotary/tremolo after the cab → Stereo**, unless the
+  player is mono (below).
+- **Go all-mono when the rig is mono** — one guitar amp, one PA channel, a
+  mono IEM mix. Ask if you don't know and it matters (a big stereo ambience
+  tone is worth one question); default to stereo for FOH/headphone/DAW use,
+  which is what a Stadium usually feeds.
+- Some models exist in one variant only. `list-blocks` names are the authority:
+  if there is no `… Mono`, the model is what it is — don't hunt for a sibling.
 
 ### 4. Get exact param names — REQUIRED step
 
@@ -260,6 +290,11 @@ ritually:
   `device measure`: the meters tap DOWNSTREAM of the output gain — [MEASURED]
   Stadium XL fw 1.3.2, 2026-07-30; earlier revisions of this skill claimed the
   opposite.)
+- **Output destination** — `"output": {"to": "xlr"}` sends that path to one
+  physical output instead of the default `matrix` (everything). Only for a
+  two-rig preset — see "Two paths" below. Valid: `matrix`, `xlr`, `qtr`,
+  `phones`, `send1_2`, `send3_4`, `spdif`, `usb1_2`/`usb3_4`/`usb5_6`,
+  `path2a`/`path2b`/`path2a_b`, `none`. Needs engine ≥ 0.51.0.
 - **Split type + merge mixer** — a `split` entry requires a `type` (or raw
   `model`): `"y"` (plain even split), `"ab"` (footswitch/morph between
   branches), `"crossover"` (frequency split, e.g. bass bi-amping:
@@ -273,6 +308,64 @@ After generating, tweak these without re-authoring via a `helixgen patch`
 `set_param` op on the pseudo-blocks `input` / `output` / `split` / `join`
 (e.g. `{"op": "set_param", "block": "input", "param": "threshold",
 "value": -60.0}`).
+
+#### Two paths — the second DSP is a routing decision, not a tone knob
+
+`paths` takes **1 or 2 entries, one per DSP**. Default to **one**. A second
+path costs a whole DSP and buys nothing unless the tone genuinely needs two
+signals. Line 6 uses one in 59 of 66 factory presets, but almost always for
+reasons the recipe layer can't feel — reach for it only in these cases:
+
+**A. Two amps blended (11 factory presets do this).** Both paths take the same
+jack and sum at the matrix. This is the "layered" sound — a big clean and a
+grind stacked, or two mic'd cabs — and it is what `dual amp` means on a
+Tool-style rig. Hard-pan them for width, or leave both centred to blend:
+
+```json
+"paths": [
+  {"input": "inst1", "output": {"pan": 0.0},
+   "blocks": [{"block": "Brit Plexi"}, {"block": "4x12 Greenback 25"}]},
+  {"input": "inst1", "output": {"pan": 1.0},
+   "blocks": [{"block": "Essex A15"}, {"block": "1x12 Blue Bell"}]}
+]
+```
+
+**B. Two physical outputs — FOH + amp-in-the-room.** One path ends in a cab/IR
+and goes to the board; the other skips the cab and drives a real power amp on
+stage. Same guitar, two destinations, one preset:
+
+```json
+"paths": [
+  {"input": "inst1", "output": {"to": "xlr"},
+   "blocks": [{"block": "Brit Plexi"}, {"block": "4x12 Greenback 25"}]},
+  {"input": "inst1", "output": {"to": "qtr"},
+   "blocks": [{"block": "Brit Plexi"}]}
+]
+```
+
+A wet/dry rig is the same shape: dry amp+cab to `qtr`, ambience-only path to
+`xlr` or `send1_2`. **Storage is hardware-validated** (Stadium XL fw 1.3.2,
+2026-08-17: a `to: xlr` / `to: qtr` preset installs and `device to-hsp` reads
+it back byte-exact) — but **how a given routing combination behaves is not**.
+Say so in the report, and tell the user to check the destination jack first if
+one feed is silent.
+
+**C. Serial cascade (`to: "path2a"`, path 2 input `"none"`).** 41 of the 66
+factory presets do this — it continues one chain onto the second DSP purely
+to spread processing load. **Don't reach for it.** helixgen cannot measure DSP
+cost, the device is the only authority on whether a preset fits, and it
+changes nothing you can hear. Author it only when a user asks for it by name.
+
+**Traps:**
+- `paths[1].input` defaults to **`"none"`** — a second path with blocks and no
+  input is silent. Always set it explicitly (`"inst1"`, or `"none"` on purpose
+  for a cascade).
+- **Two summed amps are louder.** Redo the volume-normalization pass (5.7)
+  across both paths, and raise both amps together when repairing level — never
+  one, or the blend moves.
+- Parallel *inside* one path (a `split`/`join` region, 17 factory presets) is
+  the cheaper tool when the two branches share an amp. Prefer it for
+  drive-blend and bi-amp work; a second DSP is for two full rigs.
 
 #### Name the tone — identity flags, not the recipe title
 
@@ -385,7 +478,7 @@ volume under two different names *with two different units*:
 - `Level` — **decibels**, typically `-40..10`, default around `-10`
   (Agoura amps).
 
-`show-block` prints the unit and range explicitly since engine 0.47.2
+`show-block` prints the unit and range explicitly since engine 0.50.0
 (`Level  float -40..10 dB (default -10)`). Writing `Level: 0.5` on an Agoura amp
 is not "half volume" — it is **+10.5 dB over the model default**, and it clips.
 Factory amps sit around −11 to −6 dB. Always read the unit off `show-block`
@@ -466,9 +559,9 @@ By default, wire the chain for live use: give every toggle-able effect a footswi
 
 If the user says "no footswitches" or "leave the controls alone," skip this step.
 
-**MIDI CC control (only on request):** if the user wants a param or bypass driven by an external MIDI controller / DAW, add a top-level `midi` list (see the `docs/recipe-reference.md` "MIDI CC control" section) — each `{"cc": 0-127, "targets": [...]}` sweeps a param (`{"block", "param", "min", "max"}`) or toggles a bypass (`{"block", "bypass": true}`). CC-only, EXPERIMENTAL, and realized on `device install`/`sync`. Do **not** auto-wire MIDI by default — only when asked; it does not consume the FS/EXP budget, and a `(block, param)` still gets only one controller across FS/EXP/MIDI.
+**MIDI CC control (only on request):** if the user wants a param or bypass driven by an external MIDI controller / DAW, add a top-level `midi` list (see the `docs/recipe-reference.md` "MIDI CC control" section) — each `{"cc": 0-127, "targets": [...]}` sweeps a param (`{"block", "param", "min", "max"}`) or toggles a bypass (`{"block", "bypass": true}`). CC-only, EXPERIMENTAL, and realized on `device copy`. Do **not** auto-wire MIDI by default — only when asked; it does not consume the FS/EXP budget, and a `(block, param)` still gets only one controller across FS/EXP/MIDI.
 
-**Command Center commands (only on request):** if the user wants a footswitch (or Instant slot) to **send** a MIDI message (PC/CC/Note/MMC) or a Preset/Snapshot action to the device / external gear — as opposed to toggling a block — add a top-level `commands` list (see the `docs/recipe-reference.md` "Command Center commands" section). Each `{"switch": "FS1".."FS11"|"Instant1".."Instant6", "command": <family>, ...fields}`. EXPERIMENTAL, storage-validated, realized on `device install`/`sync`. Do **not** auto-wire commands by default — only when asked. A command switch is distinct from a block-bypass footswitch (a switch can't do both in helixgen yet), so don't put a command on a switch already used in `footswitches`.
+**Command Center commands (only on request):** if the user wants a footswitch (or Instant slot) to **send** a MIDI message (PC/CC/Note/MMC) or a Preset/Snapshot action to the device / external gear — as opposed to toggling a block — add a top-level `commands` list (see the `docs/recipe-reference.md` "Command Center commands" section). Each `{"switch": "FS1".."FS11"|"Instant1".."Instant6", "command": <family>, ...fields}`. EXPERIMENTAL, storage-validated, realized on `device copy`. Do **not** auto-wire commands by default — only when asked. A command switch is distinct from a block-bypass footswitch (a switch can't do both in helixgen yet), so don't put a command on a switch already used in `footswitches`.
 
 ### 5.7. Volume-normalization pass
 
@@ -783,6 +876,99 @@ git-commit library files itself** — that behavior now lives in the engine.
 e.g. a project presets folder reached via an ad-hoc `-o` path — but the default
 library flow is hands-off.)
 
+#### 7d. Offer to put referenced user IRs on the device
+
+Skip entirely if the chain uses only stock cabs.
+
+An IR in the **local** registry is not an IR **on the Stadium** — two separate
+inventories joined by `irhash`, and one that never reached the hardware plays as
+a silent **"No Model"** cab. Don't hand the user unverified "import it yourself
+first" boilerplate: you can put it there in about a second.
+
+**ASK FIRST — this is a hardware write.** Everything else in this skill is
+offline authoring; this is the one step that changes the user's physical device,
+so it follows step 9's pattern rather than acting on its own. One line, in the
+report:
+
+> "This tone uses <IR name>. Want me to put it on your Stadium now (about a
+> second)? Otherwise it goes up by itself when you install the preset."
+
+That last clause is true and matters — `device copy` uploads referenced IRs
+by default, so declining costs the user
+nothing. Push early only because it lets them load the preset straight from the
+hardware. **Never push unasked**: an IR the user never wanted is not trivially
+reclaimable, since `device ir-prune` *protects* IRs referenced by a local
+off-device tone (they need `--force`), so an abandoned tone pins its IR on the
+device.
+
+If the user declines, say the IR will go up on install and move on.
+
+**If the user agrees**, first confirm the WAV still hashes to what the preset
+references — `push-ir` hashes the file you hand it and knows nothing about the
+preset, so a WAV edited or replaced since registration uploads under a
+*different* hash, leaving the cab silent while everything reports success:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen irhash "<path>/<ir>.wav"
+```
+
+Compare that against the `irhash` in the preset (`helixgen view`). On a
+mismatch, stop and tell the user their WAV changed since it was registered —
+`register-irs` again is the fix, not a push. Then:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen device push-ir "<path>/<ir>.wav"
+```
+
+`push-ir` **is** the presence check: it resolves the hash through the device's
+point lookup, answers "already on device" when the IR is there, and otherwise
+uploads and registers it in ~0.1-1 s. Running it when the IR is already present
+is the normal, expected case.
+
+**Do NOT run `device list-irs` to decide whether to push** — but for the right
+reason. `push-ir` already takes a container listing internally (plus a rename
+nudge, which is an IR-container *write* under the `irs` lock), so gating on a
+listing just does that work twice. It is redundancy, not scale: the device holds
+far fewer IRs than the local registry, and enumerating them is fast.
+`device list-irs` stays the right verb when the user asks what is on their
+device — just not as a gate here.
+
+**Report what you saw, and no more.** `push-ir` has no `--json`; you are
+prose-matching stdout. Say "already on your Stadium" or "uploaded just now"
+only when the output says so, and don't upgrade either into a guarantee the
+cab will sound — see the wedge case below.
+
+**Failure modes — none of these block delivery.** Report the tone as normal,
+then:
+
+- **No device resolves** (no `device discover` record, no `$HELIXGEN_HELIX_IP`)
+  — `push-ir` fails fast, no network stall. Fall back to the manual
+  Librarian-import line in the `setup` skill's "After generating a preset that
+  uses user IRs". If the user expects their Stadium to be on the LAN, offer
+  `helixgen device discover` once — but if that finds nothing, do **not**
+  conclude the device is absent: with a VPN up, discovery searches the tunnel
+  instead of the LAN (backlog #77). The `device` skill's "Found nothing?" notes
+  have the one-command diagnosis.
+- **A lock is held** — `push-ir` takes the `irs` scope. A concurrent `/device`
+  session (a `sync` holds `library`+`irs`) makes it block for
+  `$HELIXGEN_LOCK_TIMEOUT` (default 30 s) then exit non-zero *naming the
+  holder*. A dangling `$HELIXGEN_LOCK_TOKEN` errors the same way. Read the
+  message and wait for the other session — this is **not** a reason to reach
+  for `--no-lock`, and re-running just burns another 30 s.
+- **The WAV path is gone** — moved, deleted, or on an unmounted volume, leaving
+  `mapping.json` stale. `push-ir` errors on the path, not the network. Say which
+  file is missing; don't retry it as if it were a dropped connection.
+- **Network error** — the Stadium's stack is flaky; re-run once. If it still
+  fails, say plainly that the IR has not reached the device yet and name
+  `helixgen device push-ir` as the way to finish it.
+- **Silent cab even though the push reported success (#93)** — `push-ir`'s
+  "already on device" answer is *deliberately trusting* when its listing refresh
+  can't be confirmed (an empty or failed listing, or a nudge that didn't
+  confirm), and it heals a wedged orphan silently in that case rather than
+  warning. So if the user later reports "No Model" on an IR you pushed, believe
+  them over the exit code: `device list-irs` to check for the hash, and
+  `device delete-ir --force-wedge` then re-push is the sure clear.
+
 ### 8. Report back
 
 Tell the user, in this order:
@@ -792,7 +978,8 @@ Tell the user, in this order:
 4. **Instrument** — `<guitar> — <one-clause why>` (skip the "why" if the user named the guitar themselves), then `Selector: <position> · Volume: <0–10> · Tone: <0–10>` in that guitar's real switch language, plus a one-clause note for any non-obvious move (roll-off, coil-split, pick attack)
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
 6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop. Once it's on the device, offer the measured level-match (step 9).
-7. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
+7. **IRs** (only if the chain uses a user IR) — this is where step 7d's offer goes. If the user has not answered it yet, ask here: `Uses YA MRSH 412 T75 Mix 04 — want me to put it on your Stadium now? Otherwise it goes up when you install the preset.` If they already answered, report only what you actually observed — `already on your Stadium`, `uploaded just now`, or `will go up on install`. Never tell the user to import an IR by hand after a push reported success, and never promise the cab will sound — the push's "already" answer can be trusting (see 7d's wedge note).
+8. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
 
@@ -846,7 +1033,7 @@ warns when it isn't).
 **The sequence** — this is the part to get right, because the tone has to be on
 the device *and selected* before anything can be measured:
 
-1. **Put it on the Helix and SELECT it.** `device install` (or `device sync
+1. **Put it on the Helix and SELECT it.** `device copy` (or `device copy
    <setlist>`) writes the preset but **leaves the active tone untouched** —
    snapshot-scope normalize verifies the active preset's name and aborts on a
    mismatch, which on a freshly installed preset is guaranteed. So follow the
@@ -865,7 +1052,7 @@ the device *and selected* before anything can be measured:
    before you start it.
 3. **Write them:** re-run the same command with `--yes`. Trims land in the
    **local `.hsp`**, as per-snapshot output-level moves — not on the device.
-4. **Re-sync** (`device sync` / `device install`) or nothing changes audibly on
+4. **Re-copy** (`device copy`) or nothing changes audibly on
    the hardware.
 5. **Update the write-up** — the balance is now measured, so refresh the
    Levels line via `helixgen library doc` (7a), and the run itself is recorded
@@ -891,7 +1078,7 @@ that one is a **gain-staging** problem, and unlike the rest of this step it is
 on a layered preset) and re-run. `ChVol` is wildly non-linear — 0.55 → 1.0 was
 +24.7 dB of chain gain on one measured amp — so move it in small steps.
 **Re-sync before re-measuring**: a `ChVol` edit lands in the local `.hsp`, so
-until `device sync`/`install` rebuilds the device copy the hardware is still
+until `device copy` refreshes the device preset the hardware is still
 running the old chain and the re-measure reads "no change". Do **not** solve it by raising the output block instead: that
 amplifies the chain's noise floor by the same amount.
 
@@ -924,7 +1111,7 @@ Run it yourself; don't hand the user a list of verbs.
    (per-snapshot: it is usually ONE quiet snapshot that is short, and a base
    edit would move the whole preset).
 5. **Sync before re-measuring.** The edit is in the local `.hsp`; until
-   `device sync <setlist>` / `device install` rebuilds the device copy, a
+   `device copy` refreshes the device preset, a
    re-measure reads the OLD chain and looks like the edit did nothing. This
    is the single most common way to waste a loop.
 6. **Re-measure and repeat** until `ceiling ≥ target`. Then run the normal
@@ -954,7 +1141,7 @@ Rules of thumb for translating ear-language to param moves:
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
 - **"Swap X for something Y"** → run `list-blocks --category <cat>`, scan for candidates, `show-block` the chosen one, then a `swap_model` op in a `helixgen patch` call
-- **Feedback about ONE snapshot** ("the lead snapshot is too loud", "clean scene needs less drive") → a per-snapshot override, not a base edit: add `"snapshot": "<name-or-0-based-index>"` to the `set_param`/`set_enabled` patch op (or the single-op form `helixgen set-param <hsp> <block> <param> <value> --snapshot <name-or-index>`, 0.23.0). The param must already carry a base value and the preset must define snapshots; overrides reach the device on the next `device install`/`sync`. Once a param varies per-snapshot, a later plain base edit of it is inaudible on-device (`set-param` warns) — keep editing that param per-snapshot.
+- **Feedback about ONE snapshot** ("the lead snapshot is too loud", "clean scene needs less drive") → a per-snapshot override, not a base edit: add `"snapshot": "<name-or-0-based-index>"` to the `set_param`/`set_enabled` patch op (or the single-op form `helixgen set-param <hsp> <block> <param> <value> --snapshot <name-or-index>`, 0.23.0). The param must already carry a base value and the preset must define snapshots; overrides reach the device on the next `device copy`. Once a param varies per-snapshot, a later plain base edit of it is inaudible on-device (`set-param` warns) — keep editing that param per-snapshot.
 
 **Objective numbers from a recording (optional).** If the user has (or makes)
 a WAV capture of the tone and wants measurements instead of ear-language,
@@ -964,12 +1151,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.47.2'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.53.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.47.2'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.53.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1008,6 +1195,9 @@ touching the tone:
 | Recommending a block not in the user's library | Always verify with `list-blocks --category <cat>` first |
 | Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
+| A stereo drive/wah/comp in front of the amp | Pre-amp blocks are Mono — Line 6's own corpus runs 1 stereo drive to 108 mono. Stereo belongs after the cab (step 3) |
+| A mono delay/reverb after the cab on a stereo rig | 69% of factory post-cab blocks are stereo; use the Stereo variant unless the player's rig is mono |
+| A second path with blocks but no `input` | `paths[1].input` defaults to `"none"` — the path is silent. Set it explicitly (step 5, "Two paths") |
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
 | Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory median is HighCut 11750 / LowCut 19.9 — mostly untouched (step 5 cab voicing baseline) |
 | Leaving cab `Mic` unset and calling it neutral | The default is a per-cab accident, not a choice. When Line 6 picks, the most common pick is `121 Ribbon`, then `57 Dynamic` and `160 Ribbon`, at 0° on-axis. Choose by label — `show-block` prints them (step 5) |
@@ -1039,7 +1229,72 @@ touching the tone:
 | Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.32 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
 | Git-committing the generated `.hsp`/library files yourself | Core auto-commits library changes (gated by `git_commit_tones`); the skill must not add/commit library paths (step 7c) |
 
+## Forking a tone — use `library fork`
+
+> **If the fork's chain references a user IR, step 7d still applies.** This
+> section bypasses the numbered workflow, so nothing has offered to put that IR
+> on the device — make the same offer here before reporting the fork done.
+
+
+"Fork this tone", "make me an EC-1000 version", "same rig, different song" —
+there is a verb for this. Do NOT hand-roll it, and do NOT re-author from the
+tone's write-up.
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen library fork "<source>" --guitar "<target guitar>"
+```
+
+`<source>` resolves like `library show` — a logical slug, the metadata
+filename, or a variant's exact `preset_name` — or a path to an `.hsp` that
+isn't in the library yet. A slug with more than one variant is ambiguous and
+errors, naming each candidate; pass the exact `preset_name`.
+
+What it does, and why each part matters:
+
+- **The `.hsp` is the source.** The fork is a verbatim copy — every block,
+  param, snapshot, footswitch, expression assignment and IR reference, including
+  anything helixgen doesn't model — with only the display name rewritten.
+- **`--guitar` alone adds a SECOND VARIANT of the same logical tone**: one
+  metadata JSON, two entries under `variants`. Pass `--artist`/`--song` or
+  `--descriptor` instead to make it a new logical tone (the "same rig, different
+  song" case).
+- **It refuses to overwrite.** An existing target variant errors, naming the
+  existing `.hsp`, and writes nothing.
+- **Provenance is recorded** — `describe` shows "forked from <variant>, <date>".
+- **The source's write-up is carried but MARKED as inherited.** Update it; it
+  describes the parent, not the fork.
+- `--dry-run` prints what would be written and writes nothing.
+
+**Then adapt it — a fork is not a copy.** The verb prints an adaptation
+checklist when the two guitars' pickup classes differ, naming the actual params
+in *this* chain (`Soup Pro [0:b03] Drive`, `IR [0:b04] HighCut`, …). It
+deliberately re-voices nothing: apply step 6's pickup-class guidance yourself,
+then say in the write-up what you changed for the instrument and what you kept.
+
+**Never re-author a fork from the markdown.** `description_md` and anything in
+`~/.helixgen/research/*.md` are human write-ups: they list "the 2–3 settings
+that matter", not full block state, and older ones describe superseded chains.
+A real case — forking Dream On from its markdown reproduced legacy HX amps,
+`ChVol 0.95` and cab `HighCut 6800 / LowCut 90`, all pre-rewrite values, and
+the result was audibly hot and noisy on hot pickups. The `.hsp` beside it had
+the corrected chain. Read the write-up for *intent*; take *values* from the
+`.hsp`.
+
+**Never hand-type a display name.** Identity comes from the flags; the name and
+slug are synthesized (`"$Artist - $Song - $Guitar"`). The engine now refuses
+identity smuggled into `--descriptor` (e.g. `"Dream On -- EC1000"`) and warns
+that the legacy `-o` form discards the naming flags and writes no metadata —
+but don't rely on the guards: use the flags.
+
 ## Adjusting an existing tone (surgical edits)
+
+> **Patching a stock cab into an IR block reintroduces the "No Model" risk that
+> step 7d exists to prevent** — this path never runs it. After any edit that
+> adds or changes an `ir` reference, make step 7d's offer. If the hash was
+> passed through unregistered there is no `mapping.json` entry and therefore no
+> local WAV to push: `register-irs` it first, and say so rather than offering a
+> push that cannot work.
+
 
 When the user asks to *tweak* a tone you already generated (e.g. "brighter
 cab", "swap to a Plexi", "more delay", "kill the reverb"), do NOT regenerate
