@@ -290,7 +290,7 @@ ritually:
   preset, write a `mic_input` object into the preferences file
   (`$HELIXGEN_PREFS` if set, else `$HELIXGEN_HOME/preferences.json`, else
   `~/.helixgen/preferences.json`), keeping the file's other keys. Exact keys —
-  anything else is an error:
+  any other key disables the whole preference (one stderr warning):
   ```json
   {"mic_input": {"enabled": true, "path": 1, "lowcut": 80,
                  "gate": true, "threshold": -50, "decay": 0.1,
