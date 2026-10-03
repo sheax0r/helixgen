@@ -281,6 +281,26 @@ ritually:
   alone and let the preference apply. If a tone genuinely needs that path for
   a second amp, say so — the engine will refuse the mic there and print why,
   and the user should know their vocal is missing from that preset.
+  **Back-off reasons go to stderr while `generate` exits 0** — read stderr
+  after every generate when the preference is on; a refusal there means the
+  vocal is missing from that preset. The preference applies only at
+  `generate`: a `library fork` copy or a `patch` edit keeps whatever input the
+  source `.hsp` already had.
+- **Writing the mic preference** — when the user asks for the mic on every
+  preset, write a `mic_input` object into the preferences file
+  (`$HELIXGEN_PREFS` if set, else `$HELIXGEN_HOME/preferences.json`, else
+  `~/.helixgen/preferences.json`), keeping the file's other keys. Exact keys —
+  anything else is an error:
+  ```json
+  {"mic_input": {"enabled": true, "path": 1, "lowcut": 80,
+                 "gate": true, "threshold": -50, "decay": 0.1,
+                 "trim": 0, "level": 0}}
+  ```
+  Only `enabled` is required. **`path` is 0-based**: `1` is the second path
+  (the Stadium screen's "Path 2"), and only `0` or `1` exist — `1`, the
+  default, is the one that is usually free. `lowcut`/`trim`/`gate`/`threshold`/
+  `decay` are the mic input's own params; `level` is that path's output level
+  in dB. Generate once afterwards and read stderr to confirm it took.
 - **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim of
   the whole path; `pan` for hard-panned dual-path tones. It is **not** the
   actuator for the *authoring-time* normalization pass (5.7) — it is the

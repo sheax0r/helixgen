@@ -422,10 +422,13 @@ is no "send the mic to the outputs" global. That routing is **per preset**
 and on most presets the second DSP path is free for it: the stock chassis
 ships it enabled, fed from Guitar In 2, with no blocks in it.
 
-Before re-jacking a path, check it is genuinely free — `flow[1]` holding only
-`b00` + `b13`, **and** no other path routing its output into it via
-`P35_OutputPath2*`. A path carrying blocks is somebody's second amp, and
-taking its input silences that amp.
+`"path"` is 0-based — `1` is the Stadium's "Path 2". Before re-jacking a path,
+check it is genuinely free with `helixgen view <f>.hsp`: `paths[1]` must carry
+no blocks, **and** no other path's `output.to` may name it (`path2a`,
+`path2b`, `path2a_b`). A path carrying blocks is somebody's second amp, and
+taking its input silences that amp — `set_input` itself does not check.
+`set_input` writes no `LowCut`; set it afterwards with
+`helixgen set-param <f>.hsp input lowcut 80 --path 1`.
 
 What is NOT preset state, and cannot be fixed by any recipe:
 
