@@ -262,7 +262,7 @@ def main():
         corpus = build_corpus(files, cat_idx, failed, warnings, instrument, ver)
         stem = "factory-corpus" if instrument == "guitar" else f"factory-corpus-{instrument}"
         (out_dir / f"{stem}.json").write_text(json.dumps(corpus, indent=1))
-        (out_dir / f"{stem}.md").write_text(render_md(corpus))
+        (out_dir / f"{stem}.md").write_text(render_md(corpus, stem))
         print(f"{instrument}: presets={corpus['presets']} models={len(corpus['by_model'])} "
               f"skipped={sum(corpus['skipped_models'].values())} engine={ver}")
 
@@ -276,7 +276,7 @@ def cell(d, key="median"):
     return "-" if v is None else f"{v:g}"
 
 
-def render_md(c):
+def render_md(c, stem="factory-corpus"):
     KEY = {"amp": ["Drive", "Master", "MasterVol", "Level", "Hype", "Channel",
                    "Sag", "ZPrePost", "Bass", "Mid", "Treble", "Presence"],
            "cab": ["Distance", "Angle", "Position", "Mic", "HighCut", "LowCut",
@@ -315,10 +315,13 @@ def render_md(c):
          "same type and range; the rest are listed as suppressed, because the same",
          "param name carries different units in different models (reverb `Decay` is",
          "a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for",
-         "those live in `data/factory-corpus.json` under `by_model`.", "",
-         "**Known gaps.** Rows are BASE values — snapshot",
-         "arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 20 of",
-         "45 amp instances in the guitar set, so a single number can be one end of a designed range.",
+         f"those live in `data/{stem}.json` under `by_model`.", "",
+         "**Known gaps.** Rows are BASE values — snapshot arrays are ignored here,",
+         # ponytail: guitar-only figure, hand-measured; compute per corpus if bass needs it
+         *(["and `amp Drive` alone is snapshot-modulated on 20 of 45 amp instances",
+            "in the guitar set, so a single number can be one end of a designed range."]
+           if c.get("instrument", "guitar") == "guitar" else
+           ["so a single number can be one end of a snapshot-designed range."]),
          "Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.",
          "", f"**Amp model family:** Agoura {c['amp_family_use'].get('Agoura', 0)} vs "
          f"legacy {c['amp_family_use'].get('legacy', 0)} amp instances.", "",
