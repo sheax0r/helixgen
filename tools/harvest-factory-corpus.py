@@ -17,6 +17,7 @@ their values run ~20% different), integer/enum params as mode+frequencies rather
 than medians, and the conversion warnings.
 
 Run:    python3 harvest-factory-corpus.py <sbe-dir> <out-dir>
+        (writes both corpora: factory-corpus.* for guitar, factory-corpus-bass.* for BAS presets)
 """
 import json
 import os
@@ -88,6 +89,19 @@ def model_meta(model_id, _cache={}):
 def enabled_of(obj):
     e = (obj or {}).get("@enabled")
     return bool(e.get("value", True)) if isinstance(e, dict) else True
+
+
+def instrument_of(name) -> str:
+    """Line 6 titles every factory bass preset `BAS …` (file: NN-13C-BAS-Rock-Legends)."""
+    title = re.sub(r"^\d+-\d+[A-Z]-", "", Path(name).stem)
+    return "bass" if re.match(r"BAS\b", title) else "guitar"
+
+
+def split_by_instrument(paths):
+    out = {"guitar": [], "bass": []}
+    for p in paths:
+        out[instrument_of(Path(p).name)].append(p)
+    return out
 
 
 def harvest(hsp_files, cat_idx):
@@ -183,16 +197,8 @@ def row(entries, categorical):
     return r
 
 
-def main():
-    if len(sys.argv) < 3:
-        sys.exit("usage: harvest-factory-corpus.py <sbe-dir> <out-dir>")
-    sbe_dir, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    ok, failed, warnings = convert(sbe_dir, out_dir / "hsp")
-    print(f"converted {len(ok)}, failed {len(failed)}")
-    cat_idx = category_index()
-    obs, kinds, model_use, family_use, presets, skipped = harvest(ok, cat_idx)
+def build_corpus(hsp_files, cat_idx, failed, warnings, instrument, ver):
+    obs, kinds, model_use, family_use, presets, skipped = harvest(hsp_files, cat_idx)
 
     by_model, by_cat = {}, {}
     pooled = defaultdict(lambda: defaultdict(list))
@@ -219,13 +225,13 @@ def main():
             by_cat.setdefault(cat, {})[pname] = row(
                 entries, any(s[3] for s in shapes[cat][pname]))
 
-    ver = sh([HELIXGEN, "--version"]).stdout.strip()
-    corpus = {
+    return {
         "source": "Line 6 Helix Stadium factory setlist",
+        "instrument": instrument,
         "engine": ver,
         "presets": len(presets),
         "inputs": sorted(p["file"] for p in presets),
-        "failed_conversions": failed,
+        "failed_conversions": [f for f in failed if instrument_of(f["file"]) == instrument],
         "method": ("parsed from the .hsp directly (to-hsp writes every param the "
                    "model declares); each row separates values left at the model "
                    "default from values the designer moved"),
@@ -240,10 +246,25 @@ def main():
         "by_category_suppressed": suppressed,
         "by_model": {k: dict(sorted(v.items())) for k, v in sorted(by_model.items())},
     }
-    (out_dir / "factory-corpus.json").write_text(json.dumps(corpus, indent=1))
-    (out_dir / "factory-corpus.md").write_text(render_md(corpus))
-    print(f"models={len(by_model)} skipped={sum(skipped.values())} "
-          f"warnings={sum(warnings.values())} engine={ver}")
+
+
+def main():
+    if len(sys.argv) < 3:
+        sys.exit("usage: harvest-factory-corpus.py <sbe-dir> <out-dir>")
+    sbe_dir, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ok, failed, warnings = convert(sbe_dir, out_dir / "hsp")
+    print(f"converted {len(ok)}, failed {len(failed)}")
+    cat_idx = category_index()
+    ver = sh([HELIXGEN, "--version"]).stdout.strip()
+    for instrument, files in split_by_instrument(ok).items():
+        corpus = build_corpus(files, cat_idx, failed, warnings, instrument, ver)
+        stem = "factory-corpus" if instrument == "guitar" else f"factory-corpus-{instrument}"
+        (out_dir / f"{stem}.json").write_text(json.dumps(corpus, indent=1))
+        (out_dir / f"{stem}.md").write_text(render_md(corpus))
+        print(f"{instrument}: presets={corpus['presets']} models={len(corpus['by_model'])} "
+              f"skipped={sum(corpus['skipped_models'].values())} engine={ver}")
 
 
 def cell(d, key="median"):
@@ -264,7 +285,8 @@ def render_md(c):
            "delay": ["Mix", "Feedback", "Time"],
            "reverb": ["Mix", "Decay", "PreDelay"],
            "dynamics": ["Level", "Threshold", "Mix"]}
-    L = [f"# Factory preset corpus — {c['presets']} Line 6 Stadium factory presets", "",
+    L = [f"# Factory preset corpus — {c['presets']} Line 6 Stadium factory "
+         f"{c.get('instrument', 'guitar')} presets", "",
          "What Line 6's own preset designers actually do, measured from the",
          f"Stadium's factory setlist. Engine: `{c['engine']}`.", "",
          "## How to read a row — this matters more than the numbers",
