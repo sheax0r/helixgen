@@ -173,7 +173,7 @@ Say in the report when you had to fall back to a legacy model, and why.
 - **Pick the mic deliberately, and know that ribbons are the factory habit.**
   Across the corpus, when Line 6 chooses a mic rather than leaving the default,
   the picks are `121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (10),
-  `84 Ribbon` (6) — ribbons lead, and often sit on the second cab of a
+  `414 Cond` (6) — ribbons lead, and often sit on the second cab of a
   dual-cab pair. Angle is **0° on-axis on 71 of 81 cabs**.
 - Mic, distance, position and the cut frequencies are all step-5 decisions now,
   and they have measured starting points — see the **cab voicing baseline**.
@@ -337,7 +337,7 @@ path costs a whole DSP and buys nothing unless the tone genuinely needs two
 signals. Line 6 uses one in 43 of the 50 factory guitar presets, but almost always for
 reasons the recipe layer can't feel — reach for it only in these cases:
 
-**A. Two amps blended (4 factory guitar presets do this).** Both paths take the same
+**A. Two amps blended (3 factory guitar presets do this, plus a two-guitar rig that feeds DSP 2 from Inst2).** Both paths take the same
 jack and sum at the matrix. This is the "layered" sound — a big clean and a
 grind stacked, or two mic'd cabs — and it is what `dual amp` means on a
 Tool-style rig. Hard-pan them for width, or leave both centred to blend:
@@ -445,7 +445,7 @@ neither.
 | `Distance` | 42 at default. Of the 39 moved, median 3" (p25–p75 1–3.5), max 7 | 1–3.5" is the working range. Close-micing is normal; distance is not a mud cure |
 | `Position` | 27 at default — the most-adjusted cab param after `Mic`. Moved median 0.30 (p25–p75 0.19–0.31) | This is what they actually voice with. Toward 0 brighter, toward 1 darker |
 | `Angle` | 71 at default. When moved, they move it **to 0°** | On-axis. Several cabs already default to 45°, so "try 45°" may be a no-op — `show-block` first |
-| `Mic` | 20 at default. Deliberate picks: **`121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (10), `84 Ribbon` (6)** | Pick by label — `show-block` prints them. When Line 6 chooses a mic at all, a **ribbon** is the most common choice, and it often lives on the second cab of a dual-cab pair |
+| `Mic` | 20 at default. Deliberate picks: **`121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (10), `414 Cond` (6)** | Pick by label — `show-block` prints them. When Line 6 chooses a mic at all, a **ribbon** is the most common choice, and it often lives on the second cab of a dual-cab pair |
 | `Level` | 47 at default (0 dB). Of the 34 moved, median +2.5 (p25–p75 −2.9…+6) | Leave at 0 on a single cab; it is the balance knob between the two halves of a dual cab. An **IR block defaults to −18 dB** — a different reference; don't compare the two |
 
 Still true, and still worth doing:
@@ -481,7 +481,7 @@ certainly a mistake (the envelope check in step 7b catches it).
 | Drive `Gain` | **0.12–0.46, median 0.32 when set** (almost always set: 3 of 50 at default) | Factory drives run LOW and push the amp. The ones actually ON at load sit at 0.25 — most factory drives are bypassed and engaged by a snapshot/footswitch |
 | Drive `Gain` (pedal AS the distortion) | up to 0.76 | The top of the same distribution, not a separate factory practice — use when the pedal is the gain source |
 | Amp `Drive` | **0.46–0.64** (median 0.53) | The most reliably-dialled amp param — only 6 of 45 sit at default. Far lower than you would guess; saturation comes from the power amp, not from piling on preamp gain |
-| Amp power-amp volume | **28 of 58 sit at the model default** (usually 1.0). Of the 30 moved, median **0.52** (p25–p75 0.36–0.69) | The knob's NAME varies — `Master` on most, **`MasterVol` on `US Double Black`**, `Output Volume` on `WhoWatt 103`, absent on `Mandarin Rock 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`) sit at 0.36–0.55 |
+| Amp power-amp volume | **28 of 58 sit at the model default** (usually 1.0). Of the 30 moved, median **0.52** (p25–p75 0.36–0.69) | The knob's NAME varies — `Master` on most, **`MasterVol` on `US Double Black`**, `Output Volume` on `WhoWatt 103`, absent on `Mandarin Rock 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`) run 0.21–0.60, p25–p75 0.40–0.52 (median 0.46) |
 | Amp channel volume | `ChVol` is 0..1; Agoura `Level` is **dB** | Also seen: `Ch Vol`, `Ch Level` (alongside a separate `Level`!), `Output`, `ODLevel`. See the level-units box below and read `show-block` every time |
 | Amp `Hype` | **leave at 0** | 39 of 53 factory guitar amps never touch it. The 14 that do sit at **0.21–0.37 (median 0.26)**. A seasoning, not a baseline |
 | Amp `Sag` / `Ripple` | **−1..1 default 0 on Agoura; 0..1 default 0.5 on legacy** | Different scales entirely — the corpus suppresses this row for exactly that reason. On a legacy amp, 0 is not neutral, it is the extreme. `show-block` before writing |
@@ -1157,7 +1157,7 @@ Rules of thumb for translating ear-language to param moves:
 - **"Too bright / harsh"** → drop `Treble`/`Presence` first; then try cab `Angle` 45°, a darker `Mic`, or `Position` toward 0.4. Pull `HighCut` down only as a last resort, and not below 8000 — that is already below the factory p25 (8275)
 - **"Fizzy / digital / not amp-in-the-room"** → in order: (1) confirm the amp is an **Agoura** model, not a legacy HX one — that is the biggest single difference in feel, and no EQ move substitutes for it; (2) raise the amp's power-amp volume (`Master`/`MasterVol` — check `show-block`) toward its factory value for that model and back `Drive` off to ~0.5, so the saturation comes from the power amp; (3) try a different cab `Mic` and `Angle` 45°; (4) a Parametric EQ cutting 2–4 dB at 3–4 kHz medium Q; (5) a subtle comp (~1–2 dB GR) at the front. Do NOT reach for a big `HighCut` — a dark preset is the more common failure here
 - **"Not enough body"** → raise `Bass` 0.05–0.10 or `Mid` 0.05; if a `LowCut` was set, lower it back toward the 19.9 default
-- **(guitar) "Boomy / flubby"** → raise cab `LowCut` toward 60–90 (the top of factory practice: moved p75 72, max 99), back `Bass` off
+- **(guitar) "Boomy / flubby"** → raise cab `LowCut` toward 60–75 (the top of factory practice: moved p75 72), back `Bass` off
 - **Bass "boomy / flubby"** → see **Bass tones**; do not raise cab LowCut into the fundamental
 - **"Lead doesn't sing / cut"** → raise `Mid` 0.05–0.10 in the lead snapshot, raise delay `Mix` 0.05
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
@@ -1245,7 +1245,7 @@ touching the tone:
 | Hand-formatting the old `"<Tone> — <Guitar>"` title in the recipe | Identity comes from `generate`'s `--artist`/`--song` or `--descriptor` + `--guitar` flags, not the recipe `"name"` (step 5 naming) |
 | Picking a legacy HX amp when an Agoura model exists | Agoura is the Stadium's own engine (SIC amp/cab interaction, real touch response) and is what 44 of the 50 factory guitar presets are built on, 53 amp uses to 12. Legacy models exist for backward compatibility — reaching for one by name-similarity is how a preset ends up feeling flat (step 3) |
 | Writing an Agoura amp's `Level` as if it were a 0..1 knob | `Level` is **dB** (`-40..10`, default ~`-10`); `ChVol` is the 0..1 one. `Level: 0.5` is +10.5 dB and clips. `show-block` prints the unit — read it (step 5 level-units box) |
-| Overriding the amp's power-amp volume by habit | Half of factory guitar amps (28 of 58) sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.52), and the high-gain Agouras sit at 0.36–0.55. Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `US Double Black`, absent on `Mandarin Rock 3` — `show-block` first (step 5) |
+| Overriding the amp's power-amp volume by habit | Half of factory guitar amps (28 of 58) sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.52), and the high-gain Agouras run 0.40–0.52 (p25–p75; median 0.46). Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `US Double Black`, absent on `Mandarin Rock 3` — `show-block` first (step 5) |
 | Setting `Hype` on every Agoura amp | 39 of 53 factory guitar amps leave it at 0. The 14 that use it sit at 0.21–0.37. A seasoning, not a baseline (step 5) |
 | Shipping without running the envelope check | Step 7b is the only automatic check that the preset is voiced like a real one; a FAIL is a recipe bug, not a formality |
 | Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.31 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
