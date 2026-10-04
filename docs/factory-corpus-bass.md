@@ -1,4 +1,4 @@
-# Factory preset corpus — 50 Line 6 Stadium factory guitar presets
+# Factory preset corpus — 16 Line 6 Stadium factory bass presets
 
 What Line 6's own preset designers actually do, measured from the
 Stadium's factory setlist. Engine: `helixgen, version 0.52.1`.
@@ -36,105 +36,89 @@ arrays are ignored here, and `amp Drive` alone is snapshot-modulated on many
 amps (about a third of the guitar set), so a single number can be one end of a designed range.
 Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.
 
-**Amp model family:** Agoura 53 vs legacy 12 amp instances.
+**Amp model family:** Agoura 16 vs legacy 10 amp instances.
 
-**Blocks per preset:** median 12 (min 7, max 21)
+**Blocks per preset:** median 15 (min 8, max 18)
 
-**Named snapshots per preset:** median 5 (min 4, max 8)
+**Named snapshots per preset:** median 4.5 (min 4, max 8)
 
 ## amp
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Drive | 45 | 6 | 0.5 | 0.53 | 0.46-0.64 | 0.2..1 |
-| Master | 58 | 28 | 0.85 | 0.52 | 0.3625-0.6875 | 0.21..1 |
-| MasterVol | 4 | 4 | 1 | - | - | 1..1 |
-| Hype | 53 | 39 | 0 | 0.26 | 0.2075-0.3675 | 0..0.58 |
-| ZPrePost | 50 | 49 | 0.3 | 0.35 | - | 0.3..1 |
-| Bass | 61 | 8 | 0.5 | 0.5 | 0.35-0.6 | 0.19..1 |
-| Mid | 37 | 5 | 0.53 | 0.54 | 0.445-0.6425 | 0.28..1 |
-| Treble | 58 | 13 | 0.625 | 0.63 | 0.5-0.7 | 0.32..1 |
-| Presence | 33 | 7 | 0.55 | 0.595 | 0.4775-0.76 | 0.02..1 |
+| Drive | 15 | 1 | 0.45 | 0.445 | 0.4025-0.56 | 0.28..0.88 |
+| Master | 25 | 13 | 1 | 0.85 | 0.8475-0.892375 | 0.55..1 |
+| Level | 15 | 3 | -10 | -10.55 | -16.775--3.75 | -22..2.7 |
+| Hype | 16 | 12 | 0 | 0.35 | - | 0..1 |
+| Sag | 15 | 12 | 0 | -0.86 | - | -1..0 |
+| ZPrePost | 12 | 9 | 0.5 | 0.328 | - | 0..1 |
+| Bass | 17 | 12 | 0.55 | 0.577413 | - | 0.5..0.7 |
+| Mid | 11 | 6 | 0.5 | 0.35 | - | 0.31..0.73 |
+| Treble | 17 | 7 | 0.55 | 0.605 | 0.497875-0.65 | 0.3..0.764525 |
+| Presence | 2 | 0 | 0.48 | 0.48 | - | 0.27..0.69 |
 
-Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
-
-| param | n on | median (on) |
-|---|---|---|
-| Drive | 38 | 0.52 |
-| Master | 51 | 0.79 |
-| Hype | 51 | 0 |
-| ZPrePost | 49 | 0.3 |
-| Bass | 54 | 0.5 |
-| Mid | 31 | 0.55 |
-| Treble | 51 | 0.63 |
-| Presence | 27 | 0.59 |
-
-Suppressed in amp (unit mixture — see `by_model`): `Boost`, `Bright`, `Channel`, `Level`, `Ripple`, `Sag`
+Suppressed in amp (unit mixture — see `by_model`): `Channel`
 
 ## cab
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Distance | 81 | 42 | 1.25 | 3 | 1-3.5 | 1..7 |
-| Angle | 81 | 71 | 0 | 0 | 0-0 | 0..45 |
-| Position | 81 | 27 | 0.3 | 0.3 | 0.1925-0.31 | 0..0.77 |
-| Mic | 81 | 20 | mode 0 | mode 5 | - | 0..11 |
-| HighCut | 81 | 41 | 10000 | 9650 | 8275-10000 | 3600..20100 |
-| LowCut | 81 | 47 | 31 | 50 | 36.75-71.75 | 19..99 |
-| Level | 81 | 47 | 0 | 2.5 | -2.9-6 | -6.9..6 |
-| Pan | 81 | 59 | 0.5 | 0.5 | 0-1 | 0..1 |
+| Distance | 27 | 14 | 2.75 | 2 | 1-4 | 1..9 |
+| Angle | 27 | 16 | 45 | 0 | 0-0 | 0..45 |
+| Position | 27 | 17 | 0.35 | 0.4 | 0.4-0.58 | 0..0.75 |
+| Mic | 27 | 16 | mode 6 | mode 10 | - | 1..11 |
+| HighCut | 27 | 20 | 13800 | 8000 | - | 3700..20100 |
+| LowCut | 27 | 24 | 19.9 | 54 | - | 19.9..69 |
+| Level | 27 | 21 | 0 | 1.25 | - | -3..6 |
+| Pan | 27 | 27 | 0.5 | - | - | 0.5..0.5 |
 
 ## drive
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Gain | 50 | 3 | 0.33 | 0.32 | 0.119-0.46 | 0..0.76 |
-| Tone | 48 | 6 | 0.5588 | 0.58 | 0.37-0.71 | 0.08..0.88 |
+| Gain | 6 | 2 | 0.42 | 0.415 | - | 0.25..0.65 |
+| Level | 20 | 1 | 0.7 | 0.7 | 0.615-0.74 | 0.45..1 |
+| Tone | 2 | 1 | 0.455 | 0.38 | - | 0.38..0.53 |
 
 Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
 
 | param | n on | median (on) |
 |---|---|---|
-| Gain | 20 | 0.25 |
-| Tone | 19 | 0.52 |
+| Gain | 1 | 0.42 |
+| Level | 6 | 0.7 |
+| Tone | 1 | 0.53 |
 
-Suppressed in drive (unit mixture — see `by_model`): `Bright`, `Clipping`, `Level`
+Suppressed in drive (unit mixture — see `by_model`): `Bass`, `Treble`
 
 ## delay
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Mix | 68 | 4 | 0.33 | 0.33 | 0.29-0.415725 | 0.13..1 |
-| Feedback | 68 | 5 | 0.3775 | 0.39 | 0.295-0.5 | 0..0.77 |
+| Mix | 2 | 1 | 0.61 | 0.72 | - | 0.5..0.72 |
+| Feedback | 2 | 1 | 0.3325 | 0.29 | - | 0.29..0.375 |
 
-Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
-
-| param | n on | median (on) |
-|---|---|---|
-| Mix | 20 | 0.3605 |
-| Feedback | 20 | 0.305 |
-
-Suppressed in delay (unit mixture — see `by_model`): `Bass`, `LowCut`, `Mode`, `Pitch`, `Ramp`, `Speed`, `Time`, `Treble`
+Suppressed in delay (unit mixture — see `by_model`): `LowCut`, `Time`
 
 ## reverb
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Mix | 67 | 3 | 0.31 | 0.305 | 0.2375-0.37 | 0.13..0.59 |
+| Mix | 2 | 1 | 0.71 | 0.92 | - | 0.5..0.92 |
+| Decay | 1 | 1 | 1.2 | - | - | 1.2..1.2 |
 
-Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
-
-| param | n on | median (on) |
-|---|---|---|
-| Mix | 48 | 0.285 |
-
-Suppressed in reverb (unit mixture — see `by_model`): `Decay`, `HighCut`, `LowCut`, `PreDelay`
+Suppressed in reverb (unit mixture — see `by_model`): `PreDelay`
 
 ## dynamics
 
 | param | n | at default | median (all) | median (moved) | moved p25-p75 | min..max |
 |---|---|---|---|---|---|---|
-| Mix | 27 | 6 | 0.7 | 0.67 | 0.46-0.7 | 0.3205..1 |
+| Mix | 31 | 11 | 0.71 | 0.7 | 0.7-0.7025 | 0.61..1 |
 
-Suppressed in dynamics (unit mixture — see `by_model`): `Attack`, `Decay`, `Level`, `Release`, `Threshold`
+Blocks that are ON at load (the rest are engaged by a snapshot or footswitch):
+
+| param | n on | median (on) |
+|---|---|---|
+| Mix | 30 | 0.71 |
+
+Suppressed in dynamics (unit mixture — see `by_model`): `Attack`, `Gain`, `Level`, `Ratio`, `Release`, `Threshold`
 
