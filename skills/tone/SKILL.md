@@ -155,7 +155,7 @@ amp's power section (that's what `ZPrePost` and the `AmpCabZ*` / `AmpCabPeak*`
 params on the amp block are). Legacy models get none of it, and they are why a
 generated preset can feel flat and lifeless next to a factory one.
 
-Line 6's own 66 factory presets use **69 Agoura amp instances to 22 legacy**
+Line 6's 50 factory guitar presets use **53 Agoura amp instances to 12 legacy**
 (`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md`). Tell them apart by model id — Agoura models are
 `Agoura_Amp*`, legacy are `HD2_Amp*`/`HD2_Preamp*`:
 
@@ -172,9 +172,9 @@ Say in the report when you had to fall back to a legacy model, and why.
 
 - **Pick the mic deliberately, and know that ribbons are the factory habit.**
   Across the corpus, when Line 6 chooses a mic rather than leaving the default,
-  the picks are `121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (11),
-  `47 Cond FET` (7) — ribbons lead, and often sit on the second cab of a
-  dual-cab pair. Angle is **0° on-axis on 87 of 108 cabs**.
+  the picks are `121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (10),
+  `84 Ribbon` (6) — ribbons lead, and often sit on the second cab of a
+  dual-cab pair. Angle is **0° on-axis on 71 of 81 cabs**.
 - Mic, distance, position and the cut frequencies are all step-5 decisions now,
   and they have measured starting points — see the **cab voicing baseline**.
 
@@ -197,8 +197,9 @@ Most effect models ship as a **Mono / Stereo pair** (`Chorus Mono` /
 `Chorus Stereo`). The variant is a real choice: a stereo block costs more DSP
 and buys nothing that a mono listener can hear.
 
-The rule Line 6 follows, measured across the 66 factory presets
-(`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md`):
+The rule Line 6 follows, measured across the 66-preset factory set (guitar and
+bass mixed — this table predates the instrument split and has not been
+re-derived for the 50 factory guitar presets alone):
 
 | where the block sits | stereo | mono | stereo share |
 |---|---|---|---|
@@ -333,10 +334,10 @@ After generating, tweak these without re-authoring via a `helixgen patch`
 
 `paths` takes **1 or 2 entries, one per DSP**. Default to **one**. A second
 path costs a whole DSP and buys nothing unless the tone genuinely needs two
-signals. Line 6 uses one in 59 of 66 factory presets, but almost always for
+signals. Line 6 uses one in 43 of the 50 factory guitar presets, but almost always for
 reasons the recipe layer can't feel — reach for it only in these cases:
 
-**A. Two amps blended (11 factory presets do this).** Both paths take the same
+**A. Two amps blended (4 factory guitar presets do this).** Both paths take the same
 jack and sum at the matrix. This is the "layered" sound — a big clean and a
 grind stacked, or two mic'd cabs — and it is what `dual amp` means on a
 Tool-style rig. Hard-pan them for width, or leave both centred to blend:
@@ -370,8 +371,8 @@ it back byte-exact) — but **how a given routing combination behaves is not**.
 Say so in the report, and tell the user to check the destination jack first if
 one feed is silent.
 
-**C. Serial cascade (`to: "path2a"`, path 2 input `"none"`).** 41 of the 66
-factory presets do this — it continues one chain onto the second DSP purely
+**C. Serial cascade (`to: "path2a"`, path 2 input `"none"`).** 39 of the 50
+factory guitar presets do this — it continues one chain onto the second DSP purely
 to spread processing load. **Don't reach for it.** helixgen cannot measure DSP
 cost, the device is the only authority on whether a preset fits, and it
 changes nothing you can hear. Author it only when a user asks for it by name.
@@ -383,7 +384,7 @@ changes nothing you can hear. Author it only when a user asks for it by name.
 - **Two summed amps are louder.** Redo the volume-normalization pass (5.7)
   across both paths, and raise both amps together when repairing level — never
   one, or the blend moves.
-- Parallel *inside* one path (a `split`/`join` region, 17 factory presets) is
+- Parallel *inside* one path (a `split`/`join` region, 11 factory guitar presets) is
   the cheaper tool when the two branches share an amp. Prefer it for
   drive-blend and bi-amp work; a second DSP is for two full rigs.
 
@@ -424,7 +425,7 @@ worrying about the title — the naming flags stamp identity at `generate` time.
 
 **Read `${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus.md` before you set a cab
 param.** It is the measured distribution of what Line 6's own designers do
-across the 66 factory presets, and it replaced a set of invented "anti-fizz"
+across the 50 factory guitar presets, and it replaced a set of invented "anti-fizz"
 numbers that were making every generated preset dark and dry.
 
 Read its rows the way that file explains: **`at_default` first, then `moved`.**
@@ -437,15 +438,15 @@ sounds muffled and lifeless next to a factory one. The old baseline cut the top
 off at 6500–7000 Hz and the bottom at 80–100 Hz on *every* preset. Line 6 does
 neither.
 
-| Cab param | Factory practice (n=108 cabs) | What to do |
+| Cab param | Factory practice (n=81 cabs) | What to do |
 |---|---|---|
-| `HighCut` | **61 of 108 left at the model default.** Of the 47 moved, median 9500 (p25–p75 8000–10000) | Default is the majority answer. If you do cut, 8000–10000 is the factory window — **6500–7000 is below anything they shipped** |
-| `LowCut` | **71 of 108 left at default.** Of the 37 moved, median 50 (p25–p75 39–69) | Mostly untouched. When they do move it they land around 40–70, not 80–100 |
-| `Distance` | 56 at default. Of the 52 moved, median 2.9" (p25–p75 1–3.6), max 9 | 1–3.5" is the working range. Close-micing is normal; distance is not a mud cure |
-| `Position` | 44 at default — the most-adjusted cab param. Moved median 0.30 (p25–p75 0.24–0.39) | This is what they actually voice with. Toward 0 brighter, toward 1 darker |
-| `Angle` | 87 at default. When moved, they move it **to 0°** | On-axis. Several cabs already default to 45°, so "try 45°" may be a no-op — `show-block` first |
-| `Mic` | 36 at default. Deliberate picks: **`121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (11), `47 Cond FET` (7)** | Pick by label — `show-block` prints them. When Line 6 chooses a mic at all, a **ribbon** is the most common choice, and it often lives on the second cab of a dual-cab pair |
-| `Level` | 68 at default (0 dB). Of the 40 moved, median +2.5 (p25–p75 −3…+6) | Leave at 0 on a single cab; it is the balance knob between the two halves of a dual cab. An **IR block defaults to −18 dB** — a different reference; don't compare the two |
+| `HighCut` | **41 of 81 left at the model default.** Of the 40 moved, median 9650 (p25–p75 8275–10000) | Default vs cut is close to a coin flip — leaving it is never wrong. If you do cut, ~8300–10000 is the factory window — **6500–7000 is well below it** |
+| `LowCut` | **47 of 81 left at default.** Of the 34 moved, median 50 (p25–p75 37–72) | Mostly untouched. When they do move it they land around 40–70, not 80–100 |
+| `Distance` | 42 at default. Of the 39 moved, median 3" (p25–p75 1–3.5), max 7 | 1–3.5" is the working range. Close-micing is normal; distance is not a mud cure |
+| `Position` | 27 at default — the most-adjusted cab param after `Mic`. Moved median 0.30 (p25–p75 0.19–0.31) | This is what they actually voice with. Toward 0 brighter, toward 1 darker |
+| `Angle` | 71 at default. When moved, they move it **to 0°** | On-axis. Several cabs already default to 45°, so "try 45°" may be a no-op — `show-block` first |
+| `Mic` | 20 at default. Deliberate picks: **`121 Ribbon` (15), `57 Dynamic` (11), `160 Ribbon` (10), `84 Ribbon` (6)** | Pick by label — `show-block` prints them. When Line 6 chooses a mic at all, a **ribbon** is the most common choice, and it often lives on the second cab of a dual-cab pair |
+| `Level` | 47 at default (0 dB). Of the 34 moved, median +2.5 (p25–p75 −2.9…+6) | Leave at 0 on a single cab; it is the balance knob between the two halves of a dual cab. An **IR block defaults to −18 dB** — a different reference; don't compare the two |
 
 Still true, and still worth doing:
 
@@ -477,18 +478,18 @@ certainly a mistake (the envelope check in step 7b catches it).
 
 | Knob | Range | Notes |
 |------|-------|-------|
-| Drive `Gain` | **0.12–0.48, median 0.32 when set** (almost always set: 5 of 56 at default) | Factory drives run LOW and push the amp. The ones actually ON at load sit at 0.30 — most factory drives are bypassed and engaged by a snapshot/footswitch |
+| Drive `Gain` | **0.12–0.46, median 0.32 when set** (almost always set: 3 of 50 at default) | Factory drives run LOW and push the amp. The ones actually ON at load sit at 0.25 — most factory drives are bypassed and engaged by a snapshot/footswitch |
 | Drive `Gain` (pedal AS the distortion) | up to 0.76 | The top of the same distribution, not a separate factory practice — use when the pedal is the gain source |
-| Amp `Drive` | **0.41–0.61** (median 0.50) | The most reliably-dialled amp param — only 7 of 60 sit at default. Far lower than you would guess; saturation comes from the power amp, not from piling on preamp gain |
-| Amp power-amp volume | **41 of 83 sit at the model default** (usually 1.0). Of the 42 moved, median **0.645** (p25–p75 0.42–0.85) | The knob's NAME varies — `Master` on most, **`MasterVol` on `US Double Black`**, `Output Volume` on `WhoWatt 103`, absent on `Mandarin Rock 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`, `Agua 751`) sit at 0.36–0.55 |
+| Amp `Drive` | **0.46–0.64** (median 0.53) | The most reliably-dialled amp param — only 6 of 45 sit at default. Far lower than you would guess; saturation comes from the power amp, not from piling on preamp gain |
+| Amp power-amp volume | **28 of 58 sit at the model default** (usually 1.0). Of the 30 moved, median **0.52** (p25–p75 0.36–0.69) | The knob's NAME varies — `Master` on most, **`MasterVol` on `US Double Black`**, `Output Volume` on `WhoWatt 103`, absent on `Mandarin Rock 3`; `show-block` first or `generate` errors. Start from the model's own default rather than a fixed number: the factory habit is to leave it high, and when they move it they move it DOWN. The high-gain Agouras (`EVPanama`, `German Xtra`, `Revv`, `Solid 100`) sit at 0.36–0.55 |
 | Amp channel volume | `ChVol` is 0..1; Agoura `Level` is **dB** | Also seen: `Ch Vol`, `Ch Level` (alongside a separate `Level`!), `Output`, `ODLevel`. See the level-units box below and read `show-block` every time |
-| Amp `Hype` | **leave at 0** | 51 of 69 factory amps never touch it. The 18 that do sit at **0.21–0.39 (median 0.275)**. A seasoning, not a baseline |
+| Amp `Hype` | **leave at 0** | 39 of 53 factory guitar amps never touch it. The 14 that do sit at **0.21–0.37 (median 0.26)**. A seasoning, not a baseline |
 | Amp `Sag` / `Ripple` | **−1..1 default 0 on Agoura; 0..1 default 0.5 on legacy** | Different scales entirely — the corpus suppresses this row for exactly that reason. On a legacy amp, 0 is not neutral, it is the extreme. `show-block` before writing |
-| Amp `ZPrePost` | **58 of 62 at the model default** | Effectively never touched. Leave it unless research names a specific sag/feel behaviour |
+| Amp `ZPrePost` | **49 of 50 at the model default** | Effectively never touched. Leave it unless research names a specific sag/feel behaviour |
 | Cab params | see the voicing baseline above | |
-| Delay `Mix` | **0.29–0.42** (median 0.33; set on 65 of 70) | Factory delays are much wetter than the old 0.10–0.20 guidance. ON-at-load delays sit slightly wetter still (0.36) |
-| Delay `Feedback` | **0.29–0.50** (median 0.39 when set) | |
-| Reverb `Mix` | **0.24–0.39** (median 0.32, max 0.92) | Factory reverb is wet. The old 0.08–0.15 was a third of real practice |
+| Delay `Mix` | **0.29–0.42** (median 0.33; set on 64 of 68) | Factory delays are much wetter than the old 0.10–0.20 guidance. ON-at-load delays sit slightly wetter still (0.36) |
+| Delay `Feedback` | **0.30–0.50** (median 0.39 when set) | |
+| Reverb `Mix` | **0.24–0.37** (median 0.31, max 0.59) | Factory reverb is wet. The old 0.08–0.15 was a third of real practice |
 | Comp before amp (optional) | ~1–2 dB gain reduction | Polished feel; skip for raw dynamics |
 
 **Level units — the bug this table exists to prevent.** Amps expose channel
@@ -514,7 +515,7 @@ Amp-EQ tweaks for the user's specific guitar (apply to whichever amp params actu
 | Ibanez Prestige (RG/AZ/S) | hot HB, tight low-mids | as LP/SG but you can run `Treble` slightly higher (0.60–0.65); these excel at fast tight runs, keep `Mid` ~0.60 for cut |
 | ES-335 / hollow / semi-hollow | warm HB, more body | pull `Bass` to ~0.45 to avoid boom; `Master` ~0.45 to control feedback |
 | PRS / generic HB | balanced HB | midpoint of Strat and LP — start at amp defaults and adjust from ear |
-| Bass guitar | varies | more `Bass`, less `Mid`; back `Master` off to keep cab tight |
+| Bass guitar | — | not a guitar tweak: see **Bass tones** (end of Workflow) |
 
 ### 5.5. Snapshots (when the user wants multiple scenes in one preset)
 
@@ -863,7 +864,7 @@ table + `description_md` verbatim) or `helixgen library show "<name>" [--json]`
 Before you report, run the envelope check. It reads the generated `.hsp`
 directly, back-fills every param the model declares, and compares each value —
 base and per-snapshot — against `${CLAUDE_PLUGIN_ROOT}/data/factory-corpus.json`,
-the measured distributions from Line 6's own 66 factory presets. It is the only
+the measured distributions from Line 6's 50 factory guitar presets. It is the only
 automatic check that the tone is voiced like a real preset rather than like a
 plausible-sounding guess:
 
@@ -1153,10 +1154,11 @@ After the user loads the preset and reports back ("the lead is too compressed", 
 Rules of thumb for translating ear-language to param moves:
 - **"Too compressed"** on a lead → back amp `Drive` off ~0.10, raise `Master`; or back drive pedal `Gain` off ~0.10
 - **"Too dark"** → raise `Treble` 0.05–0.10, raise `Presence` 0.05; or change to a brighter amp variant if the EQ is already at ceiling
-- **"Too bright / harsh"** → drop `Treble`/`Presence` first; then try cab `Angle` 45°, a darker `Mic`, or `Position` toward 0.4. Pull `HighCut` down only as a last resort, and not below 8000 — that is already at the aggressive end of factory practice
+- **"Too bright / harsh"** → drop `Treble`/`Presence` first; then try cab `Angle` 45°, a darker `Mic`, or `Position` toward 0.4. Pull `HighCut` down only as a last resort, and not below 8000 — that is already below the factory p25 (8275)
 - **"Fizzy / digital / not amp-in-the-room"** → in order: (1) confirm the amp is an **Agoura** model, not a legacy HX one — that is the biggest single difference in feel, and no EQ move substitutes for it; (2) raise the amp's power-amp volume (`Master`/`MasterVol` — check `show-block`) toward its factory value for that model and back `Drive` off to ~0.5, so the saturation comes from the power amp; (3) try a different cab `Mic` and `Angle` 45°; (4) a Parametric EQ cutting 2–4 dB at 3–4 kHz medium Q; (5) a subtle comp (~1–2 dB GR) at the front. Do NOT reach for a big `HighCut` — a dark preset is the more common failure here
 - **"Not enough body"** → raise `Bass` 0.05–0.10 or `Mid` 0.05; if a `LowCut` was set, lower it back toward the 19.9 default
-- **"Boomy / flubby"** → raise cab `LowCut` toward 60–90 (factory's upper range), back `Bass` off
+- **(guitar) "Boomy / flubby"** → raise cab `LowCut` toward 60–90 (the top of factory practice: moved p75 72, max 99), back `Bass` off
+- **Bass "boomy / flubby"** → see **Bass tones**; do not raise cab LowCut into the fundamental
 - **"Lead doesn't sing / cut"** → raise `Mid` 0.05–0.10 in the lead snapshot, raise delay `Mix` 0.05
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
@@ -1215,11 +1217,11 @@ touching the tone:
 | Recommending a block not in the user's library | Always verify with `list-blocks --category <cat>` first |
 | Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
-| A stereo drive/wah/comp in front of the amp | Pre-amp blocks are Mono — Line 6's own corpus runs 1 stereo drive to 108 mono. Stereo belongs after the cab (step 3) |
-| A mono delay/reverb after the cab on a stereo rig | 69% of factory post-cab blocks are stereo; use the Stereo variant unless the player's rig is mono |
+| A stereo drive/wah/comp in front of the amp | Pre-amp blocks are Mono — Line 6's 66-preset factory set (guitar and bass mixed) runs 1 stereo drive to 108 mono. Stereo belongs after the cab (step 3) |
+| A mono delay/reverb after the cab on a stereo rig | 69% of post-cab blocks in the 66-preset factory set (guitar and bass mixed) are stereo; use the Stereo variant unless the player's rig is mono |
 | A second path with blocks but no `input` | `paths[1].input` defaults to `"none"` — the path is silent. Set it explicitly (step 5, "Two paths") |
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
-| Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory median is HighCut 11750 / LowCut 19.9 — mostly untouched (step 5 cab voicing baseline) |
+| Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory guitar cabs leave HighCut at the model default on 41 of 81 and LowCut on 47 of 81; moved, the medians are 9650 / 50 (step 5 cab voicing baseline) |
 | Leaving cab `Mic` unset and calling it neutral | The default is a per-cab accident, not a choice. When Line 6 picks, the most common pick is `121 Ribbon`, then `57 Dynamic` and `160 Ribbon`, at 0° on-axis. Choose by label — `show-block` prints them (step 5) |
 | Heavy reverb defaults | Stadium plates run hot; start at 0.10 |
 | Asking 5 clarifying questions | Cap at 3, only what's actually missing |
@@ -1241,12 +1243,12 @@ touching the tone:
 | Writing a companion `.md` next to the `.hsp` | Gone — descriptions live in `description_md` via `library doc` (per-variant notes → `notes_md`); read back with `helixgen describe` |
 | Naming a tone without its target guitar | Pass `--guitar <label>` so the display name/slug carry the guitar (`"$Artist - $Song - $Guitar"` / `"$Descriptor - $Guitar"`, step 5); omit it only when the tone is explicitly guitar-agnostic |
 | Hand-formatting the old `"<Tone> — <Guitar>"` title in the recipe | Identity comes from `generate`'s `--artist`/`--song` or `--descriptor` + `--guitar` flags, not the recipe `"name"` (step 5 naming) |
-| Picking a legacy HX amp when an Agoura model exists | Agoura is the Stadium's own engine (SIC amp/cab interaction, real touch response) and is what all 66 factory presets are built on, 69 uses to 22. Legacy models exist for backward compatibility — reaching for one by name-similarity is how a preset ends up feeling flat (step 3) |
+| Picking a legacy HX amp when an Agoura model exists | Agoura is the Stadium's own engine (SIC amp/cab interaction, real touch response) and is what 44 of the 50 factory guitar presets are built on, 53 amp uses to 12. Legacy models exist for backward compatibility — reaching for one by name-similarity is how a preset ends up feeling flat (step 3) |
 | Writing an Agoura amp's `Level` as if it were a 0..1 knob | `Level` is **dB** (`-40..10`, default ~`-10`); `ChVol` is the 0..1 one. `Level: 0.5` is +10.5 dB and clips. `show-block` prints the unit — read it (step 5 level-units box) |
-| Overriding the amp's power-amp volume by habit | Half of factory amps sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.645), and the high-gain Agouras sit at 0.36–0.55. Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `US Double Black`, absent on `Mandarin Rock 3` — `show-block` first (step 5) |
-| Setting `Hype` on every Agoura amp | 51 of 69 factory amps leave it at 0. The 18 that use it sit at 0.21–0.39. A seasoning, not a baseline (step 5) |
+| Overriding the amp's power-amp volume by habit | Half of factory guitar amps (28 of 58) sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.52), and the high-gain Agouras sit at 0.36–0.55. Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `US Double Black`, absent on `Mandarin Rock 3` — `show-block` first (step 5) |
+| Setting `Hype` on every Agoura amp | 39 of 53 factory guitar amps leave it at 0. The 14 that use it sit at 0.21–0.37. A seasoning, not a baseline (step 5) |
 | Shipping without running the envelope check | Step 7b is the only automatic check that the preset is voiced like a real one; a FAIL is a recipe bug, not a formality |
-| Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.32 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
+| Reverb/delay `Mix` at 0.08–0.20 | That was invented guidance. Factory sets these on nearly every block, at reverb 0.31 and delay 0.33 medians — generated presets have been shipping far too dry (step 5) |
 | Git-committing the generated `.hsp`/library files yourself | Core auto-commits library changes (gated by `git_commit_tones`); the skill must not add/commit library paths (step 7c) |
 
 ## Forking a tone — use `library fork`

@@ -1253,3 +1253,12 @@ def test_device_skill_does_not_claim_records_outlast_a_hand_passed_ip() -> None:
     assert re.search(r"both go stale on the next DHCP lease", text), (
         "device: false durability asymmetry between --ip and the persisted record"
     )
+
+
+def test_tone_skill_cites_guitar_corpus_not_mixed_66() -> None:
+    """The 66-preset corpus mixed 16 bass presets into guitar baselines (2026-10-03)."""
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    corpus = json.loads((REPO_ROOT / "data" / "factory-corpus.json").read_text())
+    assert corpus["instrument"] == "guitar"
+    assert "66 factory presets" not in text
+    assert f"{corpus['presets']} factory guitar presets" in text
