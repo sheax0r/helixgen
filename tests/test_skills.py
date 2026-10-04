@@ -1262,3 +1262,18 @@ def test_tone_skill_cites_guitar_corpus_not_mixed_66() -> None:
     assert corpus["instrument"] == "guitar"
     assert "66 factory presets" not in text
     assert f"{corpus['presets']} factory guitar presets" in text
+
+
+def test_tone_skill_has_a_measured_bass_section() -> None:
+    text = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "### Bass tones" in text
+    bass = text.split("### Bass tones", 1)[1].split("\n## ", 1)[0]
+    # routed to the bass envelope, never the guitar one
+    assert "HELIXGEN_FACTORY_CORPUS" in bass and "factory-corpus-bass.json" in bass
+    assert "factory-corpus-bass.md" in bass
+    # the guitar boomy fix must not leak in
+    assert "LowCut" in bass
+    # honest provenance
+    assert "not ear-validated" in bass.lower() or "not yet ear-validated" in bass.lower()
+    # gate early in the workflow so the agent reads it before picking blocks
+    assert text.index("Bass tones") < text.index("### 3. Pick blocks from the library")

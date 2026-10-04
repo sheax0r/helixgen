@@ -87,6 +87,10 @@ descriptions used to play). The verbs this skill drives:
 
 Ask at most 3 short questions, and only the ones the request didn't already answer. Common gaps:
 
+- **Bass guitar?** If the instrument is a bass (the user says so, or the profile's
+  `type` is `"bass"` in `helixgen library show <guitar> --json`), read
+  **Bass tones** (end of the Workflow) before step 3. Several guitar rules in
+  steps 3–10 do not apply to bass.
 - **Guitar** (single-coil / humbucker / acoustic / bass; specific model if mentioned)
 - **Role(s)** — single role (rhythm / lead / clean / pad / solo boost), or multiple. If multiple, **ask the family question** (see 1a below).
 - **Reference specifics** (which section of a song; live vs studio version)
@@ -873,6 +877,8 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" \
   python3 "${CLAUDE_PLUGIN_ROOT}/tools/envelope-check.py" <path-to>/<variant-slug>.hsp
 ```
 
+**Bass tone?** Check against the bass corpus instead (command in **Bass tones**). The guitar envelope FAILs correct bass values.
+
 Reading the result:
 
 - **FAIL** — the value is outside anything Line 6 shipped **for that same
@@ -1208,6 +1214,89 @@ touching the tone:
   Fix the gain staging (amp/drive `Level`/`Gain` params) *first* instead of
   proposing tone tweaks on top of a clipping chain — then have the user
   re-run `device normalize`.
+
+### Bass tones
+
+Measured from Line 6's 16 factory bass presets (`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus-bass.md`); not yet ear-validated on hardware.
+
+**Amps.** Agoura first, as for guitar — 16 Agoura amp instances to 10 legacy.
+Agoura: `Ampeg SVT 50th` (5), `Ampeg B15NF 66` (4), `US Drip Bass` (3),
+`Mandarin Plus 200`, `Brit MegaBass`, `Agua 751` (1 each; plus one `WhoWatt 103`).
+Legacy: `Ampeg SVT-4 PRO` (6 — the single most-used bass amp), and one each of
+`Woody Blue`, `Woody Blue (Preamp)`, `Agua Sledge (Preamp)`, `Busy One Jump`.
+When the instrument is a bass, pick from these — never from the guitar Agoura
+list in step 3. Agoura `Level` is dB; `SVT-4 PRO` uses 0..1 `ChVol` (`show-block` first).
+
+**Cabs and mics.** `8x10 SVT AV`, `4x10 Ampeg Pro`, `1x15 Ampeg B-15` (6 each),
+`2x15 US Dripman` (4); `2x15 Brute`, `4x10 Garden` (2), `1x12 Epicenter` (1).
+Bass cabs carry a **different mic list** from guitar cabs (`88 Dynamic`, `D6
+Dynamic`, `47 Cond FET`, … — no `121`/`160 Ribbon`), so the guitar mic advice
+does not transfer. Factory picks: `8x10 SVT AV` → `47 Cond FET` on 4 of 6
+(default `88 Dynamic`); `1x15 Ampeg B-15` default `47 Cond FET` (3 of 6);
+`4x10 Ampeg Pro` default `D6 Dynamic` (5 of 6); `2x15 US Dripman` default
+`67 Cond` (4 of 4). Read labels off `show-block <cab> --json` → `enum_labels`.
+
+**The factory bass layout — a dry/DI signal beside the amp.** 9 of 16 presets
+run a lane with no amp in parallel with an amp lane; 14 of 16 feed DSP 2 from
+the jack (never the guitar habit of cascading — only 2 bass presets cascade).
+13 of 16 use a DI block (`Regal Bass DI Mono`, 15 instances; `ZeroAmp Bass DI
+Mono`, 6), and it **leads its lane** (12 of 16) — only 1 preset puts a DI
+straight into an amp. A compressor sits after the cab in 11 of 16 (`LA Studio
+Comp`, 18 instances); 6 of 16 also start DSP 1 with one (`Ampeg Opto Comp` on 4).
+8 of 16 carry an octaver (`Boctaver Mono` or `Bass Octaver`), before the amp wherever there is one. In recipe terms it is "Two paths" case **A** with
+the second rig dry (step 5):
+
+```json
+"paths": [
+  {"input": "inst1",
+   "blocks": [{"block": "Ampeg Opto Comp Mono"}, {"block": "Ampeg SVT 50th"},
+              {"block": "8x10 SVT AV"}, {"block": "LA Studio Comp Mono"}]},
+  {"input": "inst1",
+   "blocks": [{"block": "Regal Bass DI Mono"}, {"block": "LA Studio Comp Mono"}]}
+]
+```
+
+The cheaper single-DSP form (6 of 16 split inside a DSP) is a `{"split": {"type": "y"}}` …
+`{"join": {...}}` region with the DI on one branch. Either way the two signals
+sum — redo the 5.7 level pass across both.
+
+**Starting values** (factory moved median, min–max, n; p25–p75 where n ≥ 8):
+
+| block / param | factory | note |
+|---|---|---|
+| `Ampeg SVT 50th` `Level` | −9.6 dB (−20…−2.1), n=5 | `Master`, `Hype`: leave at default (3/5, 4/5) |
+| `Ampeg B15NF 66` `Drive` / `Treble` / `Level` | 0.62 (0.34–0.88) / 0.58 (0.48–0.66) / −11.5 dB (−16.6…−3), n=4 | `Master`, `Hype`: leave at default (3/4); `Bass` half default, moved 0.58 |
+| `US Drip Bass` `Level` | −17.3 dB (−22…−8.8), n=3 | `Master` (3/3), `Hype` (2/3): leave at default |
+| `Ampeg SVT-4 PRO` `Drive` / `Master` | 0.43 (0.28–0.47) / 0.85 (0.84–1), n=6 | `Bass`: leave at default (4/6); `Mid` half default, moved 0.35; `Treble` moved 0.54 (0.45–0.62) |
+| `8x10 SVT AV` `Distance` / `LowCut` | 4 (1–6.75) / 54 Hz (37–69; 3 of 6 at default 37), n=6 | `HighCut` (4/6), `Level` (5/6): leave at default |
+| `1x15 Ampeg B-15` `Distance` / `HighCut` | 1.5 (1–9) / 8000 (7400–20100), n=6; 2 of 6 at default each | `LowCut` (6/6), `Level` (4/6): leave at default |
+| `2x15 US Dripman` `Distance` | 1.875 (1–4.25), n=4; 2 at default | `HighCut` (3/4), `LowCut`, `Level`, `Mic` (4/4): leave at default |
+| `4x10 Ampeg Pro` | n=6 | `Distance`, `HighCut`, `LowCut` (6/6), `Mic` (5/6), `Level` (4/6): leave at default |
+| `Regal Bass DI Mono` `Bass` / `Treble` | 0.55 (p25–p75 0.55–0.55; 0.49–0.65) / 0.58 (0.43–0.66), n=15 | always set |
+| `ZeroAmp Bass DI Mono` `Bass` / `Treble` / `Level` | 0.51 (0.35–0.51) / 0.47 (0.47–0.58) / 0.70 (0.45–1), n=6 | `Blend` half default, moved 0.66 (0.4–0.81) |
+| `Ampeg Scrambler Mono` `Level` / `Treble` | 0.74 / 0.59 (0.59–0.63), n=5 | `Blend`: leave at default (3/5) |
+| `Teemah! Mono` `Gain` / `Bass` / `Treble` / `Level` | 0.30 (0.25–0.65) / 0.24 (0–0.26) / 0.35 (0.24–0.37) / 0.58 (0.5–0.66), n=3 | |
+| `LA Studio Comp Mono` `Level` / `Mix` | −4.2 dB (p25–p75 −5.6…−2.5) / 0.70 (0.61–1), n=14 | Stereo (n=4): −6.5 dB, 0.70 |
+| `Ampeg Opto Comp Mono` `Level` | 0.75 (0.56–0.75), n=10 | 0..1, not dB |
+| `Rochester Comp Mono` `Level` / `Ratio` | 11 dB (p25–p75 4.1–11) / 7 (2.5–40), n=8 | `Threshold` (5/8), `Mix` (8/8): leave at default |
+| `Deluxe Comp Mono` `Threshold` / `Ratio` / `Level` | −34.2 dB (−51.7…−27) / 5 (3–5) / 4.2 dB (1.5–17.3), n=4 | `Mix` half default, moved 0.83 |
+| `Parametric Mono` | n=6; `LowCut` moved 28 Hz (20–160) | corrective, per preset: moved `MidFreq` 737 Hz, `MidGain` −11.6 dB, `LowGain` −4.3 dB; ranges wide |
+
+**Guitar rules that do not apply to bass:**
+- **Cab `LowCut`.** Bass cabs leave it at the model default on 19 of 22
+  instances (`1x15 Ampeg B-15` 6/6, `4x10 Ampeg Pro` 6/6, `2x15 US Dripman`
+  4/4 at 19.9 Hz; `8x10 SVT AV` 3/6 at its 37 Hz default, moved 54, max 69).
+  The guitar "boomy → raise cab LowCut" fix cuts a bass's fundamental. For bass boom, back off amp `Bass` or use a Parametric EQ cut.
+- **The guitar pickup table** (step 5) — it is for guitar pickups.
+- **Guitar Agoura picks** (step 3) and the guitar cab-mic habits above.
+
+**Envelope check for bass** — replaces the 7b command:
+
+```bash
+HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" \
+HELIXGEN_FACTORY_CORPUS="${CLAUDE_PLUGIN_ROOT}/data/factory-corpus-bass.json" \
+  python3 "${CLAUDE_PLUGIN_ROOT}/tools/envelope-check.py" <path-to>/<variant-slug>.hsp
+```
 
 ## Common Mistakes
 
