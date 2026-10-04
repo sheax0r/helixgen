@@ -32,8 +32,8 @@ a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for
 those live in `data/factory-corpus.json` under `by_model`.
 
 **Known gaps.** Rows are BASE values — snapshot
-arrays are ignored here, and `amp Drive` alone is snapshot-modulated on many
-amps (about a third of the guitar set), so a single number can be one end of a designed range.
+arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 20 of
+45 amp instances in the guitar set, so a single number can be one end of a designed range.
 Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.
 
 **Amp model family:** Agoura 16 vs legacy 10 amp instances.

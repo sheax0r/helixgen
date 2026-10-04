@@ -7,9 +7,9 @@ anywhere the pinned engine is installed, with no engine-internal imports.
 
 THE THING THAT MAKES THIS USABLE: every row separates values the designer LEFT AT
 THE MODEL DEFAULT from values they deliberately MOVED. Pool them and you get
-medians that describe nobody — factory `cab HighCut` "median 11750" is the
-midpoint between 29 cabs left wide open at 20100 and 13 cut to 8000, and occurs
-zero times in the corpus. `moved_*` is the design signal; `at_default` is how
+medians that describe nobody — factory `cab HighCut` pooled median is the
+midpoint between cabs left wide open at the model default and cabs deliberately
+cut, and can land on a value no preset uses. `moved_*` is the design signal; `at_default` is how
 often the answer is "leave it alone".
 
 Also recorded: bypass state (most factory drive/delay blocks are OFF at load, and
@@ -317,8 +317,8 @@ def render_md(c):
          "a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for",
          "those live in `data/factory-corpus.json` under `by_model`.", "",
          "**Known gaps.** Rows are BASE values — snapshot",
-         "arrays are ignored here, and `amp Drive` alone is snapshot-modulated on many",
-         "amps (about a third of the guitar set), so a single number can be one end of a designed range.",
+         "arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 20 of",
+         "45 amp instances in the guitar set, so a single number can be one end of a designed range.",
          "Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.",
          "", f"**Amp model family:** Agoura {c['amp_family_use'].get('Agoura', 0)} vs "
          f"legacy {c['amp_family_use'].get('legacy', 0)} amp instances.", "",
