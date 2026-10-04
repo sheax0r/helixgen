@@ -1238,7 +1238,7 @@ does not transfer. Factory picks: `8x10 SVT AV` → `47 Cond FET` on 4 of 6
 
 **The factory bass layout — a dry/DI signal beside the amp.** 9 of 16 presets
 run a lane with no amp in parallel with an amp lane; 14 of 16 feed DSP 2 from
-the jack (never the guitar habit of cascading — only 2 bass presets cascade).
+the jack (unlike the guitar habit of cascading — only 2 bass presets cascade).
 13 of 16 use a DI block (`Regal Bass DI Mono`, 15 instances; `ZeroAmp Bass DI
 Mono`, 6), and it **leads its lane** (12 of 16) — only 1 preset puts a DI
 straight into an amp. A compressor sits after the cab in 11 of 16 (`LA Studio
@@ -1256,8 +1256,8 @@ the second rig dry (step 5):
 ]
 ```
 
-The cheaper single-DSP form (6 of 16 split inside a DSP) is a `{"split": {"type": "y"}}` …
-`{"join": {...}}` region with the DI on one branch. Either way the two signals
+The single-DSP form is a `{"split": {"type": "y"}}` … `{"join": {...}}`
+region with the DI on one branch (2 presets; 6 of 16 split inside a DSP in all). Either way the two signals
 sum — redo the 5.7 level pass across both.
 
 **Starting values** (factory moved median, min–max, n; p25–p75 where n ≥ 8):
@@ -1273,18 +1273,18 @@ sum — redo the 5.7 level pass across both.
 | `2x15 US Dripman` `Distance` | 1.875 (1–4.25), n=4; 2 at default | `HighCut` (3/4), `LowCut`, `Level`, `Mic` (4/4): leave at default |
 | `4x10 Ampeg Pro` | n=6 | `Distance`, `HighCut`, `LowCut` (6/6), `Mic` (5/6), `Level` (4/6): leave at default |
 | `Regal Bass DI Mono` `Bass` / `Treble` | 0.55 (p25–p75 0.55–0.55; 0.49–0.65) / 0.58 (0.43–0.66), n=15 | always set |
-| `ZeroAmp Bass DI Mono` `Bass` / `Treble` / `Level` | 0.51 (0.35–0.51) / 0.47 (0.47–0.58) / 0.70 (0.45–1), n=6 | `Blend` half default, moved 0.66 (0.4–0.81) |
-| `Ampeg Scrambler Mono` `Level` / `Treble` | 0.74 / 0.59 (0.59–0.63), n=5 | `Blend`: leave at default (3/5) |
+| `ZeroAmp Bass DI Mono` `Drive` / `Bass` / `Treble` / `Level` | 0.68 (0.45–0.93) / 0.51 (0.35–0.51) / 0.47 (0.47–0.58) / 0.70 (0.45–1), n=6 | `Blend` half default, moved 0.66 (0.4–0.81) |
+| `Ampeg Scrambler Mono` `Drive` / `Level` / `Treble` | 0.70 (0.7–0.77) / 0.74 / 0.59 (0.59–0.63), n=5 | `Blend`: leave at default (3/5) |
 | `Teemah! Mono` `Gain` / `Bass` / `Treble` / `Level` | 0.30 (0.25–0.65) / 0.24 (0–0.26) / 0.35 (0.24–0.37) / 0.58 (0.5–0.66), n=3 | |
-| `LA Studio Comp Mono` `Level` / `Mix` | −4.2 dB (p25–p75 −5.6…−2.5) / 0.70 (0.61–1), n=14 | Stereo (n=4): −6.5 dB, 0.70 |
-| `Ampeg Opto Comp Mono` `Level` | 0.75 (0.56–0.75), n=10 | 0..1, not dB |
+| `LA Studio Comp Mono` `Gain` / `Level` / `Mix` | 0.52 (p25–p75 0.42–0.61) / −4.2 dB (p25–p75 −5.6…−2.5) / 0.70 (0.61–1), n=14 | Stereo (n=4): −6.5 dB, 0.70 |
+| `Ampeg Opto Comp Mono` `Level` | 0.75 (p25–p75 0.75–0.75; 0.56–0.75), n=10 | 0..1, not dB; `Blend`: leave at default (6/10) |
 | `Rochester Comp Mono` `Level` / `Ratio` | 11 dB (p25–p75 4.1–11) / 7 (2.5–40), n=8 | `Threshold` (5/8), `Mix` (8/8): leave at default |
 | `Deluxe Comp Mono` `Threshold` / `Ratio` / `Level` | −34.2 dB (−51.7…−27) / 5 (3–5) / 4.2 dB (1.5–17.3), n=4 | `Mix` half default, moved 0.83 |
 | `Parametric Mono` | n=6; `LowCut` moved 28 Hz (20–160) | corrective, per preset: moved `MidFreq` 737 Hz, `MidGain` −11.6 dB, `LowGain` −4.3 dB; ranges wide |
 
 **Guitar rules that do not apply to bass:**
-- **Cab `LowCut`.** Bass cabs leave it at the model default on 19 of 22
-  instances (`1x15 Ampeg B-15` 6/6, `4x10 Ampeg Pro` 6/6, `2x15 US Dripman`
+- **Cab `LowCut`.** Bass cabs leave it at the model default on 19 of the 22
+  instances on the four main bass cabs (`1x15 Ampeg B-15` 6/6, `4x10 Ampeg Pro` 6/6, `2x15 US Dripman`
   4/4 at 19.9 Hz; `8x10 SVT AV` 3/6 at its 37 Hz default, moved 54, max 69).
   The guitar "boomy → raise cab LowCut" fix cuts a bass's fundamental. For bass boom, back off amp `Bass` or use a Parametric EQ cut.
 - **The guitar pickup table** (step 5) — it is for guitar pickups.
@@ -1297,6 +1297,11 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" \
 HELIXGEN_FACTORY_CORPUS="${CLAUDE_PLUGIN_ROOT}/data/factory-corpus-bass.json" \
   python3 "${CLAUDE_PLUGIN_ROOT}/tools/envelope-check.py" <path-to>/<variant-slug>.hsp
 ```
+
+Read its FAILs more loosely than 7b says. The bass rows are **base values only**, so a FAIL on a
+snapshot value that deliberately moves a param is expected (a factory bass preset FAILs its own
+corpus that way). And most bass rows have n < 8: there, read a FAIL as a NOTE — name the choice in
+the write-up rather than nudging the value into the band.
 
 ## Common Mistakes
 
