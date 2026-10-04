@@ -17,7 +17,7 @@
 - Guitar corpus keeps its paths: `data/factory-corpus.json`, `docs/factory-corpus.md`. Bass corpus: `data/factory-corpus-bass.json`, `docs/factory-corpus-bass.md`.
 - Bass classification rule: preset title (file stem with the `NN-BBS-` position prefix removed) starts with the token `BAS`. Nothing else is used: no model sniffing, no hand-kept list.
 - Harvest with the pinned engine: `helixgen --version` must print `0.52.1`. If not, stop and run `uv tool install --force 'helixgen[device]==0.52.1'`.
-- Factory source: `/Users/michael.shea/git/helixgen-core-wt/untranscode-fixes/tests/fixtures/device_content/` holds the 66 factory `.sbe` files (untracked fixtures). Confirm 66 files, 16 with `BAS` in the name. If the directory is missing or the counts differ, **stop and ask the user**. A re-export needs the hardware.
+- Factory source: `<factory .sbe dir>` (a helixgen-core checkout's `tests/fixtures/device_content/`) holds the 66 factory `.sbe` files (untracked fixtures). Confirm 66 files, 16 with `BAS` in the name. If the directory is missing or the counts differ, **stop and ask the user**. A re-export needs the hardware.
 - Skills operate through the CLI. Skill text must not tell agents to read harvester source.
 - Tests: `python3 -m pytest` from the worktree root (needs only pytest).
 - Release: bump the version in **both** `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`. Never push tags or move `stable` by hand.
@@ -201,7 +201,7 @@ git commit -m "feat(tools): split factory corpus by instrument (BAS-prefixed pre
 - Consumes: Task 1's harvester.
 - Produces: the four committed corpus files, plus `$SCRATCH/drift.md`, the three-column table that Task 3 works from.
 
-Set `SCRATCH` to the session scratchpad and `SBE=/Users/michael.shea/git/helixgen-core-wt/untranscode-fixes/tests/fixtures/device_content` in every command. Shell variables do not persist between agent Bash calls, so repeat them.
+Set `SCRATCH` to the session scratchpad and `SBE=<factory .sbe dir>` in every command. Shell variables do not persist between agent Bash calls, so repeat them.
 
 - [ ] **Step 1: Preflight**
 
