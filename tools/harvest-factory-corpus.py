@@ -7,9 +7,9 @@ anywhere the pinned engine is installed, with no engine-internal imports.
 
 THE THING THAT MAKES THIS USABLE: every row separates values the designer LEFT AT
 THE MODEL DEFAULT from values they deliberately MOVED. Pool them and you get
-medians that describe nobody — factory `cab HighCut` "median 11750" is the
-midpoint between 29 cabs left wide open at 20100 and 13 cut to 8000, and occurs
-zero times in the corpus. `moved_*` is the design signal; `at_default` is how
+medians that describe nobody — factory `cab HighCut` pooled median is the
+midpoint between cabs left wide open at the model default and cabs deliberately
+cut, and can land on a value no preset uses. `moved_*` is the design signal; `at_default` is how
 often the answer is "leave it alone".
 
 Also recorded: bypass state (most factory drive/delay blocks are OFF at load, and
@@ -17,6 +17,7 @@ their values run ~20% different), integer/enum params as mode+frequencies rather
 than medians, and the conversion warnings.
 
 Run:    python3 harvest-factory-corpus.py <sbe-dir> <out-dir>
+        (writes both corpora: factory-corpus.* for guitar, factory-corpus-bass.* for BAS presets)
 """
 import json
 import os
@@ -88,6 +89,19 @@ def model_meta(model_id, _cache={}):
 def enabled_of(obj):
     e = (obj or {}).get("@enabled")
     return bool(e.get("value", True)) if isinstance(e, dict) else True
+
+
+def instrument_of(name) -> str:
+    """Line 6 titles every factory bass preset `BAS …` (file: NN-13C-BAS-Rock-Legends)."""
+    title = re.sub(r"^\d+-\d+[A-Z]-", "", Path(name).stem)
+    return "bass" if re.match(r"BAS\b", title) else "guitar"
+
+
+def split_by_instrument(paths):
+    out = {"guitar": [], "bass": []}
+    for p in paths:
+        out[instrument_of(Path(p).name)].append(p)
+    return out
 
 
 def harvest(hsp_files, cat_idx):
@@ -183,16 +197,8 @@ def row(entries, categorical):
     return r
 
 
-def main():
-    if len(sys.argv) < 3:
-        sys.exit("usage: harvest-factory-corpus.py <sbe-dir> <out-dir>")
-    sbe_dir, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    ok, failed, warnings = convert(sbe_dir, out_dir / "hsp")
-    print(f"converted {len(ok)}, failed {len(failed)}")
-    cat_idx = category_index()
-    obs, kinds, model_use, family_use, presets, skipped = harvest(ok, cat_idx)
+def build_corpus(hsp_files, cat_idx, failed, warnings, instrument, ver):
+    obs, kinds, model_use, family_use, presets, skipped = harvest(hsp_files, cat_idx)
 
     by_model, by_cat = {}, {}
     pooled = defaultdict(lambda: defaultdict(list))
@@ -219,13 +225,13 @@ def main():
             by_cat.setdefault(cat, {})[pname] = row(
                 entries, any(s[3] for s in shapes[cat][pname]))
 
-    ver = sh([HELIXGEN, "--version"]).stdout.strip()
-    corpus = {
+    return {
         "source": "Line 6 Helix Stadium factory setlist",
+        "instrument": instrument,
         "engine": ver,
         "presets": len(presets),
         "inputs": sorted(p["file"] for p in presets),
-        "failed_conversions": failed,
+        "failed_conversions": [f for f in failed if instrument_of(f["file"]) == instrument],
         "method": ("parsed from the .hsp directly (to-hsp writes every param the "
                    "model declares); each row separates values left at the model "
                    "default from values the designer moved"),
@@ -240,10 +246,25 @@ def main():
         "by_category_suppressed": suppressed,
         "by_model": {k: dict(sorted(v.items())) for k, v in sorted(by_model.items())},
     }
-    (out_dir / "factory-corpus.json").write_text(json.dumps(corpus, indent=1))
-    (out_dir / "factory-corpus.md").write_text(render_md(corpus))
-    print(f"models={len(by_model)} skipped={sum(skipped.values())} "
-          f"warnings={sum(warnings.values())} engine={ver}")
+
+
+def main():
+    if len(sys.argv) < 3:
+        sys.exit("usage: harvest-factory-corpus.py <sbe-dir> <out-dir>")
+    sbe_dir, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ok, failed, warnings = convert(sbe_dir, out_dir / "hsp")
+    print(f"converted {len(ok)}, failed {len(failed)}")
+    cat_idx = category_index()
+    ver = sh([HELIXGEN, "--version"]).stdout.strip()
+    for instrument, files in split_by_instrument(ok).items():
+        corpus = build_corpus(files, cat_idx, failed, warnings, instrument, ver)
+        stem = "factory-corpus" if instrument == "guitar" else f"factory-corpus-{instrument}"
+        (out_dir / f"{stem}.json").write_text(json.dumps(corpus, indent=1))
+        (out_dir / f"{stem}.md").write_text(render_md(corpus, stem))
+        print(f"{instrument}: presets={corpus['presets']} models={len(corpus['by_model'])} "
+              f"skipped={sum(corpus['skipped_models'].values())} engine={ver}")
 
 
 def cell(d, key="median"):
@@ -255,7 +276,7 @@ def cell(d, key="median"):
     return "-" if v is None else f"{v:g}"
 
 
-def render_md(c):
+def render_md(c, stem="factory-corpus"):
     KEY = {"amp": ["Drive", "Master", "MasterVol", "Level", "Hype", "Channel",
                    "Sag", "ZPrePost", "Bass", "Mid", "Treble", "Presence"],
            "cab": ["Distance", "Angle", "Position", "Mic", "HighCut", "LowCut",
@@ -264,16 +285,17 @@ def render_md(c):
            "delay": ["Mix", "Feedback", "Time"],
            "reverb": ["Mix", "Decay", "PreDelay"],
            "dynamics": ["Level", "Threshold", "Mix"]}
-    L = [f"# Factory preset corpus — {c['presets']} Line 6 Stadium factory presets", "",
+    L = [f"# Factory preset corpus — {c['presets']} Line 6 Stadium factory "
+         f"{c.get('instrument', 'guitar')} presets", "",
          "What Line 6's own preset designers actually do, measured from the",
          f"Stadium's factory setlist. Engine: `{c['engine']}`.", "",
          "## How to read a row — this matters more than the numbers",
          "",
          "**`at_default` is half the answer.** Each row counts every instance of the",
          "param, including the ones nobody touched. A median over that pool describes",
-         "no real preset: cab `HighCut` pools 29 cabs left wide open at 20100 with 13",
-         "deliberately cut to 8000, and the resulting median (11750) occurs **zero**",
-         "times in the corpus. So each row also carries:",
+         "no real preset: cab `HighCut` pools cabs left wide open at the model default",
+         "with cabs deliberately cut, so the pooled median can say nothing about",
+         "which choice a designer made. So each row also carries:",
          "",
          "- **`at_default`** — how many of the `n` instances sit on the model's own",
          "  default. High `at_default` means the factory answer is *leave it alone*.",
@@ -293,12 +315,13 @@ def render_md(c):
          "same type and range; the rest are listed as suppressed, because the same",
          "param name carries different units in different models (reverb `Decay` is",
          "a 0..1 knob on HD2 models and SECONDS on VIC ones). Per-model numbers for",
-         "those live in `data/factory-corpus.json` under `by_model`.", "",
-         "**Known gaps.** `device to-hsp` drops the second model slot of every",
-         "two-slot cab block; 48 of those hold `NoCab` and lose nothing, but ~30 real",
-         "second cabs are missing (bead hgc-q38). Rows are BASE values — snapshot",
-         "arrays are ignored here, and `amp Drive` alone is snapshot-modulated on 21",
-         "of 60 amps, so a single number can be one end of a designed range.",
+         f"those live in `data/{stem}.json` under `by_model`.", "",
+         "**Known gaps.** Rows are BASE values — snapshot arrays are ignored here,",
+         # ponytail: guitar-only figure, hand-measured; compute per corpus if bass needs it
+         *(["and `amp Drive` alone is snapshot-modulated on 20 of 45 amp instances",
+            "in the guitar set, so a single number can be one end of a designed range."]
+           if c.get("instrument", "guitar") == "guitar" else
+           ["so a single number can be one end of a snapshot-designed range."]),
          "Infrastructure blocks (inputs, outputs, splits, joins, looper) are excluded.",
          "", f"**Amp model family:** Agoura {c['amp_family_use'].get('Agoura', 0)} vs "
          f"legacy {c['amp_family_use'].get('legacy', 0)} amp instances.", "",
