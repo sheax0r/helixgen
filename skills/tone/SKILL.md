@@ -341,8 +341,8 @@ path costs a whole DSP and buys nothing unless the tone genuinely needs two
 signals. Line 6 uses one in 43 of the 50 factory guitar presets, but almost always for
 reasons the recipe layer can't feel — reach for it only in these cases:
 
-**A. Two amps blended (3 factory guitar presets do this, plus a two-guitar rig that feeds DSP 2 from Inst2).** Both paths take the same
-jack and sum at the matrix. This is the "layered" sound — a big clean and a
+**A. Two amps blended (3 factory guitar presets do this, plus a two-guitar rig that feeds DSP 2 from Inst2).** In the blended case both paths
+take the same jack and sum at the matrix. This is the "layered" sound — a big clean and a
 grind stacked, or two mic'd cabs — and it is what `dual amp` means on a
 Tool-style rig. Hard-pan them for width, or leave both centred to blend:
 
@@ -1240,8 +1240,9 @@ does not transfer. Factory picks: `8x10 SVT AV` → `47 Cond FET` on 4 of 6
 run a lane with no amp in parallel with an amp lane; 14 of 16 feed DSP 2 from
 the jack (unlike the guitar habit of cascading — only 2 bass presets cascade).
 13 of 16 use a DI block (`Regal Bass DI Mono`, 15 instances; `ZeroAmp Bass DI
-Mono`, 6), and it **leads its lane** (12 of 16) — only 1 preset puts a DI
-straight into an amp. A compressor sits after the cab in 11 of 16 (`LA Studio
+Mono`, 6), and it **leads its lane** (12 of 16). 9 of 16 give a DI its own
+amp-less lane; 5 run one ahead of the amp in the amp lane (Drip-Pro,
+4-PRO-4-Pros, Slap-City, Thunderwear, Fresh-n-Clean; Slap-City does both). A compressor sits after the cab in 11 of 16 (`LA Studio
 Comp`, 18 instances); 6 of 16 also start DSP 1 with one (`Ampeg Opto Comp` on 4).
 8 of 16 carry an octaver (`Boctaver Mono` or `Bass Octaver`), before the amp wherever there is one. In recipe terms it is "Two paths" case **A** with
 the second rig dry (step 5):
@@ -1249,12 +1250,28 @@ the second rig dry (step 5):
 ```json
 "paths": [
   {"input": "inst1",
-   "blocks": [{"block": "Ampeg Opto Comp Mono"}, {"block": "Ampeg SVT 50th"},
-              {"block": "8x10 SVT AV"}, {"block": "LA Studio Comp Mono"}]},
+   "blocks": [
+     {"block": "Ampeg Opto Comp Mono", "params": {"Level": 0.75, "Compression": 0.335}},
+     {"block": "Ampeg SVT 50th",
+      "params": {"1Bass": 0.60, "1Mid": 0.71, "2Treble": 0.50, "2Drive": 0.49, "Level": -9.6}},
+     {"block": "8x10 SVT AV", "params": {"Mic": "47 Cond FET", "Distance": 4, "LowCut": 54}},
+     {"block": "LA Studio Comp Mono",
+      "params": {"PeakReduction": 0.54, "Emphasis": 0.30, "Gain": 0.52, "Level": -4.2, "Mix": 0.70}}]},
   {"input": "inst1",
-   "blocks": [{"block": "Regal Bass DI Mono"}, {"block": "LA Studio Comp Mono"}]}
+   "blocks": [
+     {"block": "Regal Bass DI Mono", "params": {"Volume": 0.30, "Bass": 0.55, "Treble": 0.58}},
+     {"block": "LA Studio Comp Mono",
+      "params": {"PeakReduction": 0.54, "Emphasis": 0.30, "Gain": 0.52, "Level": -4.2, "Mix": 0.70}}]}
 ]
 ```
+
+The `params` are not optional: the factory never leaves `Regal` `Volume`, LA
+`PeakReduction`/`Emphasis` or SVT 50th `1Bass`/`2Treble` at their defaults,
+and the defaults FAIL the bass envelope check.
+**Mic preference:** if `mic_input.enabled` is true, use the single-DSP
+split/join form below and leave path 2 to the mic (`mic_input.path`, default
+`1`) — a recipe `input` on that path overrides the preference. If path 2 is
+used anyway, say in the report that the vocal is dropped from this preset.
 
 The single-DSP form is a `{"split": {"type": "y"}}` … `{"join": {...}}`
 region with the DI on one branch (2 presets; 6 of 16 split inside a DSP in all). Either way the two signals
@@ -1264,7 +1281,7 @@ sum — redo the 5.7 level pass across both.
 
 | block / param | factory | note |
 |---|---|---|
-| `Ampeg SVT 50th` `Level` | −9.6 dB (−20…−2.1), n=5 | `Master`, `Hype`: leave at default (3/5, 4/5) |
+| `Ampeg SVT 50th` `1Bass` / `1Mid` / `2Treble` / `2Drive` / `Level` | 0.60 (0.46–0.655) / 0.71 (0.27–0.71) / 0.50 (0.38–0.61) / 0.49 (0.19–0.59) / −9.6 dB (−20…−2.1), n=5 | first four never at default (`1Bass` 0.44 and `2Treble` 0.75 are outside the factory range); `Master`, `Hype`: leave at default (3/5, 4/5) |
 | `Ampeg B15NF 66` `Drive` / `Treble` / `Level` | 0.62 (0.34–0.88) / 0.58 (0.48–0.66) / −11.5 dB (−16.6…−3), n=4 | `Master`, `Hype`: leave at default (3/4); `Bass` half default, moved 0.58 |
 | `US Drip Bass` `Level` | −17.3 dB (−22…−8.8), n=3 | `Master` (3/3), `Hype` (2/3): leave at default |
 | `Ampeg SVT-4 PRO` `Drive` / `Master` | 0.43 (0.28–0.47) / 0.85 (0.84–1), n=6 | `Bass`: leave at default (4/6); `Mid` half default, moved 0.35; `Treble` moved 0.54 (0.45–0.62) |
@@ -1272,12 +1289,12 @@ sum — redo the 5.7 level pass across both.
 | `1x15 Ampeg B-15` `Distance` / `HighCut` | 1.5 (1–9) / 8000 (7400–20100), n=6; 2 of 6 at default each | `LowCut` (6/6), `Level` (4/6): leave at default |
 | `2x15 US Dripman` `Distance` | 1.875 (1–4.25), n=4; 2 at default | `HighCut` (3/4), `LowCut`, `Level`, `Mic` (4/4): leave at default |
 | `4x10 Ampeg Pro` | n=6 | `Distance`, `HighCut`, `LowCut` (6/6), `Mic` (5/6), `Level` (4/6): leave at default |
-| `Regal Bass DI Mono` `Bass` / `Treble` | 0.55 (p25–p75 0.55–0.55; 0.49–0.65) / 0.58 (0.43–0.66), n=15 | always set |
+| `Regal Bass DI Mono` `Volume` / `Bass` / `Treble` | 0.30 (p25–p75 0.30–0.45; 0.30–0.69) / 0.55 (p25–p75 0.55–0.55; 0.49–0.65) / 0.58 (0.43–0.66), n=15 | always set; `Volume` default 0.23 is below anything shipped |
 | `ZeroAmp Bass DI Mono` `Drive` / `Bass` / `Treble` / `Level` | 0.68 (0.45–0.93) / 0.51 (0.35–0.51) / 0.47 (0.47–0.58) / 0.70 (0.45–1), n=6 | `Blend` half default, moved 0.66 (0.4–0.81) |
 | `Ampeg Scrambler Mono` `Drive` / `Level` / `Treble` | 0.70 (0.7–0.77) / 0.74 / 0.59 (0.59–0.63), n=5 | `Blend`: leave at default (3/5) |
 | `Teemah! Mono` `Gain` / `Bass` / `Treble` / `Level` | 0.30 (0.25–0.65) / 0.24 (0–0.26) / 0.35 (0.24–0.37) / 0.58 (0.5–0.66), n=3 | |
-| `LA Studio Comp Mono` `Gain` / `Level` / `Mix` | 0.52 (p25–p75 0.42–0.61) / −4.2 dB (p25–p75 −5.6…−2.5) / 0.70 (0.61–1), n=14 | Stereo (n=4): −6.5 dB, 0.70 |
-| `Ampeg Opto Comp Mono` `Level` | 0.75 (p25–p75 0.75–0.75; 0.56–0.75), n=10 | 0..1, not dB; `Blend`: leave at default (6/10) |
+| `LA Studio Comp Mono` `PeakReduction` / `Emphasis` / `Gain` / `Level` / `Mix` | 0.54 (p25–p75 0.42–0.70) / 0.30 (always) / 0.52 (p25–p75 0.42–0.61) / −4.2 dB (p25–p75 −5.6…−2.5) / 0.70 (0.61–1), n=14 | `PeakReduction`, `Emphasis` never at default (0.78, 0.09 — both outside the range); Stereo (n=4): −6.5 dB, 0.70 |
+| `Ampeg Opto Comp Mono` `Level` / `Compression` | 0.75 (p25–p75 0.75–0.75; 0.56–0.75) / moved 0.335 (0.23–0.70; 4 of 10 at default 0.5), n=10 | 0..1, not dB; `Blend`: leave at default (6/10) |
 | `Rochester Comp Mono` `Level` / `Ratio` | 11 dB (p25–p75 4.1–11) / 7 (2.5–40), n=8 | `Threshold` (5/8), `Mix` (8/8): leave at default |
 | `Deluxe Comp Mono` `Threshold` / `Ratio` / `Level` | −34.2 dB (−51.7…−27) / 5 (3–5) / 4.2 dB (1.5–17.3), n=4 | `Mix` half default, moved 0.83 |
 | `Parametric Mono` | n=6; `LowCut` moved 28 Hz (20–160) | corrective, per preset: moved `MidFreq` 737 Hz, `MidGain` −11.6 dB, `LowGain` −4.3 dB; ranges wide |
@@ -1317,7 +1334,7 @@ the write-up rather than nudging the value into the band.
 | Forgetting a cab | Output is dry/fizzy without one; place after the amp |
 | Clamping cab `HighCut` to 6500–7000 and `LowCut` to 80–100 on every preset | That was invented guidance and it is what makes generated presets sound muffled next to factory ones. Factory guitar cabs leave HighCut at the model default on 41 of 81 and LowCut on 47 of 81; moved, the medians are 9650 / 50 (step 5 cab voicing baseline) |
 | Leaving cab `Mic` unset and calling it neutral | The default is a per-cab accident, not a choice. When Line 6 picks, the most common pick is `121 Ribbon`, then `57 Dynamic` and `160 Ribbon`, at 0° on-axis. Choose by label — `show-block` prints them (step 5) |
-| Heavy reverb defaults | Stadium plates run hot; start at 0.10 |
+| Heavy reverb defaults | Stadium plates run hot — start inside the factory window (Mix 0.24–0.37, median 0.31), not above it, and trim 0.03–0.05 by ear |
 | Asking 5 clarifying questions | Cap at 3, only what's actually missing |
 | Reporting only amp settings, not the instrument recommendation | Selector + volume + tone (+ coil-split/pick-attack where relevant) are part of the tone; include them in the report (step 6, step 8 item 4) |
 | Authoring a multi-snapshot tone and never offering the measured level-match | 5.7's levels are unmeasured rules of thumb; `device normalize` closes the loop against real hardware in ~10 s of playing per snapshot (step 9). Offer it — don't wait to be asked |
