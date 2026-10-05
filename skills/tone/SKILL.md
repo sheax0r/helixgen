@@ -321,6 +321,9 @@ ritually:
   says `USB taps NOT added` naming the tone. Read stderr after generate and
   tell the user if you see it. Older tones: `helixgen usb-taps --library`
   reports added / present / skipped (dry run by default; `--apply` writes).
+  Edit verbs (`patch`, `add-block`, …) lift the taps out and put them back
+  after the new last block, so edit tapped tones normally — but an edit that
+  fills column 12 drops the taps (stderr: `USB taps REMOVED`); say so.
   Off unless the user sets it — ask before writing it into their prefs file.
 - **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim of
   the whole path; `pan` for hard-panned dual-path tones. It is **not** the
