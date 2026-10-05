@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.53.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.54.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -448,6 +448,17 @@ Ask which mic, and let the user flip it.
 If the user wants this on every preset rather than one, that is the
 `mic_input` preference in `~/.helixgen/preferences.json`, applied at generate
 time — see the `tone` skill.
+
+**Recording over USB (OBS/DAW) — the `usb_taps` preference.** A user whose
+recording software listens to dedicated USB pairs (guitar 3/4, mic 5/6) rather
+than the main mix on 1/2 hears NOTHING from a tone without taps. With
+`"usb_taps": {"guitar": "3/4", "mic": "5/6"}` in `~/.helixgen/preferences.json`
+every `.hsp` helixgen writes — `device to-hsp` included — gets them
+automatically (stderr: `usb_taps: … added`, or `USB taps NOT added` + reason).
+Retrofit tones written earlier BEFORE copying them to the device:
+`helixgen usb-taps --library` (dry run: added / present / skipped), then
+`--apply`. A `skipped` tone (lane 0 full) stays silent on those pairs — tell
+the user rather than copying it as if it were fine.
 
 ## When the device gets flaky — re-run, then reboot
 
@@ -1398,7 +1409,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.53.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.54.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

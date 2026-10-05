@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.53.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.54.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -306,6 +306,25 @@ ritually:
   default, is the one that is usually free. `lowcut`/`trim`/`gate`/`threshold`/
   `decay` are the mic input's own params; `level` is that path's output level
   in dB. Generate once afterwards and read stderr to confirm it took.
+- **USB recording taps (the `usb_taps` preference)** — if
+  `~/.helixgen/preferences.json` carries `usb_taps` (e.g.
+  `{"guitar": "3/4", "mic": "5/6"}`), the engine adds a USB output tap to
+  EVERY `.hsp` it writes — generate, `patch`/edit verbs, `library fork`/
+  `import`, `device to-hsp` — so the tone is audible on the user's recording
+  pairs (OBS/DAW) and not only the main mix on USB 1/2. Do NOT author the taps
+  yourself (no split or `usb*` output in the recipe — that would stack a
+  second tap). Each tap costs a lane-0 cell: a Y split at `b11` (else `b12`)
+  after the last block, feeding a lane-1 output at `b27`. **So with the
+  preference on, leave grid column 12 empty on every tapped path** (no block
+  at `b12` in lane 0 or `b26` in lane 1) — a tone that fills it can't take
+  the tap, is written WITHOUT taps, and is silent in OBS; stderr
+  says `USB taps NOT added` naming the tone. Read stderr after generate and
+  tell the user if you see it. Older tones: `helixgen usb-taps --library`
+  reports added / present / skipped (dry run by default; `--apply` writes).
+  Edit verbs (`patch`, `add-block`, …) lift the taps out and put them back
+  after the new last block, so edit tapped tones normally — but an edit that
+  fills column 12 drops the taps (stderr: `USB taps REMOVED`); say so.
+  Off unless the user sets it — ask before writing it into their prefs file.
 - **Output level/pan** — `"output": {"level": -3.0}` is a clean final trim of
   the whole path; `pan` for hard-panned dual-path tones. It is **not** the
   actuator for the *authoring-time* normalization pass (5.7) — it is the
@@ -1179,12 +1198,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.53.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.54.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.53.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.54.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
