@@ -109,7 +109,7 @@ helixgen device discover [--timeout N] [--json]
 helixgen device discover --forget SERIAL-OR-IP [--json]
 ```
 
-One-shot discovery, **on every private interface** (core 0.55.1): mDNS first
+One-shot discovery, **on every private interface** (core 0.55.0): mDNS first
 (the Stadium advertises `_stadiumserver._tcp.local.`; the query is sent out of
 each interface separately), then a bounded TCP connect-probe of each
 interface's own subnet as a fallback for multicast-blocked networks. Interfaces
@@ -142,12 +142,12 @@ on the device — no lock taken, nothing on the hardware changes.
   discovered** (`ip_updated_at` desc, then serial desc) and warns when
   several records disagree. Pass `--ip` on any verb to target another
   device explicitly.
-- **A VPN no longer hides the device** (fixed in core 0.55.1, hgc-094). Before
+- **A VPN no longer hides the device** (fixed in core 0.55.0, hgc-094). Before
   that, discovery only looked at the default-route interface, so a VPN made it
   search the tunnel. If you're on an older engine and discover finds nothing
   with a VPN up, that's the cause: pass `--ip` or upgrade the engine (`setup`
   step 0).
-- **"macOS is blocking local network access" error** (core 0.55.1, hgc-7he).
+- **"macOS is blocking local network access" error** (core 0.55.0, hgc-7he).
   Any device verb, or discover, can fail fast with an error naming System
   Settings > Privacy & Security > **Local Network**. Most likely that is macOS
   privacy blocking the terminal from the LAN (the socket gets `No route to
@@ -656,8 +656,10 @@ remove it there first. The setlist reference you asked for is still dropped.
 reorder; it takes effect immediately and there is nothing local to update
 afterwards. On Stadium firmware 1.4+ a setlist is a fixed grid of 128 slots
 that can have gaps, and `--to` is the **slot position the preset lands on**
-(0..127; 0 = 1A, 3 = 1D), not an index into the listed presets. On older
-firmware `--to` keeps its old index meaning. The pool keeps index semantics.
+(0..127; 0 = 1A, 3 = 1D), not an index into the listed presets; the presets
+between the old and new position shift one place, gaps included. A setlist move
+is refused if the device's firmware version can't be read. On older firmware
+`--to` keeps its old index meaning. The pool keeps index semantics.
 
 All three take the `library` lock scope (`copy` adds `irs` when uploading IRs) —
 auto-acquired, nothing to do by hand for a single call. For a longer session
@@ -679,8 +681,8 @@ helixgen device decode <file.sbe|-> [--indent N]
 ```
 
 **`backup`** photographs the device into `~/.helixgen/backup/<serial>/` —
-`pool/<Name>.sbe` (the device's own content bytes), `setlists/<Name>.json` (an
-ordered array of names), `irs/<irhash>.wav` + `irs/index.json`, and
+`pool/<Name>.sbe` (the device's own content bytes), `setlists/<Name>.json` (an array of `{name, posi}` — order and slot position; older backups are a
+plain name array, still readable), `irs/<irhash>.wav` + `irs/index.json`, and
 `device.json`. Read-only on the device, non-activating (the player's live tone is
 never disturbed), no lock. Unchanged files are not rewritten, so a re-run
 produces a clean `git status`.
@@ -1354,7 +1356,7 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   (`helixgen register-irs`) or import it in HX Edit, then re-copy.
 - `--no-irs` skips IR upload entirely — only when the IRs are known to be on the
   device already and you want a faster call.
-- **2048-IR cap** (firmware 1.4; checked from core 0.55.1). The device holds at
+- **2048-IR cap** (firmware 1.4; checked from core 0.55.0). The device holds at
   most 2048 Cab IRs. A copy whose missing IRs would go past that refuses the
   whole IR batch before uploading (`ir_cap` in the result, naming how many
   still fit); `push-ir` and backup restore refuse the same way. Free space with
