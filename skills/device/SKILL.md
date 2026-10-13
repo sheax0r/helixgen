@@ -1335,6 +1335,11 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   (`helixgen register-irs`) or import it in HX Edit, then re-copy.
 - `--no-irs` skips IR upload entirely — only when the IRs are known to be on the
   device already and you want a faster call.
+- **2048-IR cap** (firmware 1.4; checked from core 0.55.0). The device holds at
+  most 2048 Cab IRs. A copy whose missing IRs would go past that refuses the
+  whole IR batch before uploading (`ir_cap` in the result, naming how many
+  still fit); `push-ir` and backup restore refuse the same way. Free space with
+  `device ir-prune` (dry run first) or `delete-ir`, then re-copy.
 - **Firmware 1.4: IR upload is currently broken** (backlog hgc-6r5.11). The
   device rejects helixgen's file-transfer login, so any IR the device doesn't
   already have fails with `SFTP connect to hedit@<ip> failed: Authentication
