@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.54.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.55.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -109,18 +109,17 @@ helixgen device discover [--timeout N] [--json]
 helixgen device discover --forget SERIAL-OR-IP [--json]
 ```
 
-One-shot discovery: mDNS first (the Stadium advertises
-`_stadiumserver._tcp.local.` and answers a one-shot multicast query itself),
-then a bounded TCP connect-probe of this machine's own subnet as a
-fallback for multicast-blocked networks. That probe range is derived from the
-interface's **netmask** where one can be read — a /22 is probed as a /22, not
-as a /24 — capped at 1024 addresses around this machine's address, and it
-refuses to scan any range that is not private (RFC 1918). **Where the netmask
-cannot be parsed the code falls back to a hardcoded /24**, and a
-point-to-point interface is exactly that case: a VPN `utun` reads as
-`inet 10.5.0.2 --> 10.5.0.2 netmask 0xffff0000`, which does not parse, so the
-probe really does announce `10.5.0.0/24`. Trust the range the CLI prints over
-any range described here. Every candidate is confirmed with
+One-shot discovery, **on every private interface** (core 0.55.0): mDNS first
+(the Stadium advertises `_stadiumserver._tcp.local.`; the query is sent out of
+each interface separately), then a bounded TCP connect-probe of each
+interface's own subnet as a fallback for multicast-blocked networks. Interfaces
+are tried in **tiers**: physical ones (Wi-Fi, Ethernet, dongles) first; VPN
+tunnels (`utun*`, `tun*`, point-to-point) and VM/container bridges (`bridge*`,
+`vmnet*`, `docker*`, …) only as a **last resort** when the physical tier finds
+nothing. Link-down interfaces are skipped. Each probe range comes from the
+interface's netmask (a /22 is probed as a /22), capped at 1024 addresses, and
+non-private (non-RFC 1918) ranges are refused. Trust the ranges the CLI prints
+over anything described here. Every candidate is confirmed with
 the read-only `/ProductInfoGet` handshake before being trusted; confirmed
 devices are **persisted** (ip, serial, model, firmware — plus the derived RPC
 `port`, recorded **only when the device advertises a nonstandard** stream port,
@@ -135,44 +134,29 @@ on the device — no lock taken, nothing on the hardware changes.
 - **Re-run it when the device moves** — a new network or a fresh DHCP lease
   makes the persisted record stale (symptom: device verbs suddenly time out
   or can't connect at the recorded address). `device discover` again is the
-  fix.
+  fix. A persisted record and a hand-passed `--ip`
+  both go stale on the next DHCP lease; the record's advantage is recovery (re-running `discover` updates it in
+  place, keyed by serial), not durability.
 - **Multiple devices: most-recent-wins.** All found devices are listed and
   persisted; the resolver deterministically picks the **most recently
   discovered** (`ip_updated_at` desc, then serial desc) and warns when
   several records disagree. Pass `--ip` on any verb to target another
   device explicitly.
-- **Found nothing? Check for a VPN FIRST — backlog #77.** Both mDNS and the
-  subnet probe look at the **default-route interface**. With a VPN up that is
-  the tunnel, so discovery searches the tunnel's range and never sees a Stadium
-  sitting on the real LAN. Diagnose in one command:
-
-  ```bash
-  route -n get default | grep -E 'interface|gateway'
-  ```
-
-  If that names a `utun*`/`tun*` interface (or any gateway on a different range
-  from the user's LAN), that is the cause — **not** the device being absent, and
-  **not** the Stadium being "on a different subnet". List the real interfaces
-  (`ifconfig | grep 'inet ' | grep -v 127.0.0.1` — don't assume `en0`, which is
-  Wi-Fi and wrong on any Ethernet or dongle setup): the Stadium is usually on
-  the same subnet as one of them, and that **subnet may be wider than a /24**
-  (a /22 covers four times the addresses — wider network, *shorter* netmask).
-
-  **Split-tunnel caveat:** a default route that looks clean does not clear the
-  VPN. If `route -n get <the Stadium's IP>` names a tunnel interface, the same
-  cause applies even though the default route does not.
-
-  The fix is to **disconnect the VPN and run `device discover` once**, then
-  bring the VPN back up — the record persists. Only if that is not an option,
-  fall back to `--ip <addr>` / `HELIXGEN_HELIX_IP=<addr>`. Be accurate about the
-  trade: a persisted record is **not** more durable than a hand-passed IP —
-  both go stale on the next DHCP lease. The real difference is recovery. The
-  record is keyed by serial and updated in place, so re-running `discover` fixes
-  it with no `--forget`; and a stale record fails *quietly* (verbs time out
-  against a wrong address) where a hand-typed `--ip` at least fails where the
-  user can see it. Under a VPN, re-discovering means taking the tunnel down
-  again.
-- **Genuinely not found, no VPN?** Ask the user for the IP and pass
+- **A VPN no longer hides the device** (fixed in core 0.55.0, hgc-094). Before
+  that, discovery only looked at the default-route interface, so a VPN made it
+  search the tunnel. If you're on an older engine and discover finds nothing
+  with a VPN up, that's the cause: pass `--ip` or upgrade the engine (`setup`
+  step 0).
+- **"macOS is blocking local network access" error** (core 0.55.0, hgc-7he).
+  Any device verb, or discover, can fail fast with an error naming System
+  Settings > Privacy & Security > **Local Network**. Most likely that is macOS
+  privacy blocking the terminal from the LAN (the socket gets `No route to
+  host`). Tell the user to enable their terminal app there, then quit and
+  restart the terminal, which ends this session. **If it's already enabled**,
+  the device may simply be off or at a different IP — check that before
+  asking for a restart. Older engines showed this as a silent `no Helix Stadium
+  answered at <ip>:2002` timeout.
+- **Genuinely not found?** Ask the user for the IP and pass
   `--ip <addr>` (or prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots
   above the record in the resolution chain.
 - **Prune a stale record: `device discover --forget SERIAL-OR-IP`.** Removes
@@ -525,6 +509,10 @@ copy fails for one of a small, concrete set of reasons:
   IR isn't on the device and isn't in your local `mapping.json`, so it can't be
   uploaded. `register-irs` the WAV (or import it in HX Edit), then re-copy.
 - **setlist not on the device** — `device setlist create <name>`, then re-copy.
+- **`SFTP connect to hedit@<ip> failed: Authentication failed.`** — firmware
+  1.4 rejects helixgen's IR upload (hgc-6r5.11). Import the IR WAV in the
+  Stadium app's Cab IR browser, then re-copy. Not a network flake; don't retry.
+- **`ir_cap`** — the device's 2048-IR limit; free space, then re-copy.
 - **dropped connection / device unresponsive** — not a tone failure at all; the
   flaky network stack. Re-run; reboot the Helix if it persists.
 
@@ -1352,6 +1340,22 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   (`helixgen register-irs`) or import it in HX Edit, then re-copy.
 - `--no-irs` skips IR upload entirely — only when the IRs are known to be on the
   device already and you want a faster call.
+- **2048-IR cap** (firmware 1.4; checked from core 0.55.0). The device holds at
+  most 2048 Cab IRs. A copy whose missing IRs would go past that refuses the
+  whole IR batch before uploading (`ir_cap` in the result, naming how many
+  still fit); `push-ir` and backup restore refuse the same way. Free space with
+  `device ir-prune` (dry run first) or `delete-ir`, then re-copy.
+- **Firmware 1.4: IR upload is currently broken** (backlog hgc-6r5.11). The
+  device rejects helixgen's file-transfer login, so any IR the device doesn't
+  already have fails with `SFTP connect to hedit@<ip> failed: Authentication
+  failed.` IRs already on the device still resolve by hash, and `list-irs`
+  works. Workaround: import the missing IR WAVs with the Stadium app (drag them
+  into its Cab IR browser), then re-run `device copy`. Same cause breaks
+  `push-ir`, `pull-ir`, the IR half of `device backup`, IR re-upload in
+  `device restore`, and `delete-ir --force-wedge`. `delete-ir` / `ir-prune
+  --yes` still remove the registry entry but leave the backing `.wav` behind
+  (`file_removed: false`). Tell the user plainly; don't retry or reboot for
+  this one.
 
 ### 4. Photograph the device
 
@@ -1401,6 +1405,7 @@ Tightly:
 
 | Error / symptom | What it means | Do |
 |---|---|---|
+| `SFTP connect to hedit@<ip> failed: Authentication failed.` | Stadium firmware 1.4 rejects helixgen's IR file-transfer login (hgc-6r5.11, not yet fixed) | import the IR in the Stadium app, then re-copy; not a network flake, don't retry |
 | a device verb fails fast with an error naming `device discover` (no `--ip`, no `$HELIXGEN_HELIX_IP`, no persisted record) | no device address is known — there is **no built-in default IP** (0.24.0); this is an immediate instructive failure, never a stall | run `helixgen device discover` once (persists the record); if it finds nothing, ask the user for the IP and pass `--ip` |
 | device verbs time out / can't connect at the recorded address after working before | the persisted discover record went stale (new network or DHCP lease) | re-run `helixgen device discover`, then retry the verb |
 | a verb exits non-zero rejecting an **empty/whitespace-only `--ip`** | `--ip ""` (usually an unset shell var that expanded to nothing) is a mistake, not a request to fall back (behavior change, #77) | omit `--ip` to fall back to the persisted record, or pass a real address |
@@ -1409,7 +1414,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.54.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.55.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

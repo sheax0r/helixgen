@@ -238,7 +238,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.54.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.55.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -1209,37 +1209,30 @@ def test_librarian_import_advice_is_fallback_only() -> None:
 
 def test_device_skill_describes_the_probe_range_accurately() -> None:
     """`discover --help` documents a netmask-derived range capped at 1024 and
-    refusing non-RFC-1918. The skill once said "own /24 only" (wrong in general);
-    a later draft said "not a hardcoded /24" (wrong in particular — probe_network
-    falls back to /24 whenever the netmask can't be parsed, which is exactly what a
-    point-to-point VPN utun does). Both halves must be stated."""
+    refusing non-RFC-1918. The skill once said "own /24 only" (wrong in general).
+    Since core 0.55.0 the range is per interface, tunnels/point-to-point links
+    only as a last resort."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     assert not re.search(r"own\s+\*{0,2}/24\s+only", text, re.IGNORECASE), (
         "device: stale '/24 only' probe claim"
-    )
-    assert not re.search(r"not a hardcoded /24", text), (
-        "device: overcorrected — /24 IS the fallback when the netmask won't parse"
     )
     assert "1024" in text, "device: the 1024-address probe cap is unstated"
     assert re.search(r"RFC ?1918", text), "device: RFC-1918 refusal unstated"
     assert re.search(
         r"point-to-point", text, re.IGNORECASE
-    ), "device: the p2p/VPN netmask-parse fallback is unstated"
+    ), "device: tunnels / point-to-point links as the last-resort tier unstated"
 
 
-def test_device_skill_names_the_vpn_default_route_discovery_trap() -> None:
-    """Backlog #77: both mDNS and the subnet probe follow the DEFAULT-ROUTE
-    interface, so a VPN tunnel hides a LAN-attached Stadium. A split-tunnel leaves
-    the default route looking clean while still misdirecting discovery, so the
-    default-route check alone yields false negatives."""
+def test_device_skill_documents_per_interface_discover_and_local_network() -> None:
+    """Core 0.55.0 (hgc-094, hgc-7he): discover scans every private interface,
+    tunnels/bridges last; a macOS Local Network denial is its own error. The old
+    "disconnect the VPN" workaround must not survive as current advice."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    assert "VPN" in text, "device: VPN discovery trap not documented"
-    assert re.search(r"default-route interface", text, re.IGNORECASE), (
-        "device: doesn't explain that discovery follows the default route"
-    )
-    assert re.search(r"[Ss]plit-tunnel", text), (
-        "device: no cover for the split-tunnel false negative"
-    )
+    assert re.search(r"every private interface", text, re.IGNORECASE)
+    assert re.search(r"last resort", text, re.IGNORECASE)
+    assert "Local Network" in text
+    assert re.search(r"restart the terminal", text, re.IGNORECASE)
+    assert "disconnect the VPN and run" not in text
     assert not re.search(r"ifconfig en0", text), (
         "device: hardcodes en0, wrong on Ethernet/dongle setups"
     )

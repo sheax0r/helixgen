@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.54.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.55.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -76,7 +76,7 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
 | `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolved as a TONE first — logical slug / metadata filename / variant preset_name — else a guitar profile by slug/name/short_name) | text or JSON |
 | `helixgen list-irs [--json]` | user IRs registered **locally** (helixgen's `mapping.json`) — NOT what is on the device | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
-| `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` |
+| `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` (**upload fails on Stadium firmware 1.4** — hgc-6r5.11; see failure modes in 7d) |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
 | `helixgen controllers [--json]` | assignable-controller vocabulary (FS/EXP) with English names + positions | text lines or JSON array |
@@ -148,7 +148,7 @@ For each slot, run `helixgen list-blocks --category <cat>` and scan the output f
 
 #### Amps: Agoura first — this is the single biggest choice in the preset
 
-The Stadium ships **23 Agoura amps** (17 guitar, 6 bass). Everything else in the
+The library carries **30 Agoura amps** (24 guitar, 6 bass; 3 of them new in firmware 1.4, listed below). Everything else in the
 amp category is the ported **HX/legacy** set, kept so presets from older Helix
 hardware still load — Line 6 files them under `LEGACY` on the device itself.
 
@@ -169,8 +169,46 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --cat
 ```
 
 Common swaps: legacy `US Double Nrm` → Agoura **`US Double Black`** (Fender Twin);
-legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**.
+legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**;
+legacy `Litigator` → Agoura **`Prosecutor`**.
 Say in the report when you had to fall back to a legacy model, and why.
+
+**Firmware 1.4 amps — need the device on Stadium firmware 1.4+** (an older
+device can't load them). Check the firmware before reaching for one:
+`helixgen device discover --json` (or `device info`) reports it; ask the user
+only when no device record exists):
+
+- **`Brit SL100`** (`Agoura_AmpBritSL100`) — Marshall Super Lead 100 across four
+  eras, each a genuinely different circuit. `Era` 0–3 = '67 / '68 / '70 / '71;
+  `Channel` 0–2 = Normal / Bright / Jumped (jumped = both channels, the classic
+  Plexi trick); `Bright` = Bright Cap enum 0–4 (None / 120 / 470 / 1000 / 4700 pF).
+  Reach for it over `Brit Plexi` when the reference names a year or a specific
+  late-'60s/early-'70s Marshall record. Defaults: '67, Bright channel, 120 pF.
+- **`Omega Granophyre`** (`Agoura_AmpOmegaGrano`) — modern boutique 6L6 high-gain.
+  `Jack` 0/1 = Low/High input, `Voice` 0/1 = Low Mid / High Mid focus,
+  `NFB` false/true = Open/Closed negative feedback (Closed is the default and
+  the tighter one), `Depth` = low-end resonance.
+- **`Prosecutor`** (`Agoura_AmpLine6Prosecutor`) — Line 6 Original, the Agoura
+  rebuild of the HX `Litigator` (Dumble-style overdrive). Use it wherever you'd
+  have used Litigator.
+
+New 1.4 effects — type the full library name (Mono or Stereo variant):
+**`Mercator Dist Mono`** (Cartographer-preamp-style drive with an active 3-band
+EQ — cheaper on DSP than a Cartographer preamp), **`Rock Box Dist Mono`** /
+**`Rock Box Boost Mono`** (Z.Vex Box of Rock halves — put them on separate
+footswitches), **`PortaBox 424 Mono`** (Tascam Portastudio preamp grit, lo-fi),
+**`Essex Vibe Mono`** (Vox AC30 vibrato; `Stages` is a bool: `false` = 1 stage,
+`true` = 2 stages — writing `2` is not validated and is wrong),
+**`Dimension W Mono`** (BOSS DC-2W; `Version` bool: `false` = C pedal, `true` =
+D rack; `Mode` 0–9 = 1, 2, 3, 4, 1+2, 1+3, 1+4, 2+3, 2+4, 3+4). Same
+firmware-1.4 caveat.
+
+**Generated library entries have no real sighting.** Many blocks (all of the
+above, plus older catalog models no export ever included) come from the
+device's own model definitions, not from a real preset. For those, the
+`sighted` value `show-block` reports is just the insert default — not evidence
+of how factory presets set the knob. Pick values from `show-block`'s range,
+unit and the param's meaning.
 
 #### Cabs
 
@@ -992,9 +1030,8 @@ then:
   Librarian-import line in the `setup` skill's "After generating a preset that
   uses user IRs". If the user expects their Stadium to be on the LAN, offer
   `helixgen device discover` once — but if that finds nothing, do **not**
-  conclude the device is absent: with a VPN up, discovery searches the tunnel
-  instead of the LAN (backlog #77). The `device` skill's "Found nothing?" notes
-  have the one-command diagnosis.
+  conclude the device is absent: the `device` skill's discovery notes cover
+  the macOS Local Network block and the `--ip` fallback.
 - **A lock is held** — `push-ir` takes the `irs` scope. A concurrent `/device`
   session (a `sync` holds `library`+`irs`) makes it block for
   `$HELIXGEN_LOCK_TIMEOUT` (default 30 s) then exit non-zero *naming the
@@ -1004,6 +1041,11 @@ then:
 - **The WAV path is gone** — moved, deleted, or on an unmounted volume, leaving
   `mapping.json` stale. `push-ir` errors on the path, not the network. Say which
   file is missing; don't retry it as if it were a dropped connection.
+- **`SFTP connect to hedit@<ip> failed: Authentication failed.`** — Stadium
+  firmware 1.4 rejects helixgen's IR upload (hgc-6r5.11). Not a network flake;
+  don't retry. Have the user import the WAV in the Stadium app's Cab IR
+  browser. (An IR already on the device still reports `already on device` —
+  that path doesn't upload.)
 - **Network error** — the Stadium's stack is flaky; re-run once. If it still
   fails, say plainly that the IR has not reached the device yet and name
   `helixgen device push-ir` as the way to finish it.
@@ -1013,7 +1055,8 @@ then:
   confirm), and it heals a wedged orphan silently in that case rather than
   warning. So if the user later reports "No Model" on an IR you pushed, believe
   them over the exit code: `device list-irs` to check for the hash, and
-  `device delete-ir --force-wedge` then re-push is the sure clear.
+  `device delete-ir --force-wedge` then re-push is the sure clear (not on
+  firmware 1.4, where both need the broken IR file transfer — hgc-6r5.11).
 
 ### 8. Report back
 
@@ -1198,12 +1241,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.54.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.55.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.54.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.55.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
