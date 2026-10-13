@@ -149,12 +149,13 @@ on the device — no lock taken, nothing on the hardware changes.
   step 0).
 - **"macOS is blocking local network access" error** (core 0.55.0, hgc-7he).
   Any device verb, or discover, can fail fast with an error naming System
-  Settings > Privacy & Security > **Local Network**. That is macOS privacy
-  blocking the terminal from the LAN (the socket gets `No route to host` even
-  though the device is fine), not the Stadium being off. Tell the user to turn
-  the toggle on for their terminal app (or off and on again if it's already on)
-  and **restart the terminal**, which ends this session. Older engines showed
-  this as a silent `no Helix Stadium answered at <ip>:2002` timeout.
+  Settings > Privacy & Security > **Local Network**. Most likely that is macOS
+  privacy blocking the terminal from the LAN (the socket gets `No route to
+  host`). Tell the user to enable their terminal app there, then quit and
+  restart the terminal, which ends this session. **If it's already enabled**,
+  the device may simply be off or at a different IP — check that before
+  asking for a restart. Older engines showed this as a silent `no Helix Stadium
+  answered at <ip>:2002` timeout.
 - **Genuinely not found?** Ask the user for the IP and pass
   `--ip <addr>` (or prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots
   above the record in the resolution chain.
@@ -508,6 +509,10 @@ copy fails for one of a small, concrete set of reasons:
   IR isn't on the device and isn't in your local `mapping.json`, so it can't be
   uploaded. `register-irs` the WAV (or import it in HX Edit), then re-copy.
 - **setlist not on the device** — `device setlist create <name>`, then re-copy.
+- **`SFTP connect to hedit@<ip> failed: Authentication failed.`** — firmware
+  1.4 rejects helixgen's IR upload (hgc-6r5.11). Import the IR WAV in the
+  Stadium app's Cab IR browser, then re-copy. Not a network flake; don't retry.
+- **`ir_cap`** — the device's 2048-IR limit; free space, then re-copy.
 - **dropped connection / device unresponsive** — not a tone failure at all; the
   flaky network stack. Re-run; reboot the Helix if it persists.
 
@@ -1346,8 +1351,11 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   failed.` IRs already on the device still resolve by hash, and `list-irs`
   works. Workaround: import the missing IR WAVs with the Stadium app (drag them
   into its Cab IR browser), then re-run `device copy`. Same cause breaks
-  `push-ir`, `pull-ir`, and the IR half of `device backup`. Tell the user
-  plainly; don't retry or reboot for this one.
+  `push-ir`, `pull-ir`, the IR half of `device backup`, IR re-upload in
+  `device restore`, and `delete-ir --force-wedge`. `delete-ir` / `ir-prune
+  --yes` still remove the registry entry but leave the backing `.wav` behind
+  (`file_removed: false`). Tell the user plainly; don't retry or reboot for
+  this one.
 
 ### 4. Photograph the device
 

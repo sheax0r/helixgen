@@ -749,7 +749,9 @@ as a silent cab showing **"No Model"**.
 
 **Don't warn about it blindly — offer to fix it.** `helixgen device push-ir
 <wav>` is idempotent and *is* the presence check (point lookup, not an
-enumeration), so putting a referenced IR on the Stadium takes about a second.
+enumeration), so putting a referenced IR on the Stadium takes about a second
+(except on Stadium firmware 1.4, where the upload currently fails with an SFTP
+authentication error — hgc-6r5.11; import the WAV in the Stadium app instead).
 But it is a **hardware write, so it is offered, never automatic** — an IR the
 user never wanted is not trivially reclaimable (`device ir-prune` protects IRs
 that a local off-device tone references). The full procedure — the ask, the

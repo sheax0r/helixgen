@@ -76,7 +76,7 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
 | `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolved as a TONE first — logical slug / metadata filename / variant preset_name — else a guitar profile by slug/name/short_name) | text or JSON |
 | `helixgen list-irs [--json]` | user IRs registered **locally** (helixgen's `mapping.json`) — NOT what is on the device | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
-| `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` |
+| `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` (**upload fails on Stadium firmware 1.4** — hgc-6r5.11; see failure modes in 7d) |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
 | `helixgen controllers [--json]` | assignable-controller vocabulary (FS/EXP) with English names + positions | text lines or JSON array |
@@ -148,7 +148,7 @@ For each slot, run `helixgen list-blocks --category <cat>` and scan the output f
 
 #### Amps: Agoura first — this is the single biggest choice in the preset
 
-The Stadium ships **30 Agoura amps** as of firmware 1.4 (24 guitar, 6 bass). Everything else in the
+The library carries **30 Agoura amps** (24 guitar, 6 bass; 3 of them new in firmware 1.4, listed below). Everything else in the
 amp category is the ported **HX/legacy** set, kept so presets from older Helix
 hardware still load — Line 6 files them under `LEGACY` on the device itself.
 
@@ -170,11 +170,13 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --cat
 
 Common swaps: legacy `US Double Nrm` → Agoura **`US Double Black`** (Fender Twin);
 legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**;
-legacy `Line 6 Litigator` → Agoura **`Prosecutor`**.
+legacy `Litigator` → Agoura **`Prosecutor`**.
 Say in the report when you had to fall back to a legacy model, and why.
 
 **Firmware 1.4 amps — need the device on Stadium firmware 1.4+** (an older
-device can't load them; if the user hasn't said, ask before reaching for one):
+device can't load them). Check the firmware before reaching for one:
+`helixgen device discover --json` (or `device info`) reports it; ask the user
+only when no device record exists):
 
 - **`Brit SL100`** (`Agoura_AmpBritSL100`) — Marshall Super Lead 100 across four
   eras, each a genuinely different circuit. `Era` 0–3 = '67 / '68 / '70 / '71;
@@ -190,20 +192,23 @@ device can't load them; if the user hasn't said, ask before reaching for one):
   rebuild of the HX `Litigator` (Dumble-style overdrive). Use it wherever you'd
   have used Litigator.
 
-New 1.4 effects (library names carry a `Mono`/`Stereo` suffix — e.g. `Mercator Dist Mono`): **`Mercator Dist`** (Cartographer-preamp-style drive with an active
-3-band EQ — cheaper on DSP than a Cartographer preamp), **`Rock Box Dist`** /
-**`Rock Box Boost`** (Z.Vex Box of Rock halves — put them on separate
-footswitches), **`PortaBox 424`** (Tascam Portastudio preamp grit, lo-fi),
-**`Essex Vibe`** (Vox AC30 vibrato; `Stages` 1/2), **`Dimension W`** (BOSS DC-2W;
-`Version` 0/1 = C pedal / D rack, `Mode` 0–9 = 1, 2, 3, 4, 1+2, 1+3, 1+4, 2+3,
-2+4, 3+4). Same firmware-1.4 caveat.
+New 1.4 effects — type the full library name (Mono or Stereo variant):
+**`Mercator Dist Mono`** (Cartographer-preamp-style drive with an active 3-band
+EQ — cheaper on DSP than a Cartographer preamp), **`Rock Box Dist Mono`** /
+**`Rock Box Boost Mono`** (Z.Vex Box of Rock halves — put them on separate
+footswitches), **`PortaBox 424 Mono`** (Tascam Portastudio preamp grit, lo-fi),
+**`Essex Vibe Mono`** (Vox AC30 vibrato; `Stages` is a bool: `false` = 1 stage,
+`true` = 2 stages — writing `2` is not validated and is wrong),
+**`Dimension W Mono`** (BOSS DC-2W; `Version` bool: `false` = C pedal, `true` =
+D rack; `Mode` 0–9 = 1, 2, 3, 4, 1+2, 1+3, 1+4, 2+3, 2+4, 3+4). Same
+firmware-1.4 caveat.
 
-**Library entries without observed ranges.** Many blocks (all of the above, plus
-older catalog models no export ever included) are generated from the device's
-own model definitions: their `default` is the device's real insert default, but
-`observed_range` is just `[default, default]`. A one-point range there means "no
-sighting", **not** "factory presets never move this knob" — use `show-block`'s
-type and the param's meaning, not that range, to pick values.
+**Generated library entries have no real sighting.** Many blocks (all of the
+above, plus older catalog models no export ever included) come from the
+device's own model definitions, not from a real preset. For those, the
+`sighted` value `show-block` reports is just the insert default — not evidence
+of how factory presets set the knob. Pick values from `show-block`'s range,
+unit and the param's meaning.
 
 #### Cabs
 
@@ -1036,6 +1041,11 @@ then:
 - **The WAV path is gone** — moved, deleted, or on an unmounted volume, leaving
   `mapping.json` stale. `push-ir` errors on the path, not the network. Say which
   file is missing; don't retry it as if it were a dropped connection.
+- **`SFTP connect to hedit@<ip> failed: Authentication failed.`** — Stadium
+  firmware 1.4 rejects helixgen's IR upload (hgc-6r5.11). Not a network flake;
+  don't retry. Have the user import the WAV in the Stadium app's Cab IR
+  browser. (An IR already on the device still reports `already on device` —
+  that path doesn't upload.)
 - **Network error** — the Stadium's stack is flaky; re-run once. If it still
   fails, say plainly that the IR has not reached the device yet and name
   `helixgen device push-ir` as the way to finish it.
@@ -1045,7 +1055,8 @@ then:
   confirm), and it heals a wedged orphan silently in that case rather than
   warning. So if the user later reports "No Model" on an IR you pushed, believe
   them over the exit code: `device list-irs` to check for the hash, and
-  `device delete-ir --force-wedge` then re-push is the sure clear.
+  `device delete-ir --force-wedge` then re-push is the sure clear (not on
+  firmware 1.4, where both need the broken IR file transfer — hgc-6r5.11).
 
 ### 8. Report back
 

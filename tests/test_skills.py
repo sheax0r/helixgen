@@ -1209,22 +1209,18 @@ def test_librarian_import_advice_is_fallback_only() -> None:
 
 def test_device_skill_describes_the_probe_range_accurately() -> None:
     """`discover --help` documents a netmask-derived range capped at 1024 and
-    refusing non-RFC-1918. The skill once said "own /24 only" (wrong in general);
-    a later draft said "not a hardcoded /24" (wrong in particular — probe_network
-    falls back to /24 whenever the netmask can't be parsed, which is exactly what a
-    point-to-point VPN utun does). Both halves must be stated."""
+    refusing non-RFC-1918. The skill once said "own /24 only" (wrong in general).
+    Since core 0.55.0 the range is per interface, tunnels/point-to-point links
+    only as a last resort."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     assert not re.search(r"own\s+\*{0,2}/24\s+only", text, re.IGNORECASE), (
         "device: stale '/24 only' probe claim"
-    )
-    assert not re.search(r"not a hardcoded /24", text), (
-        "device: overcorrected — /24 IS the fallback when the netmask won't parse"
     )
     assert "1024" in text, "device: the 1024-address probe cap is unstated"
     assert re.search(r"RFC ?1918", text), "device: RFC-1918 refusal unstated"
     assert re.search(
         r"point-to-point", text, re.IGNORECASE
-    ), "device: the p2p/VPN netmask-parse fallback is unstated"
+    ), "device: tunnels / point-to-point links as the last-resort tier unstated"
 
 
 def test_device_skill_documents_per_interface_discover_and_local_network() -> None:
