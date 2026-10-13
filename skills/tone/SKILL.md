@@ -1025,9 +1025,8 @@ then:
   Librarian-import line in the `setup` skill's "After generating a preset that
   uses user IRs". If the user expects their Stadium to be on the LAN, offer
   `helixgen device discover` once — but if that finds nothing, do **not**
-  conclude the device is absent: with a VPN up, discovery searches the tunnel
-  instead of the LAN (backlog #77). The `device` skill's "Found nothing?" notes
-  have the one-command diagnosis.
+  conclude the device is absent: the `device` skill's discovery notes cover
+  the macOS Local Network block and the `--ip` fallback.
 - **A lock is held** — `push-ir` takes the `irs` scope. A concurrent `/device`
   session (a `sync` holds `library`+`irs`) makes it block for
   `$HELIXGEN_LOCK_TIMEOUT` (default 30 s) then exit non-zero *naming the

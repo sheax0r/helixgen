@@ -1227,19 +1227,16 @@ def test_device_skill_describes_the_probe_range_accurately() -> None:
     ), "device: the p2p/VPN netmask-parse fallback is unstated"
 
 
-def test_device_skill_names_the_vpn_default_route_discovery_trap() -> None:
-    """Backlog #77: both mDNS and the subnet probe follow the DEFAULT-ROUTE
-    interface, so a VPN tunnel hides a LAN-attached Stadium. A split-tunnel leaves
-    the default route looking clean while still misdirecting discovery, so the
-    default-route check alone yields false negatives."""
+def test_device_skill_documents_per_interface_discover_and_local_network() -> None:
+    """Core 0.55.0 (hgc-094, hgc-7he): discover scans every private interface,
+    tunnels/bridges last; a macOS Local Network denial is its own error. The old
+    "disconnect the VPN" workaround must not survive as current advice."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
-    assert "VPN" in text, "device: VPN discovery trap not documented"
-    assert re.search(r"default-route interface", text, re.IGNORECASE), (
-        "device: doesn't explain that discovery follows the default route"
-    )
-    assert re.search(r"[Ss]plit-tunnel", text), (
-        "device: no cover for the split-tunnel false negative"
-    )
+    assert re.search(r"every private interface", text, re.IGNORECASE)
+    assert re.search(r"last resort", text, re.IGNORECASE)
+    assert "Local Network" in text
+    assert re.search(r"restart the terminal", text, re.IGNORECASE)
+    assert "disconnect the VPN and run" not in text
     assert not re.search(r"ifconfig en0", text), (
         "device: hardcodes en0, wrong on Ethernet/dongle setups"
     )

@@ -109,18 +109,17 @@ helixgen device discover [--timeout N] [--json]
 helixgen device discover --forget SERIAL-OR-IP [--json]
 ```
 
-One-shot discovery: mDNS first (the Stadium advertises
-`_stadiumserver._tcp.local.` and answers a one-shot multicast query itself),
-then a bounded TCP connect-probe of this machine's own subnet as a
-fallback for multicast-blocked networks. That probe range is derived from the
-interface's **netmask** where one can be read — a /22 is probed as a /22, not
-as a /24 — capped at 1024 addresses around this machine's address, and it
-refuses to scan any range that is not private (RFC 1918). **Where the netmask
-cannot be parsed the code falls back to a hardcoded /24**, and a
-point-to-point interface is exactly that case: a VPN `utun` reads as
-`inet 10.5.0.2 --> 10.5.0.2 netmask 0xffff0000`, which does not parse, so the
-probe really does announce `10.5.0.0/24`. Trust the range the CLI prints over
-any range described here. Every candidate is confirmed with
+One-shot discovery, **on every private interface** (core 0.55.0): mDNS first
+(the Stadium advertises `_stadiumserver._tcp.local.`; the query is sent out of
+each interface separately), then a bounded TCP connect-probe of each
+interface's own subnet as a fallback for multicast-blocked networks. Interfaces
+are tried in **tiers**: physical ones (Wi-Fi, Ethernet, dongles) first; VPN
+tunnels (`utun*`, `tun*`, point-to-point) and VM/container bridges (`bridge*`,
+`vmnet*`, `docker*`, …) only as a **last resort** when the physical tier finds
+nothing. Link-down interfaces are skipped. Each probe range comes from the
+interface's netmask (a /22 is probed as a /22), capped at 1024 addresses, and
+non-private (non-RFC 1918) ranges are refused. Trust the ranges the CLI prints
+over anything described here. Every candidate is confirmed with
 the read-only `/ProductInfoGet` handshake before being trusted; confirmed
 devices are **persisted** (ip, serial, model, firmware — plus the derived RPC
 `port`, recorded **only when the device advertises a nonstandard** stream port,
@@ -135,44 +134,28 @@ on the device — no lock taken, nothing on the hardware changes.
 - **Re-run it when the device moves** — a new network or a fresh DHCP lease
   makes the persisted record stale (symptom: device verbs suddenly time out
   or can't connect at the recorded address). `device discover` again is the
-  fix.
+  fix. A persisted record and a hand-passed `--ip`
+  both go stale on the next DHCP lease; the record's advantage is recovery (re-running `discover` updates it in
+  place, keyed by serial), not durability.
 - **Multiple devices: most-recent-wins.** All found devices are listed and
   persisted; the resolver deterministically picks the **most recently
   discovered** (`ip_updated_at` desc, then serial desc) and warns when
   several records disagree. Pass `--ip` on any verb to target another
   device explicitly.
-- **Found nothing? Check for a VPN FIRST — backlog #77.** Both mDNS and the
-  subnet probe look at the **default-route interface**. With a VPN up that is
-  the tunnel, so discovery searches the tunnel's range and never sees a Stadium
-  sitting on the real LAN. Diagnose in one command:
-
-  ```bash
-  route -n get default | grep -E 'interface|gateway'
-  ```
-
-  If that names a `utun*`/`tun*` interface (or any gateway on a different range
-  from the user's LAN), that is the cause — **not** the device being absent, and
-  **not** the Stadium being "on a different subnet". List the real interfaces
-  (`ifconfig | grep 'inet ' | grep -v 127.0.0.1` — don't assume `en0`, which is
-  Wi-Fi and wrong on any Ethernet or dongle setup): the Stadium is usually on
-  the same subnet as one of them, and that **subnet may be wider than a /24**
-  (a /22 covers four times the addresses — wider network, *shorter* netmask).
-
-  **Split-tunnel caveat:** a default route that looks clean does not clear the
-  VPN. If `route -n get <the Stadium's IP>` names a tunnel interface, the same
-  cause applies even though the default route does not.
-
-  The fix is to **disconnect the VPN and run `device discover` once**, then
-  bring the VPN back up — the record persists. Only if that is not an option,
-  fall back to `--ip <addr>` / `HELIXGEN_HELIX_IP=<addr>`. Be accurate about the
-  trade: a persisted record is **not** more durable than a hand-passed IP —
-  both go stale on the next DHCP lease. The real difference is recovery. The
-  record is keyed by serial and updated in place, so re-running `discover` fixes
-  it with no `--forget`; and a stale record fails *quietly* (verbs time out
-  against a wrong address) where a hand-typed `--ip` at least fails where the
-  user can see it. Under a VPN, re-discovering means taking the tunnel down
-  again.
-- **Genuinely not found, no VPN?** Ask the user for the IP and pass
+- **A VPN no longer hides the device** (fixed in core 0.55.0, hgc-094). Before
+  that, discovery only looked at the default-route interface, so a VPN made it
+  search the tunnel. If you're on an older engine and discover finds nothing
+  with a VPN up, that's the cause: pass `--ip` or upgrade the engine (`setup`
+  step 0).
+- **"macOS is blocking local network access" error** (core 0.55.0, hgc-7he).
+  Any device verb, or discover, can fail fast with an error naming System
+  Settings > Privacy & Security > **Local Network**. That is macOS privacy
+  blocking the terminal from the LAN (the socket gets `No route to host` even
+  though the device is fine), not the Stadium being off. Tell the user to turn
+  the toggle on for their terminal app (or off and on again if it's already on)
+  and **restart the terminal**, which ends this session. Older engines showed
+  this as a silent `no Helix Stadium answered at <ip>:2002` timeout.
+- **Genuinely not found?** Ask the user for the IP and pass
   `--ip <addr>` (or prefix `HELIXGEN_HELIX_IP=<addr>`) — the override slots
   above the record in the resolution chain.
 - **Prune a stale record: `device discover --forget SERIAL-OR-IP`.** Removes
