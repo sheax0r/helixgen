@@ -1,0 +1,202 @@
+{
+  "model_id": "HD2_FilterAshevillePattrnStereo",
+  "category": "filter",
+  "display_name": "Asheville Pattrn Stereo",
+  "params": {
+    "Direction": {
+      "type": "bool",
+      "default": false
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Envelope": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "LFO": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level1": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level2": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level3": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level4": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level5": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level6": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level7": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level8": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pattern": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Spread": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "SyncSelect2": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "TempoSync2": {
+      "type": "bool",
+      "default": false
+    },
+    "Voice": {
+      "type": "bool",
+      "default": true
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FilterAshevillePattrnStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Direction": false,
+    "Drive": 0.5,
+    "Envelope": 0.5,
+    "LFO": 0.0,
+    "Level1": 1.0,
+    "Level2": 1.0,
+    "Level3": 1.0,
+    "Level4": 1.0,
+    "Level5": 1.0,
+    "Level6": 1.0,
+    "Level7": 1.0,
+    "Level8": 1.0,
+    "Mix": 1.0,
+    "Output": 1.0,
+    "Pattern": 4,
+    "Rate": 0.5,
+    "Spread": 1.0,
+    "SyncSelect1": 6,
+    "SyncSelect2": 6,
+    "TempoSync1": false,
+    "TempoSync2": false,
+    "Voice": true
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

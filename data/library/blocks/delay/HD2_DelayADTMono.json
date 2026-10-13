@@ -1,0 +1,173 @@
+{
+  "model_id": "HD2_DelayADTMono",
+  "category": "delay",
+  "display_name": "ADT Mono",
+  "params": {
+    "Deck1Vol": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Deck2Pol": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Deck2Vol": {
+      "type": "float",
+      "default": -3.0,
+      "observed_range": [
+        -3.0,
+        -3.0
+      ]
+    },
+    "DelayDeck1": {
+      "type": "float",
+      "default": 0.003000000026077032,
+      "observed_range": [
+        0.003000000026077032,
+        0.003000000026077032
+      ]
+    },
+    "DelayDeck2": {
+      "type": "float",
+      "default": 0.05000000074505806,
+      "observed_range": [
+        0.05000000074505806,
+        0.05000000074505806
+      ]
+    },
+    "DistDeck1": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "DistDeck2": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 12000.0,
+      "observed_range": [
+        12000.0,
+        12000.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 40.0,
+      "observed_range": [
+        40.0,
+        40.0
+      ]
+    },
+    "ModDepth": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "ModRate": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "TapeSpeed": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Texture": {
+      "type": "float",
+      "default": 0.625,
+      "observed_range": [
+        0.625,
+        0.625
+      ]
+    },
+    "Threshold": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "WowFlutter1": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "WowFlutter2": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelayADTMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Deck1Vol": 0.0,
+    "Deck2Pol": 0,
+    "Deck2Vol": -3.0,
+    "DelayDeck1": 0.003000000026077032,
+    "DelayDeck2": 0.05000000074505806,
+    "DistDeck1": 0.0,
+    "DistDeck2": 0.0,
+    "HighCut": 12000.0,
+    "Level": 0.0,
+    "LowCut": 40.0,
+    "ModDepth": 0.0,
+    "ModRate": 0.5,
+    "TapeSpeed": 1,
+    "Texture": 0.625,
+    "Threshold": 0.0,
+    "WowFlutter1": 0.0,
+    "WowFlutter2": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,79 @@
+{
+  "model_id": "HD2_M13ACFlanger",
+  "category": "modulation",
+  "display_name": "AC Flanger",
+  "params": {
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Manual": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Regen": {
+      "type": "float",
+      "default": 0.8799999952316284,
+      "observed_range": [
+        0.8799999952316284,
+        0.8799999952316284
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Width": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_M13ACFlanger",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Level": 0.0,
+    "Manual": 0.0,
+    "Regen": 0.8799999952316284,
+    "Speed": 0.550000011920929,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Width": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,83 @@
+{
+  "model_id": "HD2_PreampLine6Elektrik",
+  "category": "amp",
+  "display_name": "Elektrik (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.3400000035762787,
+      "observed_range": [
+        0.3400000035762787,
+        0.3400000035762787
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.6399999856948853,
+      "observed_range": [
+        0.6399999856948853,
+        0.6399999856948853
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.38999998569488525,
+      "observed_range": [
+        0.38999998569488525,
+        0.38999998569488525
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.4300000071525574,
+      "observed_range": [
+        0.4300000071525574,
+        0.4300000071525574
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.25999999046325684,
+      "observed_range": [
+        0.25999999046325684,
+        0.25999999046325684
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampLine6Elektrik",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.3400000035762787,
+    "ChVol": 0.699999988079071,
+    "Drive": 0.6399999856948853,
+    "Master": 0.6100000143051147,
+    "Mid": 0.38999998569488525,
+    "Sag": 0.4300000071525574,
+    "Treble": 0.25999999046325684
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

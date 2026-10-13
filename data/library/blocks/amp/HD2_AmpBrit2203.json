@@ -1,0 +1,133 @@
+{
+  "model_id": "HD2_AmpBrit2203",
+  "category": "amp",
+  "display_name": "Brit 2203",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5659999847412109,
+      "observed_range": [
+        0.5659999847412109,
+        0.5659999847412109
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "InputType": {
+      "type": "bool",
+      "default": true
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6980000138282776,
+      "observed_range": [
+        0.6980000138282776,
+        0.6980000138282776
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.23600000143051147,
+      "observed_range": [
+        0.23600000143051147,
+        0.23600000143051147
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpBrit2203",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5659999847412109,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.6000000238418579,
+    "Drive": 0.800000011920929,
+    "Hum": 0.5,
+    "InputType": true,
+    "Master": 0.25,
+    "Mid": 0.6980000138282776,
+    "Presence": 0.4000000059604645,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Treble": 0.23600000143051147
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

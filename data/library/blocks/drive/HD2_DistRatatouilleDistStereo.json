@@ -1,0 +1,47 @@
+{
+  "model_id": "HD2_DistRatatouilleDistStereo",
+  "category": "drive",
+  "display_name": "Ratatouille Dist Stereo",
+  "params": {
+    "Filter": {
+      "type": "float",
+      "default": 0.2800000011920929,
+      "observed_range": [
+        0.2800000011920929,
+        0.2800000011920929
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.7419999837875366,
+      "observed_range": [
+        0.7419999837875366,
+        0.7419999837875366
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6980000138282776,
+      "observed_range": [
+        0.6980000138282776,
+        0.6980000138282776
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistRatatouilleDistStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Filter": 0.2800000011920929,
+    "Gain": 0.7419999837875366,
+    "Level": 0.6980000138282776
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

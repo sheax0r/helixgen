@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_ReverbGanymedeMono",
+  "category": "reverb",
+  "display_name": "Ganymede Mono",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Modulation": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.03999999910593033,
+      "observed_range": [
+        0.03999999910593033,
+        0.03999999910593033
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbGanymedeMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 0.6499999761581421,
+    "Level": 0.0,
+    "Mix": 0.3499999940395355,
+    "Modulation": 0.699999988079071,
+    "Predelay": 0.03999999910593033,
+    "Tone": 0.7200000286102295
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

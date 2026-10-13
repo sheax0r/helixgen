@@ -1,0 +1,56 @@
+{
+  "model_id": "HD2_DistAmpegScramblerODStereo",
+  "category": "drive",
+  "display_name": "Ampeg Scrambler Stereo",
+  "params": {
+    "Blend": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.41999998688697815,
+      "observed_range": [
+        0.41999998688697815,
+        0.41999998688697815
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistAmpegScramblerODStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Blend": 0.6299999952316284,
+    "Drive": 0.7599999904632568,
+    "Level": 0.6600000262260437,
+    "Treble": 0.41999998688697815
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

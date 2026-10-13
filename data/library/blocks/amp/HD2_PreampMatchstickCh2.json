@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_PreampMatchstickCh2",
+  "category": "amp",
+  "display_name": "Matchstick Ch2 (Preamp)",
+  "params": {
+    "Ch2Drive": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Tone": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampMatchstickCh2",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Ch2Drive": 0.5299999713897705,
+    "ChVol": 0.699999988079071,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Sag": 0.6499999761581421,
+    "Tone": 2
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

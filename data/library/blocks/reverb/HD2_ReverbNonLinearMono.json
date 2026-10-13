@@ -1,0 +1,174 @@
+{
+  "model_id": "HD2_ReverbNonLinearMono",
+  "category": "reverb",
+  "display_name": "Nonlinear Mono",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Diffusion": {
+      "type": "float",
+      "default": 0.8799999952316284,
+      "observed_range": [
+        0.8799999952316284,
+        0.8799999952316284
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 8600.0,
+      "observed_range": [
+        8600.0,
+        8600.0
+      ]
+    },
+    "Late Dry": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 80.0,
+      "observed_range": [
+        80.0,
+        80.0
+      ]
+    },
+    "Manual": {
+      "type": "float",
+      "default": 0.3619999885559082,
+      "observed_range": [
+        0.3619999885559082,
+        0.3619999885559082
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Mod": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.06599999964237213,
+      "observed_range": [
+        0.06599999964237213,
+        0.06599999964237213
+      ]
+    },
+    "RoomSize": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Shape": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "SyncSelect2": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "TempoSync2": {
+      "type": "bool",
+      "default": false
+    },
+    "Width": {
+      "type": "float",
+      "default": 0.3179999887943268,
+      "observed_range": [
+        0.3179999887943268,
+        0.3179999887943268
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbNonLinearMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 1.0,
+    "Diffusion": 0.8799999952316284,
+    "HighCut": 8600.0,
+    "Late Dry": 0.0,
+    "Level": 0.0,
+    "LowCut": 80.0,
+    "Manual": 0.3619999885559082,
+    "Mix": 0.5,
+    "Mod": 0.5,
+    "Predelay": 0.0,
+    "Rate": 0.06599999964237213,
+    "RoomSize": 2,
+    "Shape": 1,
+    "SyncSelect1": 6,
+    "SyncSelect2": 6,
+    "TempoSync1": false,
+    "TempoSync2": false,
+    "Width": 0.3179999887943268
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,97 @@
+{
+  "model_id": "HD2_PreampGCougar800",
+  "category": "amp",
+  "display_name": "G Cougar 800 (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Boost": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8799999952316284,
+      "observed_range": [
+        0.8799999952316284,
+        0.8799999952316284
+      ]
+    },
+    "Contour": {
+      "type": "bool",
+      "default": true
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.25999999046325684,
+      "observed_range": [
+        0.25999999046325684,
+        0.25999999046325684
+      ]
+    },
+    "HighMid": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "LowMid": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampGCougar800",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6499999761581421,
+    "Boost": 0.4699999988079071,
+    "ChVol": 0.8799999952316284,
+    "Contour": true,
+    "Drive": 0.25999999046325684,
+    "HighMid": 0.699999988079071,
+    "LowMid": 0.25,
+    "Master": 1.0,
+    "Treble": 0.6000000238418579
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

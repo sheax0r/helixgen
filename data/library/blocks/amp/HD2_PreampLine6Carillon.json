@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_PreampLine6Carillon",
+  "category": "amp",
+  "display_name": "Carillon (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Boost": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "HumSwitch": {
+      "type": "bool",
+      "default": true
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampLine6Carillon",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.3499999940395355,
+    "Boost": 0.0,
+    "ChVol": 0.5,
+    "Drive": 0.550000011920929,
+    "HumSwitch": true,
+    "Mid": 0.699999988079071,
+    "Sag": 0.5,
+    "Treble": 0.6000000238418579
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

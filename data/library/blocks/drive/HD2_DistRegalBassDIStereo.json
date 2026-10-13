@@ -1,0 +1,52 @@
+{
+  "model_id": "HD2_DistRegalBassDIStereo",
+  "category": "drive",
+  "display_name": "Regal Bass DI Stereo",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    },
+    "Low Cut": {
+      "type": "bool",
+      "default": false
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Volume": {
+      "type": "float",
+      "default": 0.23000000417232513,
+      "observed_range": [
+        0.23000000417232513,
+        0.23000000417232513
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistRegalBassDIStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6200000047683716,
+    "Low Cut": false,
+    "Treble": 0.44999998807907104,
+    "Volume": 0.23000000417232513
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

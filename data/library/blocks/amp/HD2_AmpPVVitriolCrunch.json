@@ -1,0 +1,146 @@
+{
+  "model_id": "HD2_AmpPVVitriolCrunch",
+  "category": "amp",
+  "display_name": "PV Vitriol Crunch",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8199999928474426,
+      "observed_range": [
+        0.8199999928474426,
+        0.8199999928474426
+      ]
+    },
+    "Depth": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "PostGain": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    },
+    "PreGain": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.3700000047683716,
+      "observed_range": [
+        0.3700000047683716,
+        0.3700000047683716
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5899999737739563,
+      "observed_range": [
+        0.5899999737739563,
+        0.5899999737739563
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpPVVitriolCrunch",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6200000047683716,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.8199999928474426,
+    "Depth": 0.5,
+    "Hum": 0.0,
+    "Master": 0.5600000023841858,
+    "Mid": 0.550000011920929,
+    "PostGain": 0.7300000190734863,
+    "PreGain": 0.6000000238418579,
+    "Presence": 0.3700000047683716,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Treble": 0.5899999737739563
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

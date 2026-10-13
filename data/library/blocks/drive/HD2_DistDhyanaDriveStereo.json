@@ -1,0 +1,56 @@
+{
+  "model_id": "HD2_DistDhyanaDriveStereo",
+  "category": "drive",
+  "display_name": "Dyhana Drive Stereo",
+  "params": {
+    "Gain": {
+      "type": "float",
+      "default": 0.4399999976158142,
+      "observed_range": [
+        0.4399999976158142,
+        0.4399999976158142
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.4399999976158142,
+      "observed_range": [
+        0.4399999976158142,
+        0.4399999976158142
+      ]
+    },
+    "Voice": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistDhyanaDriveStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Gain": 0.4399999976158142,
+    "Level": 0.4000000059604645,
+    "Tone": 0.4399999976158142,
+    "Voice": 0.5600000023841858
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

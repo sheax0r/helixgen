@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_PreampLine6Oblivion",
+  "category": "amp",
+  "display_name": "Oblivion (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Boost": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "HumSwitch": {
+      "type": "bool",
+      "default": true
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5699999928474426,
+      "observed_range": [
+        0.5699999928474426,
+        0.5699999928474426
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampLine6Oblivion",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.699999988079071,
+    "Boost": 0.0,
+    "ChVol": 0.47999998927116394,
+    "Drive": 0.44999998807907104,
+    "HumSwitch": true,
+    "Mid": 0.5699999928474426,
+    "Sag": 0.5,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

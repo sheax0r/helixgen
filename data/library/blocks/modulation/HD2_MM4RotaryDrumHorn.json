@@ -1,0 +1,70 @@
+{
+  "model_id": "HD2_MM4RotaryDrumHorn",
+  "category": "modulation",
+  "display_name": "Rotary Drum/Horn",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Horn Depth": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Speed": {
+      "type": "bool",
+      "default": true
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_MM4RotaryDrumHorn",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 0.5,
+    "Drive": 0.0,
+    "Horn Depth": 0.6299999952316284,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Speed": true
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

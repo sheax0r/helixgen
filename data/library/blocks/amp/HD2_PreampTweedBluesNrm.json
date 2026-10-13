@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampTweedBluesNrm",
+  "category": "amp",
+  "display_name": "Tweed Blues Nrm (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5400000214576721,
+      "observed_range": [
+        0.5400000214576721,
+        0.5400000214576721
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.41999998688697815,
+      "observed_range": [
+        0.41999998688697815,
+        0.41999998688697815
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6399999856948853,
+      "observed_range": [
+        0.6399999856948853,
+        0.6399999856948853
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampTweedBluesNrm",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5400000214576721,
+    "ChVol": 0.800000011920929,
+    "Drive": 0.41999998688697815,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.6499999761581421,
+    "Sag": 0.5,
+    "Treble": 0.6399999856948853
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4ClassicDistortion",
+  "category": "drive",
+  "display_name": "Classic Dist",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.7799999713897705,
+      "observed_range": [
+        0.7799999713897705,
+        0.7799999713897705
+      ]
+    },
+    "Filter": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.36000001430511475,
+      "observed_range": [
+        0.36000001430511475,
+        0.36000001430511475
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4ClassicDistortion",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.47999998927116394,
+    "Drive": 0.7799999713897705,
+    "Filter": 0.4699999988079071,
+    "Output": 0.36000001430511475,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampWhoWatt100",
+  "category": "amp",
+  "display_name": "WhoWatt 100 (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.3700000047683716,
+      "observed_range": [
+        0.3700000047683716,
+        0.3700000047683716
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampWhoWatt100",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.8999999761581421,
+    "ChVol": 0.75,
+    "Drive": 0.4000000059604645,
+    "Hum": 0.5,
+    "Master": 0.6000000238418579,
+    "Mid": 0.5,
+    "Presence": 0.27000001072883606,
+    "Sag": 0.5,
+    "Treble": 0.3700000047683716
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

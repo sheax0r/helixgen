@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampLine6Epic",
+  "category": "amp",
+  "display_name": "Epic (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.5699999928474426,
+      "observed_range": [
+        0.5699999928474426,
+        0.5699999928474426
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampLine6Epic",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5299999713897705,
+    "ChVol": 0.5699999928474426,
+    "Drive": 0.5,
+    "Hum": 0.5,
+    "Master": 0.47999998927116394,
+    "Mid": 0.5299999713897705,
+    "Sag": 0.33000001311302185,
+    "Treble": 0.550000011920929
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

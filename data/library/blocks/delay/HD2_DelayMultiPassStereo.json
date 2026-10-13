@@ -1,0 +1,138 @@
+{
+  "model_id": "HD2_DelayMultiPassStereo",
+  "category": "delay",
+  "display_name": "Multi Pass Stereo",
+  "params": {
+    "Feedback": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Mode": {
+      "type": "bool",
+      "default": false
+    },
+    "Pattern": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "Tap1Pan": {
+      "type": "float",
+      "default": 0.421999990940094,
+      "observed_range": [
+        0.421999990940094,
+        0.421999990940094
+      ]
+    },
+    "Tap2Pan": {
+      "type": "float",
+      "default": 0.621999979019165,
+      "observed_range": [
+        0.621999979019165,
+        0.621999979019165
+      ]
+    },
+    "Tap3Pan": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Tap4Pan": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Tap5Pan": {
+      "type": "float",
+      "default": 0.02199999988079071,
+      "observed_range": [
+        0.02199999988079071,
+        0.02199999988079071
+      ]
+    },
+    "Tap6Pan": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 1.2000000476837158,
+      "observed_range": [
+        1.2000000476837158,
+        1.2000000476837158
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelayMultiPassStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Feedback": 0.44999998807907104,
+    "Level": 0.0,
+    "Mix": 0.4000000059604645,
+    "Mode": false,
+    "Pattern": 0,
+    "SyncSelect1": 6,
+    "Tap1Pan": 0.421999990940094,
+    "Tap2Pan": 0.621999979019165,
+    "Tap3Pan": 0.20000000298023224,
+    "Tap4Pan": 0.800000011920929,
+    "Tap5Pan": 0.02199999988079071,
+    "Tap6Pan": 1.0,
+    "TempoSync1": false,
+    "Time": 1.2000000476837158
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

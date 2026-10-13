@@ -1,0 +1,158 @@
+{
+  "model_id": "HD2_AmpGermanXtraRed",
+  "category": "amp",
+  "display_name": "German Xtra Red (Legacy)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Boost": {
+      "type": "bool",
+      "default": true
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "Class_AB_A": {
+      "type": "bool",
+      "default": true
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.8100000023841858,
+      "observed_range": [
+        0.8100000023841858,
+        0.8100000023841858
+      ]
+    },
+    "Excursion_Depth": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "Old_New": {
+      "type": "bool",
+      "default": true
+    },
+    "PreEQ_Brt": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Structure": {
+      "type": "bool",
+      "default": true
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpGermanXtraRed",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.30000001192092896,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "Boost": true,
+    "ChVol": 0.46000000834465027,
+    "Class_AB_A": true,
+    "Drive": 0.8100000023841858,
+    "Excursion_Depth": 0,
+    "Master": 0.4000000059604645,
+    "Mid": 0.46000000834465027,
+    "Old_New": true,
+    "PreEQ_Brt": 0,
+    "Presence": 0.7200000286102295,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Structure": true,
+    "Treble": 0.6499999761581421
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": [],
+  "pinned_name": true
+}

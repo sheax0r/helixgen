@@ -1,0 +1,169 @@
+{
+  "model_id": "HD2_Synth4OSCGeneratorMono",
+  "category": "pitch",
+  "display_name": "4 OSC Generator Mono",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Decay": {
+      "type": "float",
+      "default": 3.0,
+      "observed_range": [
+        3.0,
+        3.0
+      ]
+    },
+    "DryLevel": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Osc1Freq": {
+      "type": "float",
+      "default": 110.0,
+      "observed_range": [
+        110.0,
+        110.0
+      ]
+    },
+    "Osc1Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc1Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc2Freq": {
+      "type": "float",
+      "default": 220.0,
+      "observed_range": [
+        220.0,
+        220.0
+      ]
+    },
+    "Osc2Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc2Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc3Freq": {
+      "type": "float",
+      "default": 440.0,
+      "observed_range": [
+        440.0,
+        440.0
+      ]
+    },
+    "Osc3Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc3Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc4Freq": {
+      "type": "float",
+      "default": 660.0,
+      "observed_range": [
+        660.0,
+        660.0
+      ]
+    },
+    "Osc4Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc4Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "RiseTimeSwitch": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_Synth4OSCGeneratorMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.5,
+    "Decay": 3.0,
+    "DryLevel": 1.0,
+    "Level": 0.0,
+    "Osc1Freq": 110.0,
+    "Osc1Level": 0.5,
+    "Osc1Shape": 3,
+    "Osc2Freq": 220.0,
+    "Osc2Level": 0.5,
+    "Osc2Shape": 3,
+    "Osc3Freq": 440.0,
+    "Osc3Level": 0.5,
+    "Osc3Shape": 3,
+    "Osc4Freq": 660.0,
+    "Osc4Level": 0.5,
+    "Osc4Shape": 3,
+    "RiseTimeSwitch": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

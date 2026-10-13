@@ -1,0 +1,137 @@
+{
+  "model_id": "HD2_PreampCaliIVR2",
+  "category": "amp",
+  "display_name": "Cali IV Rhythm 2 (Preamp)",
+  "params": {
+    "2200Hz": {
+      "type": "float",
+      "default": -1.7000000476837158,
+      "observed_range": [
+        -1.7000000476837158,
+        -1.7000000476837158
+      ]
+    },
+    "240Hz": {
+      "type": "float",
+      "default": -2.0,
+      "observed_range": [
+        -2.0,
+        -2.0
+      ]
+    },
+    "6600Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "750Hz": {
+      "type": "float",
+      "default": -5.400000095367432,
+      "observed_range": [
+        -5.400000095367432,
+        -5.400000095367432
+      ]
+    },
+    "80Hz": {
+      "type": "float",
+      "default": 1.399999976158142,
+      "observed_range": [
+        1.399999976158142,
+        1.399999976158142
+      ]
+    },
+    "Bass": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.7400000095367432,
+      "observed_range": [
+        0.7400000095367432,
+        0.7400000095367432
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5400000214576721,
+      "observed_range": [
+        0.5400000214576721,
+        0.5400000214576721
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5400000214576721,
+      "observed_range": [
+        0.5400000214576721,
+        0.5400000214576721
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.49000000953674316,
+      "observed_range": [
+        0.49000000953674316,
+        0.49000000953674316
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampCaliIVR2",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "2200Hz": -1.7000000476837158,
+    "240Hz": -2.0,
+    "6600Hz": 0.0,
+    "750Hz": -5.400000095367432,
+    "80Hz": 1.399999976158142,
+    "Bass": 0.10000000149011612,
+    "ChVol": 0.7400000095367432,
+    "Drive": 0.5400000214576721,
+    "Master": 0.75,
+    "Mid": 0.5400000214576721,
+    "Presence": 0.49000000953674316,
+    "Sag": 0.5,
+    "Treble": 0.7200000286102295
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

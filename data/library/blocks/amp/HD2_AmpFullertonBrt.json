@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpFullertonBrt",
+  "category": "amp",
+  "display_name": "Fullerton Brt",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "DriveBright": {
+      "type": "float",
+      "default": 0.28999999165534973,
+      "observed_range": [
+        0.28999999165534973,
+        0.28999999165534973
+      ]
+    },
+    "DriveNorm": {
+      "type": "float",
+      "default": 0.029999999329447746,
+      "observed_range": [
+        0.029999999329447746,
+        0.029999999329447746
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpFullertonBrt",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.699999988079071,
+    "DriveBright": 0.28999999165534973,
+    "DriveNorm": 0.029999999329447746,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Tone": 0.7599999904632568,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

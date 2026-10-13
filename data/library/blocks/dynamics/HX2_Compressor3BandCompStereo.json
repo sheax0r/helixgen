@@ -1,0 +1,133 @@
+{
+  "model_id": "HX2_Compressor3BandCompStereo",
+  "category": "dynamics",
+  "display_name": "3-Band Comp Stereo",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.03500000014901161,
+      "observed_range": [
+        0.03500000014901161,
+        0.03500000014901161
+      ]
+    },
+    "Detector": {
+      "type": "bool",
+      "default": true
+    },
+    "Hi Gain": {
+      "type": "float",
+      "default": -2.0,
+      "observed_range": [
+        -2.0,
+        -2.0
+      ]
+    },
+    "Hi Thresh": {
+      "type": "float",
+      "default": -50.0,
+      "observed_range": [
+        -50.0,
+        -50.0
+      ]
+    },
+    "Hi X Freq": {
+      "type": "float",
+      "default": 3000.0,
+      "observed_range": [
+        3000.0,
+        3000.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 2.0,
+      "observed_range": [
+        2.0,
+        2.0
+      ]
+    },
+    "Lo Gain": {
+      "type": "float",
+      "default": 3.5,
+      "observed_range": [
+        3.5,
+        3.5
+      ]
+    },
+    "Lo Thresh": {
+      "type": "float",
+      "default": -40.0,
+      "observed_range": [
+        -40.0,
+        -40.0
+      ]
+    },
+    "Lo X Freq": {
+      "type": "float",
+      "default": 400.0,
+      "observed_range": [
+        400.0,
+        400.0
+      ]
+    },
+    "Mid Gain": {
+      "type": "float",
+      "default": 4.0,
+      "observed_range": [
+        4.0,
+        4.0
+      ]
+    },
+    "Mid Thresh": {
+      "type": "float",
+      "default": -35.0,
+      "observed_range": [
+        -35.0,
+        -35.0
+      ]
+    },
+    "Ratio": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Release": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_Compressor3BandCompStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.03500000014901161,
+    "Detector": true,
+    "Hi Gain": -2.0,
+    "Hi Thresh": -50.0,
+    "Hi X Freq": 3000.0,
+    "Level": 2.0,
+    "Lo Gain": 3.5,
+    "Lo Thresh": -40.0,
+    "Lo X Freq": 400.0,
+    "Mid Gain": 4.0,
+    "Mid Thresh": -35.0,
+    "Ratio": 2,
+    "Release": 0.20000000298023224
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

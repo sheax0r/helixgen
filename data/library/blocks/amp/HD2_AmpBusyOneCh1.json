@@ -1,0 +1,111 @@
+{
+  "model_id": "HD2_AmpBusyOneCh1",
+  "category": "amp",
+  "display_name": "Busy One Ch1",
+  "params": {
+    "Ch Vol": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Ch1 Bass": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Ch1 Boost": {
+      "type": "bool",
+      "default": false
+    },
+    "Ch1 Drive": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Ch1 Master": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Ch1 Mid": {
+      "type": "float",
+      "default": 15.0,
+      "observed_range": [
+        15.0,
+        15.0
+      ]
+    },
+    "Ch1 Mid Freq": {
+      "type": "float",
+      "default": 220.0,
+      "observed_range": [
+        220.0,
+        220.0
+      ]
+    },
+    "Ch1 Treble": {
+      "type": "float",
+      "default": 0.15000000596046448,
+      "observed_range": [
+        0.15000000596046448,
+        0.15000000596046448
+      ]
+    },
+    "Input Pad": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Limiter": {
+      "type": "bool",
+      "default": true
+    },
+    "Threshold": {
+      "type": "float",
+      "default": -6.0,
+      "observed_range": [
+        -6.0,
+        -6.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpBusyOneCh1",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Ch Vol": 0.5,
+    "Ch1 Bass": 0.4000000059604645,
+    "Ch1 Boost": false,
+    "Ch1 Drive": 1.0,
+    "Ch1 Master": 0.75,
+    "Ch1 Mid": 15.0,
+    "Ch1 Mid Freq": 220.0,
+    "Ch1 Treble": 0.15000000596046448,
+    "Input Pad": 1,
+    "Limiter": true,
+    "Threshold": -6.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

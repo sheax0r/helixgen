@@ -1,0 +1,52 @@
+{
+  "model_id": "HD2_MM4ScriptPhase",
+  "category": "modulation",
+  "display_name": "Script Phase",
+  "params": {
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 1.590000033378601,
+      "observed_range": [
+        1.590000033378601,
+        1.590000033378601
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_MM4ScriptPhase",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Level": 0.0,
+    "Speed": 1.590000033378601,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

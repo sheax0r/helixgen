@@ -1,0 +1,70 @@
+{
+  "model_id": "HD2_FM4VTron",
+  "category": "filter",
+  "display_name": "V Tron",
+  "params": {
+    "End": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mode": {
+      "type": "bool",
+      "default": true
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Start": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4VTron",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "End": 4,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Mode": true,
+    "Speed": 0.4699999988079071,
+    "Start": 0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

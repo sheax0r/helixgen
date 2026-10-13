@@ -1,0 +1,106 @@
+{
+  "model_id": "HD2_TremoloPatternMono",
+  "category": "modulation",
+  "display_name": "Bleat Chop Trem Mono",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Step1": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Step2": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Step3": {
+      "type": "int",
+      "default": 8,
+      "observed_range": [
+        8,
+        8
+      ]
+    },
+    "Step4": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "WaveShape": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_TremoloPatternMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 1.0,
+    "Level": 0.0,
+    "Speed": 1.0,
+    "Step1": 2,
+    "Step2": 4,
+    "Step3": 8,
+    "Step4": 6,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "WaveShape": 4
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

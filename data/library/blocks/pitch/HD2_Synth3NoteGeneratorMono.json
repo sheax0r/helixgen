@@ -1,0 +1,196 @@
+{
+  "model_id": "HD2_Synth3NoteGeneratorMono",
+  "category": "pitch",
+  "display_name": "3 Note Generator Mono",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Decay": {
+      "type": "float",
+      "default": 3.0,
+      "observed_range": [
+        3.0,
+        3.0
+      ]
+    },
+    "DryLevel": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Osc1Glide": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Osc1Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc1Note": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Osc1Octave": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc1Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc2Glide": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Osc2Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc2Note": {
+      "type": "int",
+      "default": 7,
+      "observed_range": [
+        7,
+        7
+      ]
+    },
+    "Osc2Octave": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc2Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Osc3Glide": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Osc3Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Osc3Note": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Osc3Octave": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Osc3Shape": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "RiseTimeSwitch": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_Synth3NoteGeneratorMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.5,
+    "Decay": 3.0,
+    "DryLevel": 1.0,
+    "Level": 0.0,
+    "Osc1Glide": 0.25,
+    "Osc1Level": 0.5,
+    "Osc1Note": 0,
+    "Osc1Octave": 3,
+    "Osc1Shape": 3,
+    "Osc2Glide": 0.25,
+    "Osc2Level": 0.5,
+    "Osc2Note": 7,
+    "Osc2Octave": 3,
+    "Osc2Shape": 3,
+    "Osc3Glide": 0.25,
+    "Osc3Level": 0.5,
+    "Osc3Note": 4,
+    "Osc3Octave": 4,
+    "Osc3Shape": 3,
+    "RiseTimeSwitch": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

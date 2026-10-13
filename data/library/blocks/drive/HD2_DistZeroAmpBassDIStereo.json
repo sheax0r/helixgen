@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_DistZeroAmpBassDIStereo",
+  "category": "drive",
+  "display_name": "ZeroAmp Bass DI Stereo",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5899999737739563,
+      "observed_range": [
+        0.5899999737739563,
+        0.5899999737739563
+      ]
+    },
+    "Blend": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistZeroAmpBassDIStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5899999737739563,
+    "Blend": 0.4000000059604645,
+    "Drive": 0.6499999761581421,
+    "Level": 0.47999998927116394,
+    "Presence": 0.5,
+    "Treble": 0.30000001192092896
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

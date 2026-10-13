@@ -1,0 +1,170 @@
+{
+  "model_id": "HD2_PreampBusyOneJump",
+  "category": "amp",
+  "display_name": "Busy One Jump (Preamp)",
+  "params": {
+    "Ch Vol": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Ch1 Bass": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Ch1 Boost": {
+      "type": "bool",
+      "default": false
+    },
+    "Ch1 Drive": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Ch1 Master": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Ch1 Mid": {
+      "type": "float",
+      "default": 15.0,
+      "observed_range": [
+        15.0,
+        15.0
+      ]
+    },
+    "Ch1 Mid Freq": {
+      "type": "float",
+      "default": 150.0,
+      "observed_range": [
+        150.0,
+        150.0
+      ]
+    },
+    "Ch1 Treble": {
+      "type": "float",
+      "default": 0.15000000596046448,
+      "observed_range": [
+        0.15000000596046448,
+        0.15000000596046448
+      ]
+    },
+    "Ch2 Bass": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Ch2 Boost": {
+      "type": "bool",
+      "default": false
+    },
+    "Ch2 Drive": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Ch2 Master": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Ch2 Mid": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Ch2 Mid Freq": {
+      "type": "float",
+      "default": 500.0,
+      "observed_range": [
+        500.0,
+        500.0
+      ]
+    },
+    "Ch2 Treble": {
+      "type": "float",
+      "default": 0.43799999356269836,
+      "observed_range": [
+        0.43799999356269836,
+        0.43799999356269836
+      ]
+    },
+    "Input Pad": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Limiter": {
+      "type": "bool",
+      "default": false
+    },
+    "Threshold": {
+      "type": "float",
+      "default": -6.0,
+      "observed_range": [
+        -6.0,
+        -6.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampBusyOneJump",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Ch Vol": 0.5,
+    "Ch1 Bass": 0.4000000059604645,
+    "Ch1 Boost": false,
+    "Ch1 Drive": 1.0,
+    "Ch1 Master": 0.75,
+    "Ch1 Mid": 15.0,
+    "Ch1 Mid Freq": 150.0,
+    "Ch1 Treble": 0.15000000596046448,
+    "Ch2 Bass": 0.25,
+    "Ch2 Boost": false,
+    "Ch2 Drive": 0.44999998807907104,
+    "Ch2 Master": 0.800000011920929,
+    "Ch2 Mid": 0.0,
+    "Ch2 Mid Freq": 500.0,
+    "Ch2 Treble": 0.43799999356269836,
+    "Input Pad": 1,
+    "Limiter": false,
+    "Threshold": -6.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

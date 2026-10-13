@@ -1,0 +1,47 @@
+{
+  "model_id": "VIC_PitchBoctaverStereo",
+  "category": "pitch",
+  "display_name": "Boctaver Stereo",
+  "params": {
+    "DryLevel": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Oct1Level": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Oct2Level": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "VIC_PitchBoctaverStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "DryLevel": 0.6000000238418579,
+    "Oct1Level": 0.6000000238418579,
+    "Oct2Level": 0.30000001192092896
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

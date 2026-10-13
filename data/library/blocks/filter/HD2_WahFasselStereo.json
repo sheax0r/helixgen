@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_WahFasselStereo",
+  "category": "filter",
+  "display_name": "Fassel Stereo",
+  "params": {
+    "FcHigh": {
+      "type": "float",
+      "default": 2155.0,
+      "observed_range": [
+        2155.0,
+        2155.0
+      ]
+    },
+    "FcLow": {
+      "type": "float",
+      "default": 455.0,
+      "observed_range": [
+        455.0,
+        455.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pedal": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_WahFasselStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "FcHigh": 2155.0,
+    "FcLow": 455.0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Pedal": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

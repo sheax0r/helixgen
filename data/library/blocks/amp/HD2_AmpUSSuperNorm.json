@@ -1,0 +1,133 @@
+{
+  "model_id": "HD2_AmpUSSuperNorm",
+  "category": "amp",
+  "display_name": "US Super Norm",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.2800000011920929,
+      "observed_range": [
+        0.2800000011920929,
+        0.2800000011920929
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bright": {
+      "type": "bool",
+      "default": false
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5799999833106995,
+      "observed_range": [
+        0.5799999833106995,
+        0.5799999833106995
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5400000214576721,
+      "observed_range": [
+        0.5400000214576721,
+        0.5400000214576721
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpUSSuperNorm",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.2800000011920929,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "Bright": false,
+    "ChVol": 0.7699999809265137,
+    "Drive": 0.5799999833106995,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.5400000214576721,
+    "Presence": 0.0,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Treble": 0.699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

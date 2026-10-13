@@ -1,0 +1,93 @@
+{
+  "model_id": "HD2_DL4EchoPlatterStereo",
+  "category": "delay",
+  "display_name": "Echo Platter",
+  "params": {
+    "Drive": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "DryThru": {
+      "type": "bool",
+      "default": false
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.22499999403953552,
+      "observed_range": [
+        0.22499999403953552,
+        0.22499999403953552
+      ]
+    },
+    "Wow Flt": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DL4EchoPlatterStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Drive": 0.25,
+    "DryThru": false,
+    "Feedback": 0.4000000059604645,
+    "Level": 0.0,
+    "Mix": 0.5,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.22499999403953552,
+    "Wow Flt": 0.25
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

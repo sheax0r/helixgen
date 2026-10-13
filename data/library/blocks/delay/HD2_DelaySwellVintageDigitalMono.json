@@ -1,0 +1,133 @@
+{
+  "model_id": "HD2_DelaySwellVintageDigitalMono",
+  "category": "delay",
+  "display_name": "Vintage Swell Mono",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "BitDepth": {
+      "type": "int",
+      "default": 7,
+      "observed_range": [
+        7,
+        7
+      ]
+    },
+    "Depth": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "SampleRate": {
+      "type": "int",
+      "default": 7,
+      "observed_range": [
+        7,
+        7
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Threshold": {
+      "type": "float",
+      "default": -60.0,
+      "observed_range": [
+        -60.0,
+        -60.0
+      ]
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelaySwellVintageDigitalMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 1.0,
+    "BitDepth": 7,
+    "Depth": 0.20000000298023224,
+    "Feedback": 0.75,
+    "Headroom": 0.0,
+    "Level": 0.0,
+    "Mix": 0.44999998807907104,
+    "Rate": 0.20000000298023224,
+    "SampleRate": 7,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Threshold": -60.0,
+    "Time": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

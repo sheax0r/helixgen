@@ -1,0 +1,65 @@
+{
+  "model_id": "HX2_GateHardGateStereo",
+  "category": "dynamics",
+  "display_name": "Hard Gate Stereo",
+  "params": {
+    "CloseThreshold": {
+      "type": "float",
+      "default": -60.0,
+      "observed_range": [
+        -60.0,
+        -60.0
+      ]
+    },
+    "Decay": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "HoldTime": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "OpenThreshold": {
+      "type": "float",
+      "default": -50.0,
+      "observed_range": [
+        -50.0,
+        -50.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_GateHardGateStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "CloseThreshold": -60.0,
+    "Decay": 0.009999999776482582,
+    "HoldTime": 0.009999999776482582,
+    "Level": 0.0,
+    "OpenThreshold": -50.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_FM4SpinCycle",
+  "category": "filter",
+  "display_name": "Spin Cycle",
+  "params": {
+    "Freq": {
+      "type": "float",
+      "default": 0.8600000143051147,
+      "observed_range": [
+        0.8600000143051147,
+        0.8600000143051147
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Q": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 1.2100000381469727,
+      "observed_range": [
+        1.2100000381469727,
+        1.2100000381469727
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Vol Sens": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4SpinCycle",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Freq": 0.8600000143051147,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Q": 0.25,
+    "Speed": 1.2100000381469727,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Vol Sens": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

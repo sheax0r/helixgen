@@ -1,0 +1,56 @@
+{
+  "model_id": "HD2_DistDerangedMasterStereo",
+  "category": "drive",
+  "display_name": "Deranged Master Stereo",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5220000147819519,
+      "observed_range": [
+        0.5220000147819519,
+        0.5220000147819519
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistDerangedMasterStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5220000147819519,
+    "Drive": 0.7699999809265137,
+    "Level": 0.0,
+    "Treble": 0.6499999761581421
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

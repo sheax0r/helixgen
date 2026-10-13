@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampBritTremBrt",
+  "category": "amp",
+  "display_name": "Brit Trem Brt (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "BrtDrive": {
+      "type": "float",
+      "default": 0.9200000166893005,
+      "observed_range": [
+        0.9200000166893005,
+        0.9200000166893005
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampBritTremBrt",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.699999988079071,
+    "BrtDrive": 0.9200000166893005,
+    "ChVol": 0.4699999988079071,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.44999998807907104,
+    "Sag": 0.5,
+    "Treble": 0.6000000238418579
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

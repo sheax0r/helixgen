@@ -1,0 +1,119 @@
+{
+  "model_id": "HD2_ReverbPlateauxMono",
+  "category": "reverb",
+  "display_name": "Plateaux Mono",
+  "params": {
+    "Cents1": {
+      "type": "float",
+      "default": -0.800000011920929,
+      "observed_range": [
+        -0.800000011920929,
+        -0.800000011920929
+      ]
+    },
+    "Cents2": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Decay": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "Modulation": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Pitch1": {
+      "type": "int",
+      "default": -12,
+      "observed_range": [
+        -12,
+        -12
+      ]
+    },
+    "Pitch2": {
+      "type": "int",
+      "default": 7,
+      "observed_range": [
+        7,
+        7
+      ]
+    },
+    "PitchMix": {
+      "type": "float",
+      "default": 0.23999999463558197,
+      "observed_range": [
+        0.23999999463558197,
+        0.23999999463558197
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbPlateauxMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Cents1": -0.800000011920929,
+    "Cents2": 0.4000000059604645,
+    "Decay": 0.4699999988079071,
+    "Level": 0.0,
+    "Mix": 0.33000001311302185,
+    "Modulation": 0.5,
+    "Pitch1": -12,
+    "Pitch2": 7,
+    "PitchMix": 0.23999999463558197,
+    "Predelay": 0.0,
+    "Tone": 0.30000001192092896
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

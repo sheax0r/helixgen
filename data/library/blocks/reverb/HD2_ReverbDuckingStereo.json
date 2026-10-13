@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_ReverbDuckingStereo",
+  "category": "reverb",
+  "display_name": "Ducking",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 0.5899999737739563,
+      "observed_range": [
+        0.5899999737739563,
+        0.5899999737739563
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 6100.0,
+      "observed_range": [
+        6100.0,
+        6100.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 165.0,
+      "observed_range": [
+        165.0,
+        165.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbDuckingStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 0.5899999737739563,
+    "HighCut": 6100.0,
+    "Level": 0.0,
+    "LowCut": 165.0,
+    "Mix": 0.5,
+    "Predelay": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

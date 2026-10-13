@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_MM4RingModulator",
+  "category": "modulation",
+  "display_name": "Ring Modulator",
+  "params": {
+    "AM/FM": {
+      "type": "float",
+      "default": 0.029999999329447746,
+      "observed_range": [
+        0.029999999329447746,
+        0.029999999329447746
+      ]
+    },
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.9200000166893005,
+      "observed_range": [
+        0.9200000166893005,
+        0.9200000166893005
+      ]
+    },
+    "Shape": {
+      "type": "float",
+      "default": 0.05999999865889549,
+      "observed_range": [
+        0.05999999865889549,
+        0.05999999865889549
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.23000000417232513,
+      "observed_range": [
+        0.23000000417232513,
+        0.23000000417232513
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_MM4RingModulator",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "AM/FM": 0.029999999329447746,
+    "Depth": 1.0,
+    "Level": 0.0,
+    "Mix": 0.9200000166893005,
+    "Shape": 0.05999999865889549,
+    "Speed": 0.23000000417232513,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

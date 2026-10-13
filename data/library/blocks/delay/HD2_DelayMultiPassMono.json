@@ -1,0 +1,84 @@
+{
+  "model_id": "HD2_DelayMultiPassMono",
+  "category": "delay",
+  "display_name": "Multi Pass Mono",
+  "params": {
+    "Feedback": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Mode": {
+      "type": "bool",
+      "default": false
+    },
+    "Pattern": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 1.2000000476837158,
+      "observed_range": [
+        1.2000000476837158,
+        1.2000000476837158
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelayMultiPassMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Feedback": 0.44999998807907104,
+    "Level": 0.0,
+    "Mix": 0.5,
+    "Mode": false,
+    "Pattern": 0,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 1.2000000476837158
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

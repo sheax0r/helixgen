@@ -1,0 +1,47 @@
+{
+  "model_id": "HD2_DistHedgehogD9Stereo",
+  "category": "drive",
+  "display_name": "Hedgehog D9 Stereo",
+  "params": {
+    "Gain": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6800000071525574,
+      "observed_range": [
+        0.6800000071525574,
+        0.6800000071525574
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistHedgehogD9Stereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Gain": 0.699999988079071,
+    "Level": 0.6800000071525574,
+    "Tone": 0.27000001072883606
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

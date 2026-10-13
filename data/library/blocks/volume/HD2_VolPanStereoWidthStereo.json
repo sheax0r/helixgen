@@ -1,0 +1,57 @@
+{
+  "model_id": "HD2_VolPanStereoWidthStereo",
+  "category": "volume",
+  "display_name": "Stereo Width",
+  "params": {
+    "Balance": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "LR In Swap": {
+      "type": "bool",
+      "default": false
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "R Polarity": {
+      "type": "bool",
+      "default": false
+    },
+    "Width": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_VolPanStereoWidthStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Balance": 0.5,
+    "LR In Swap": false,
+    "Level": 0.0,
+    "R Polarity": false,
+    "Width": 1.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

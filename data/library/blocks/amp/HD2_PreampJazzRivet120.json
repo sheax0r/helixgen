@@ -1,0 +1,83 @@
+{
+  "model_id": "HD2_PreampJazzRivet120",
+  "category": "amp",
+  "display_name": "Jazz Rivet 120 (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    },
+    "Bright": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.2800000011920929,
+      "observed_range": [
+        0.2800000011920929,
+        0.2800000011920929
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampJazzRivet120",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5600000023841858,
+    "Bright": 0.0,
+    "ChVol": 0.75,
+    "Drive": 0.2800000011920929,
+    "Master": 1.0,
+    "Mid": 0.27000001072883606,
+    "Treble": 0.4699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

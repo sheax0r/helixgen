@@ -1,0 +1,70 @@
+{
+  "model_id": "HD2_FM4TronDown",
+  "category": "filter",
+  "display_name": "Tron Down",
+  "params": {
+    "Freq": {
+      "type": "float",
+      "default": 0.6899999976158142,
+      "observed_range": [
+        0.6899999976158142,
+        0.6899999976158142
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Q": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Range": {
+      "type": "bool",
+      "default": false
+    },
+    "Type": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4TronDown",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Freq": 0.6899999976158142,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Q": 1.0,
+    "Range": false,
+    "Type": 0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

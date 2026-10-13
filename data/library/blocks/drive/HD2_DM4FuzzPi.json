@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4FuzzPi",
+  "category": "drive",
+  "display_name": "Fuzz Pi",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.3400000035762787,
+      "observed_range": [
+        0.3400000035762787,
+        0.3400000035762787
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4FuzzPi",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.30000001192092896,
+    "Drive": 0.5299999713897705,
+    "Mid": 0.3400000035762787,
+    "Output": 0.8999999761581421,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

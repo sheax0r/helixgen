@@ -1,0 +1,115 @@
+{
+  "model_id": "EuclideanDelayStereo_Victoria",
+  "category": "delay",
+  "display_name": "Euclidean Delay Stereo",
+  "params": {
+    "Feedback": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Fill": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20000.0,
+      "observed_range": [
+        20000.0,
+        20000.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 80.0,
+      "observed_range": [
+        80.0,
+        80.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.421999990940094,
+      "observed_range": [
+        0.421999990940094,
+        0.421999990940094
+      ]
+    },
+    "Rotate": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Step Time": {
+      "type": "float",
+      "default": 0.125,
+      "observed_range": [
+        0.125,
+        0.125
+      ]
+    },
+    "Steps": {
+      "type": "int",
+      "default": 8,
+      "observed_range": [
+        8,
+        8
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "EuclideanDelayStereo_Victoria",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Feedback": 0.0,
+    "Fill": 3,
+    "HighCut": 20000.0,
+    "Level": 0.0,
+    "LowCut": 80.0,
+    "Mix": 0.421999990940094,
+    "Rotate": 0,
+    "Step Time": 0.125,
+    "Steps": 8,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,56 @@
+{
+  "model_id": "HD2_DistPillarsStereo",
+  "category": "drive",
+  "display_name": "Pillars Stereo",
+  "params": {
+    "Gain": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Mode": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistPillarsStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Gain": 0.4699999988079071,
+    "Level": 0.20000000298023224,
+    "Mode": 0,
+    "Tone": 0.6200000047683716
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

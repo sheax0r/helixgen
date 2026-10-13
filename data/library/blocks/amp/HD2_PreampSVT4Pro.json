@@ -1,0 +1,193 @@
+{
+  "model_id": "HD2_PreampSVT4Pro",
+  "category": "amp",
+  "display_name": "Ampeg SVT-4 PRO (Preamp)",
+  "params": {
+    "150Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "2kHz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "300Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "33Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "5kHz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "600Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "80Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "8kHz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "900Hz": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bright": {
+      "type": "bool",
+      "default": false
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "EQ": {
+      "type": "bool",
+      "default": false
+    },
+    "EQLevel": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "MidFreq": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "UltraHi": {
+      "type": "bool",
+      "default": false
+    },
+    "UltraLo": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampSVT4Pro",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "150Hz": 0.0,
+    "2kHz": 0.0,
+    "300Hz": 0.0,
+    "33Hz": 0.0,
+    "5kHz": 0.0,
+    "600Hz": 0.0,
+    "80Hz": 0.0,
+    "8kHz": 0.0,
+    "900Hz": 0.0,
+    "Bass": 0.5,
+    "Bright": false,
+    "ChVol": 1.0,
+    "Drive": 0.5,
+    "EQ": false,
+    "EQLevel": 0.0,
+    "Master": 0.75,
+    "Mid": 0.5,
+    "MidFreq": 1,
+    "Treble": 0.5,
+    "UltraHi": false,
+    "UltraLo": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

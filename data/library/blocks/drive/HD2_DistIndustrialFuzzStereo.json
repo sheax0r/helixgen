@@ -1,0 +1,70 @@
+{
+  "model_id": "HD2_DistIndustrialFuzzStereo",
+  "category": "drive",
+  "display_name": "Industrial Fuzz Stereo",
+  "params": {
+    "Compress": {
+      "type": "float",
+      "default": 0.5699999928474426,
+      "observed_range": [
+        0.5699999928474426,
+        0.5699999928474426
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Gate": {
+      "type": "float",
+      "default": 0.5199999809265137,
+      "observed_range": [
+        0.5199999809265137,
+        0.5199999809265137
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "Oscillator": {
+      "type": "bool",
+      "default": false
+    },
+    "Stability": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistIndustrialFuzzStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Compress": 0.5699999928474426,
+    "Drive": 1.0,
+    "Gate": 0.5199999809265137,
+    "Level": 0.7699999809265137,
+    "Oscillator": false,
+    "Stability": 0.7300000190734863
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

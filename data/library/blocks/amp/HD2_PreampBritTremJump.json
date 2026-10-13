@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampBritTremJump",
+  "category": "amp",
+  "display_name": "Brit Trem Jump (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "BrtDrive": {
+      "type": "float",
+      "default": 0.8299999833106995,
+      "observed_range": [
+        0.8299999833106995,
+        0.8299999833106995
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "NrmDrive": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampBritTremJump",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.46000000834465027,
+    "BrtDrive": 0.8299999833106995,
+    "ChVol": 0.47999998927116394,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.5,
+    "NrmDrive": 0.800000011920929,
+    "Sag": 0.5,
+    "Treble": 0.6000000238418579
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

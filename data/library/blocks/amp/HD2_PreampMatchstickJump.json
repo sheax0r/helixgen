@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampMatchstickJump",
+  "category": "amp",
+  "display_name": "Matchstick Jump (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.3700000047683716,
+      "observed_range": [
+        0.3700000047683716,
+        0.3700000047683716
+      ]
+    },
+    "Ch1Drive": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Ch2Drive": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.5799999833106995,
+      "observed_range": [
+        0.5799999833106995,
+        0.5799999833106995
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Tone": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampMatchstickJump",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.3700000047683716,
+    "Ch1Drive": 0.75,
+    "Ch2Drive": 0.75,
+    "ChVol": 0.5799999833106995,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Sag": 0.5,
+    "Tone": 3,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

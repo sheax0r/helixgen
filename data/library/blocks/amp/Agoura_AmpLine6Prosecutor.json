@@ -1,0 +1,218 @@
+{
+  "model_id": "Agoura_AmpLine6Prosecutor",
+  "category": "amp",
+  "display_name": "Prosecutor",
+  "params": {
+    "AmpCabPeak2Fc": {
+      "type": "float",
+      "default": 1000.0,
+      "observed_range": [
+        1000.0,
+        1000.0
+      ]
+    },
+    "AmpCabPeak2G": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "AmpCabPeak2Q": {
+      "type": "float",
+      "default": 0.7070000171661377,
+      "observed_range": [
+        0.7070000171661377,
+        0.7070000171661377
+      ]
+    },
+    "AmpCabPeakFc": {
+      "type": "float",
+      "default": 100.0,
+      "observed_range": [
+        100.0,
+        100.0
+      ]
+    },
+    "AmpCabPeakG": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "AmpCabPeakQ": {
+      "type": "float",
+      "default": 0.7070000171661377,
+      "observed_range": [
+        0.7070000171661377,
+        0.7070000171661377
+      ]
+    },
+    "AmpCabShelfF": {
+      "type": "float",
+      "default": 3000.0,
+      "observed_range": [
+        3000.0,
+        3000.0
+      ]
+    },
+    "AmpCabShelfG": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "AmpCabZFir": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "AmpCabZUpdate": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Bass": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "CabIdx": {
+      "type": "int",
+      "default": -1,
+      "observed_range": [
+        -1,
+        -1
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Hype": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": -9.999899864196777,
+      "observed_range": [
+        -9.999899864196777,
+        -9.999899864196777
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "ZPrePost": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "Agoura_AmpLine6Prosecutor",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "AmpCabPeak2Fc": 1000.0,
+    "AmpCabPeak2G": 0.0,
+    "AmpCabPeak2Q": 0.7070000171661377,
+    "AmpCabPeakFc": 100.0,
+    "AmpCabPeakG": 0.0,
+    "AmpCabPeakQ": 0.7070000171661377,
+    "AmpCabShelfF": 3000.0,
+    "AmpCabShelfG": 0.0,
+    "AmpCabZFir": 0,
+    "AmpCabZUpdate": 0,
+    "Bass": 0.6000000238418579,
+    "CabIdx": -1,
+    "Drive": 0.5,
+    "Hype": 0.0,
+    "Level": -9.999899864196777,
+    "Master": 0.5,
+    "Mid": 0.550000011920929,
+    "Presence": 0.20000000298023224,
+    "Ripple": 0.0,
+    "Sag": 0.5,
+    "Treble": 0.44999998807907104,
+    "ZPrePost": 0.30000001192092896
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

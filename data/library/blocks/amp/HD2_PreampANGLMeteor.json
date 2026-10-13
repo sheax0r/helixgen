@@ -1,0 +1,97 @@
+{
+  "model_id": "HD2_PreampANGLMeteor",
+  "category": "amp",
+  "display_name": "ANGL Meteor (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.41999998688697815,
+      "observed_range": [
+        0.41999998688697815,
+        0.41999998688697815
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "MidBoost": {
+      "type": "bool",
+      "default": true
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampANGLMeteor",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.46000000834465027,
+    "ChVol": 0.800000011920929,
+    "Drive": 0.46000000834465027,
+    "Hum": 0.5,
+    "Master": 0.41999998688697815,
+    "Mid": 0.6000000238418579,
+    "MidBoost": true,
+    "Sag": 0.5,
+    "Treble": 0.6600000262260437
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

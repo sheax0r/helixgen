@@ -1,0 +1,47 @@
+{
+  "model_id": "HD2_DistAlpacaRougeStereo",
+  "category": "drive",
+  "display_name": "Alpaca Rouge Stereo",
+  "params": {
+    "Drive": {
+      "type": "float",
+      "default": 0.3400000035762787,
+      "observed_range": [
+        0.3400000035762787,
+        0.3400000035762787
+      ]
+    },
+    "HiCut": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Volume": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistAlpacaRougeStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Drive": 0.3400000035762787,
+    "HiCut": 0.5,
+    "Volume": 0.699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

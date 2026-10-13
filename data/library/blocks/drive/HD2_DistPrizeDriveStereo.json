@@ -1,0 +1,57 @@
+{
+  "model_id": "HD2_DistPrizeDriveStereo",
+  "category": "drive",
+  "display_name": "Prize Drive Stereo",
+  "params": {
+    "Bass Cut": {
+      "type": "bool",
+      "default": true
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.41999998688697815,
+      "observed_range": [
+        0.41999998688697815,
+        0.41999998688697815
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Spectrum": {
+      "type": "float",
+      "default": 0.7400000095367432,
+      "observed_range": [
+        0.7400000095367432,
+        0.7400000095367432
+      ]
+    },
+    "Voltage": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistPrizeDriveStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass Cut": true,
+    "Drive": 0.41999998688697815,
+    "Level": 0.4000000059604645,
+    "Spectrum": 0.7400000095367432,
+    "Voltage": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

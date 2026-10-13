@@ -1,0 +1,143 @@
+{
+  "model_id": "HD2_FlangerDynamixFlangerStereo",
+  "category": "modulation",
+  "display_name": "Dynamix Flanger Stereo",
+  "params": {
+    "CV Decay": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "CV Dynamics": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "CV Tracking": {
+      "type": "bool",
+      "default": true
+    },
+    "Control Select": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Depth": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Env Input": {
+      "type": "float",
+      "default": 70.0,
+      "observed_range": [
+        70.0,
+        70.0
+      ]
+    },
+    "Env Lag": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    },
+    "Manual": {
+      "type": "float",
+      "default": 0.4180000126361847,
+      "observed_range": [
+        0.4180000126361847,
+        0.4180000126361847
+      ]
+    },
+    "Max Delay": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Phasing": {
+      "type": "float",
+      "default": -0.9998999834060669,
+      "observed_range": [
+        -0.9998999834060669,
+        -0.9998999834060669
+      ]
+    },
+    "Recycle": {
+      "type": "bool",
+      "default": true
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.04399999976158142,
+      "observed_range": [
+        0.04399999976158142,
+        0.04399999976158142
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FlangerDynamixFlangerStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "CV Decay": 1,
+    "CV Dynamics": 1.0,
+    "CV Tracking": true,
+    "Control Select": 1,
+    "Depth": 0.6600000262260437,
+    "Env Input": 70.0,
+    "Env Lag": 0.10000000149011612,
+    "Manual": 0.4180000126361847,
+    "Max Delay": 0.009999999776482582,
+    "Mix": 0.5,
+    "Phasing": -0.9998999834060669,
+    "Recycle": true,
+    "Speed": 0.04399999976158142,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,70 @@
+{
+  "model_id": "HD2_FM4SlowFilter",
+  "category": "filter",
+  "display_name": "Slow Filter",
+  "params": {
+    "Freq": {
+      "type": "float",
+      "default": 0.09000000357627869,
+      "observed_range": [
+        0.09000000357627869,
+        0.09000000357627869
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mode": {
+      "type": "bool",
+      "default": false
+    },
+    "Q": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4SlowFilter",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Freq": 0.09000000357627869,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Mode": false,
+    "Q": 0.6700000166893005,
+    "Speed": 0.699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}
