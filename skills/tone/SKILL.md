@@ -148,7 +148,7 @@ For each slot, run `helixgen list-blocks --category <cat>` and scan the output f
 
 #### Amps: Agoura first — this is the single biggest choice in the preset
 
-The Stadium ships **23 Agoura amps** (17 guitar, 6 bass). Everything else in the
+The Stadium ships **30 Agoura amps** as of firmware 1.4 (24 guitar, 6 bass). Everything else in the
 amp category is the ported **HX/legacy** set, kept so presets from older Helix
 hardware still load — Line 6 files them under `LEGACY` on the device itself.
 
@@ -169,8 +169,41 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --cat
 ```
 
 Common swaps: legacy `US Double Nrm` → Agoura **`US Double Black`** (Fender Twin);
-legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**.
+legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**;
+legacy `Line 6 Litigator` → Agoura **`Prosecutor`**.
 Say in the report when you had to fall back to a legacy model, and why.
+
+**Firmware 1.4 amps — need the device on Stadium firmware 1.4+** (an older
+device can't load them; if the user hasn't said, ask before reaching for one):
+
+- **`Brit SL100`** (`Agoura_AmpBritSL100`) — Marshall Super Lead 100 across four
+  eras, each a genuinely different circuit. `Era` 0–3 = '67 / '68 / '70 / '71;
+  `Channel` 0–2 = Normal / Bright / Jumped (jumped = both channels, the classic
+  Plexi trick); `Bright` = Bright Cap enum 0–4 (None / 120 / 470 / 1000 / 4700 pF).
+  Reach for it over `Brit Plexi` when the reference names a year or a specific
+  late-'60s/early-'70s Marshall record. Defaults: '67, Bright channel, 120 pF.
+- **`Omega Granophyre`** (`Agoura_AmpOmegaGrano`) — modern boutique 6L6 high-gain.
+  `Jack` 0/1 = Low/High input, `Voice` 0/1 = Low Mid / High Mid focus,
+  `NFB` false/true = Open/Closed negative feedback (Closed is the default and
+  the tighter one), `Depth` = low-end resonance.
+- **`Prosecutor`** (`Agoura_AmpLine6Prosecutor`) — Line 6 Original, the Agoura
+  rebuild of the HX `Litigator` (Dumble-style overdrive). Use it wherever you'd
+  have used Litigator.
+
+New 1.4 effects: **`Mercator`** (Cartographer-preamp-style drive with an active
+3-band EQ — cheaper on DSP than a Cartographer preamp), **`Rock Box Dist`** /
+**`Rock Box Boost`** (Z.Vex Box of Rock halves — put them on separate
+footswitches), **`PortaBox 424`** (Tascam Portastudio preamp grit, lo-fi),
+**`Essex Vibe`** (Vox AC30 vibrato; `Stages` 1/2), **`Dimension W`** (BOSS DC-2W;
+`Version` 0/1 = C pedal / D rack, `Mode` 0–9 = 1, 2, 3, 4, 1+2, 1+3, 1+4, 2+3,
+2+4, 3+4). Same firmware-1.4 caveat.
+
+**Library entries without observed ranges.** Many blocks (all of the above, plus
+older catalog models no export ever included) are generated from the device's
+own model definitions: their `default` is the device's real insert default, but
+`observed_range` is just `[default, default]`. A one-point range there means "no
+sighting", **not** "factory presets never move this knob" — use `show-block`'s
+type and the param's meaning, not that range, to pick values.
 
 #### Cabs
 
