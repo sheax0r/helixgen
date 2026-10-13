@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.55.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.55.1'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -197,8 +197,9 @@ Two things do persist locally, and neither is intent:
   RPC port, present **only when nonstandard**; absent means the default 2002),
   written by `device discover`. Gitignored. Losing it costs one re-`discover`.
 - `~/.helixgen/backup/<serial>/` — the **photograph** written by `device
-  backup`: `pool/<Name>.sbe` (device bytes), `setlists/<Name>.json` (an ordered
-  array of names — this is where order is recorded), `irs/` and `device.json`.
+  backup`: `pool/<Name>.sbe` (device bytes), `setlists/<Name>.json` (an array of
+  `{name, posi}` — this is where order AND slot position are recorded; older
+  backups hold a plain ordered name array, still readable), `irs/` and `device.json`.
   Git-tracked, and the input to `device restore`.
 
 **The photograph is a record, not a control surface.** Hand-editing
@@ -571,6 +572,10 @@ helixgen device setlist export-hss Gigs out.hss               # export a DEVICE 
   `device to-hsp <cid>`. Nothing local records the import, and nothing will
   later strip the references: without a reconcile, an import is just a set of
   device writes that stay put.
+- **A slot whose model this engine can't transcode fails loudly** (core 0.55.1):
+  the per-slot error names the unresolved model, `--dry-run` marks it `would
+  FAIL`, and if no slot is importable the destination setlist is not created.
+  It used to drop the block silently.
 - **NOT idempotent on retry.** Re-running an import after a partial failure
   installs + references the already-succeeded slots AGAIN (duplicate pool
   presets + references). Before retrying, delete the setlist and the
@@ -649,7 +654,12 @@ remove it there first. The setlist reference you asked for is still dropped.
 
 **`move`** — repositions within a setlist's reference order. This is a **device**
 reorder; it takes effect immediately and there is nothing local to update
-afterwards.
+afterwards. On Stadium firmware 1.4+ a setlist is a fixed grid of 128 slots
+that can have gaps, and `--to` is the **slot position the preset lands on**
+(0..127; 0 = 1A, 3 = 1D), not an index into the listed presets; the presets
+between the old and new position shift one place, gaps included. A setlist move
+is refused if the device's firmware version can't be read. On older firmware
+`--to` keeps its old index meaning. The pool keeps index semantics.
 
 All three take the `library` lock scope (`copy` adds `irs` when uploading IRs) —
 auto-acquired, nothing to do by hand for a single call. For a longer session
@@ -671,8 +681,8 @@ helixgen device decode <file.sbe|-> [--indent N]
 ```
 
 **`backup`** photographs the device into `~/.helixgen/backup/<serial>/` —
-`pool/<Name>.sbe` (the device's own content bytes), `setlists/<Name>.json` (an
-ordered array of names), `irs/<irhash>.wav` + `irs/index.json`, and
+`pool/<Name>.sbe` (the device's own content bytes), `setlists/<Name>.json` (an array of `{name, posi}` — order and slot position; older backups are a
+plain name array, still readable), `irs/<irhash>.wav` + `irs/index.json`, and
 `device.json`. Read-only on the device, non-activating (the player's live tone is
 never disturbed), no lock. Unchanged files are not rewritten, so a re-run
 produces a clean `git status`.
@@ -685,7 +695,13 @@ what `device decode` is for — a lossless native dump, no transcoder involved).
 
 **`restore`** replays a photograph: pool content first, then setlist order. It
 prints the diff and confirms before touching anything; `--dry-run` shows the plan
-without applying. Additive-and-update by default.
+without applying. Additive-and-update by default. It puts each setlist reference
+back at its **recorded slot position**: a misplaced reference is moved add-first
+(the new reference goes in, then the old one comes out), so a failure mid-way
+leaves a preset listed twice, never missing — re-run restore and it converges. A
+slot held by a preset that isn't in the photograph is refused unless `--prune`.
+A backup with gaps can't be restored onto firmware older than 1.4 (refused with
+a message).
 
 > **`--prune` is the one destructive path in this skill.** It deletes device
 > presets that are absent from the snapshot. Always show the user the
@@ -1414,7 +1430,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.55.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.55.1'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
