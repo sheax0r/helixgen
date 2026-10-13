@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DistTeemahStereo",
+  "category": "drive",
+  "display_name": "Teemah! Stereo",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Clipping": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.5199999809265137,
+      "observed_range": [
+        0.5199999809265137,
+        0.5199999809265137
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistTeemahStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Clipping": 0,
+    "Gain": 0.5199999809265137,
+    "Level": 0.6299999952316284,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

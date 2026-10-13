@@ -1,0 +1,83 @@
+{
+  "model_id": "HD2_PreampDividedDuo",
+  "category": "amp",
+  "display_name": "Divided Duo (Preamp)",
+  "params": {
+    "ChVol": {
+      "type": "float",
+      "default": 0.6800000071525574,
+      "observed_range": [
+        0.6800000071525574,
+        0.6800000071525574
+      ]
+    },
+    "Drive1": {
+      "type": "float",
+      "default": 0.4099999964237213,
+      "observed_range": [
+        0.4099999964237213,
+        0.4099999964237213
+      ]
+    },
+    "Drive2": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.4300000071525574,
+      "observed_range": [
+        0.4300000071525574,
+        0.4300000071525574
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampDividedDuo",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "ChVol": 0.6800000071525574,
+    "Drive1": 0.4099999964237213,
+    "Drive2": 0.33000001311302185,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Sag": 0.6700000166893005,
+    "Tone": 0.4300000071525574
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

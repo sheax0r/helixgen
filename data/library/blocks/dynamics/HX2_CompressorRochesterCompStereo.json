@@ -1,0 +1,92 @@
+{
+  "model_id": "HX2_CompressorRochesterCompStereo",
+  "category": "dynamics",
+  "display_name": "Rochester Comp Stereo",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 3.0,
+      "observed_range": [
+        3.0,
+        3.0
+      ]
+    },
+    "Knee": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 10.0,
+      "observed_range": [
+        10.0,
+        10.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Ratio": {
+      "type": "float",
+      "default": 10.0,
+      "observed_range": [
+        10.0,
+        10.0
+      ]
+    },
+    "Release": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    },
+    "Threshold": {
+      "type": "float",
+      "default": -24.0,
+      "observed_range": [
+        -24.0,
+        -24.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_CompressorRochesterCompStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.009999999776482582,
+    "Gain": 3.0,
+    "Knee": 0.0,
+    "Level": 10.0,
+    "Mix": 1.0,
+    "Ratio": 10.0,
+    "Release": 0.10000000149011612,
+    "Threshold": -24.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

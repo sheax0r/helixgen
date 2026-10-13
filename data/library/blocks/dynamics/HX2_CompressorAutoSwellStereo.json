@@ -1,0 +1,70 @@
+{
+  "model_id": "HX2_CompressorAutoSwellStereo",
+  "category": "dynamics",
+  "display_name": "Autoswell Stereo",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Decay": {
+      "type": "float",
+      "default": 0.014999999664723873,
+      "observed_range": [
+        0.014999999664723873,
+        0.014999999664723873
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Rel Offset": {
+      "type": "float",
+      "default": 5.0,
+      "observed_range": [
+        5.0,
+        5.0
+      ]
+    },
+    "Taper": {
+      "type": "bool",
+      "default": true
+    },
+    "Threshold": {
+      "type": "float",
+      "default": -70.0,
+      "observed_range": [
+        -70.0,
+        -70.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_CompressorAutoSwellStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.4000000059604645,
+    "Decay": 0.014999999664723873,
+    "Level": 0.0,
+    "Rel Offset": 5.0,
+    "Taper": true,
+    "Threshold": -70.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

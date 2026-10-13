@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampCaliRectifire",
+  "category": "amp",
+  "display_name": "Cali Rectifire (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.25999999046325684,
+      "observed_range": [
+        0.25999999046325684,
+        0.25999999046325684
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.6800000071525574,
+      "observed_range": [
+        0.6800000071525574,
+        0.6800000071525574
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5899999737739563,
+      "observed_range": [
+        0.5899999737739563,
+        0.5899999737739563
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.3799999952316284,
+      "observed_range": [
+        0.3799999952316284,
+        0.3799999952316284
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampCaliRectifire",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.25999999046325684,
+    "ChVol": 0.6700000166893005,
+    "Drive": 0.6800000071525574,
+    "Hum": 0.27000001072883606,
+    "Master": 0.33000001311302185,
+    "Mid": 0.5899999737739563,
+    "Presence": 0.20000000298023224,
+    "Sag": 0.5,
+    "Treble": 0.3799999952316284
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

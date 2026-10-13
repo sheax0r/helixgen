@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampEssexA15",
+  "category": "amp",
+  "display_name": "Essex A15 (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampEssexA15",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.4000000059604645,
+    "ChVol": 0.6499999761581421,
+    "Drive": 0.550000011920929,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.5,
+    "Sag": 0.6100000143051147,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

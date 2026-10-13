@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4Line6Distortion",
+  "category": "drive",
+  "display_name": "L6 Distortion",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.4099999964237213,
+      "observed_range": [
+        0.4099999964237213,
+        0.4099999964237213
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.8799999952316284,
+      "observed_range": [
+        0.8799999952316284,
+        0.8799999952316284
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4Line6Distortion",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 1.0,
+    "Drive": 0.800000011920929,
+    "Mid": 0.4099999964237213,
+    "Output": 0.5,
+    "Treble": 0.8799999952316284
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_FM4Seeker",
+  "category": "filter",
+  "display_name": "Seeker",
+  "params": {
+    "Freq": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Q": {
+      "type": "float",
+      "default": 0.38999998569488525,
+      "observed_range": [
+        0.38999998569488525,
+        0.38999998569488525
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 5.800000190734863,
+      "observed_range": [
+        5.800000190734863,
+        5.800000190734863
+      ]
+    },
+    "Steps": {
+      "type": "int",
+      "default": 8,
+      "observed_range": [
+        8,
+        8
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4Seeker",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Freq": 0.0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Q": 0.38999998569488525,
+    "Speed": 5.800000190734863,
+    "Steps": 8,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

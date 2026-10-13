@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpEssexA30",
+  "category": "amp",
+  "display_name": "Essex A30",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.7400000095367432,
+      "observed_range": [
+        0.7400000095367432,
+        0.7400000095367432
+      ]
+    },
+    "Cut": {
+      "type": "float",
+      "default": 0.7799999713897705,
+      "observed_range": [
+        0.7799999713897705,
+        0.7799999713897705
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpEssexA30",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.7400000095367432,
+    "Cut": 0.7799999713897705,
+    "Drive": 0.6000000238418579,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Presence": 0.0,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

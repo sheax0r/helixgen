@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_DL4Reverse",
+  "category": "delay",
+  "display_name": "Reverse",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "ModSpeed": {
+      "type": "float",
+      "default": 0.05999999865889549,
+      "observed_range": [
+        0.05999999865889549,
+        0.05999999865889549
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 2.0,
+      "observed_range": [
+        2.0,
+        2.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DL4Reverse",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 1.0,
+    "Feedback": 0.0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "ModSpeed": 0.05999999865889549,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 2.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

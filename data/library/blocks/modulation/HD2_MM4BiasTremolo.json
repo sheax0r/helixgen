@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_MM4BiasTremolo",
+  "category": "modulation",
+  "display_name": "Bias Tremolo",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Shape": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 9.40999984741211,
+      "observed_range": [
+        9.40999984741211,
+        9.40999984741211
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Volsens": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_MM4BiasTremolo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 1.0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Shape": 0.0,
+    "Speed": 9.40999984741211,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Volsens": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

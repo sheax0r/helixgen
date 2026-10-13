@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_MM4Panner",
+  "category": "modulation",
+  "display_name": "Panner",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Shape": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 3.0799999237060547,
+      "observed_range": [
+        3.0799999237060547,
+        3.0799999237060547
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "VolSen": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_MM4Panner",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 1.0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Shape": 0,
+    "Speed": 3.0799999237060547,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "VolSen": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

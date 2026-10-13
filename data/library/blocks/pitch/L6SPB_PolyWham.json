@@ -1,0 +1,83 @@
+{
+  "model_id": "L6SPB_PolyWham",
+  "category": "pitch",
+  "display_name": "Poly Wham",
+  "params": {
+    "AutoEQ": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "HeelShift": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Position": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "ToeShift": {
+      "type": "int",
+      "default": 12,
+      "observed_range": [
+        12,
+        12
+      ]
+    },
+    "Tracking": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "L6SPB_PolyWham",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "AutoEQ": 0.699999988079071,
+    "HeelShift": 0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Position": 1.0,
+    "ToeShift": 12,
+    "Tracking": 3
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

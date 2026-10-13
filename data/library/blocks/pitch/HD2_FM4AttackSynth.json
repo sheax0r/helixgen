@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_FM4AttackSynth",
+  "category": "pitch",
+  "display_name": "Attack Synth",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Freq": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pitch": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Wave": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4AttackSynth",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 1.0,
+    "Freq": 0.800000011920929,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Pitch": 0.0,
+    "Wave": 2
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

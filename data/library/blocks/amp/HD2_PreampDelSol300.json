@@ -1,0 +1,120 @@
+{
+  "model_id": "HD2_PreampDelSol300",
+  "category": "amp",
+  "display_name": "Del Sol 300 (Preamp)",
+  "params": {
+    "125Hz": {
+      "type": "float",
+      "default": 2.5,
+      "observed_range": [
+        2.5,
+        2.5
+      ]
+    },
+    "1kHz": {
+      "type": "float",
+      "default": 4.5,
+      "observed_range": [
+        4.5,
+        4.5
+      ]
+    },
+    "250Hz": {
+      "type": "float",
+      "default": -3.200000047683716,
+      "observed_range": [
+        -3.200000047683716,
+        -3.200000047683716
+      ]
+    },
+    "2kHz": {
+      "type": "float",
+      "default": 1.5,
+      "observed_range": [
+        1.5,
+        1.5
+      ]
+    },
+    "4kHz": {
+      "type": "float",
+      "default": 5.699999809265137,
+      "observed_range": [
+        5.699999809265137,
+        5.699999809265137
+      ]
+    },
+    "500Hz": {
+      "type": "float",
+      "default": -2.0,
+      "observed_range": [
+        -2.0,
+        -2.0
+      ]
+    },
+    "62p5Hz": {
+      "type": "float",
+      "default": 9.0,
+      "observed_range": [
+        9.0,
+        9.0
+      ]
+    },
+    "Brite": {
+      "type": "bool",
+      "default": true
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Contour": {
+      "type": "bool",
+      "default": true
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.8199999928474426,
+      "observed_range": [
+        0.8199999928474426,
+        0.8199999928474426
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampDelSol300",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "125Hz": 2.5,
+    "1kHz": 4.5,
+    "250Hz": -3.200000047683716,
+    "2kHz": 1.5,
+    "4kHz": 5.699999809265137,
+    "500Hz": -2.0,
+    "62p5Hz": 9.0,
+    "Brite": true,
+    "ChVol": 0.800000011920929,
+    "Contour": true,
+    "Gain": 0.8199999928474426,
+    "Master": 0.75
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

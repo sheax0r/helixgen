@@ -1,0 +1,75 @@
+{
+  "model_id": "HD2_VibratoEssexVibeMono",
+  "category": "modulation",
+  "display_name": "Essex Vibe Mono",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    },
+    "Stages": {
+      "type": "bool",
+      "default": false
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Trem": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_VibratoEssexVibeMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 1.0,
+    "Level": 0.0,
+    "Rate": 0.30000001192092896,
+    "Stages": false,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Trem": 0.20000000298023224
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

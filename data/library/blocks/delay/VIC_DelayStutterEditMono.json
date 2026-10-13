@@ -1,0 +1,166 @@
+{
+  "model_id": "VIC_DelayStutterEditMono",
+  "category": "delay",
+  "display_name": "Tesselator Mono",
+  "params": {
+    "Boomerang": {
+      "type": "bool",
+      "default": false
+    },
+    "Direction": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "FX Level": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "First": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    },
+    "HP Filter": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LP Filter": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Last": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Operation": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Pitch": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Ramp": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Steps": {
+      "type": "int",
+      "default": 8,
+      "observed_range": [
+        8,
+        8
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "SyncSelect2": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "TempoSync2": {
+      "type": "bool",
+      "default": false
+    },
+    "Transport": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "VIC_DelayStutterEditMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Boomerang": false,
+    "Direction": 0,
+    "FX Level": 0.800000011920929,
+    "First": 0.10000000149011612,
+    "HP Filter": 0.0,
+    "LP Filter": 1.0,
+    "Last": 0.20000000298023224,
+    "Level": 0.0,
+    "Operation": 2,
+    "Pitch": 0,
+    "Ramp": 0,
+    "Speed": 1.0,
+    "Steps": 8,
+    "SyncSelect1": 6,
+    "SyncSelect2": 6,
+    "TempoSync1": false,
+    "TempoSync2": false,
+    "Transport": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

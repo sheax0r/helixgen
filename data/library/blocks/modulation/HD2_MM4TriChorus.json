@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_MM4TriChorus",
+  "category": "modulation",
+  "display_name": "Tri Chorus",
+  "params": {
+    "Depth1": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Depth2": {
+      "type": "float",
+      "default": 0.9100000262260437,
+      "observed_range": [
+        0.9100000262260437,
+        0.9100000262260437
+      ]
+    },
+    "Depth3": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.8600000143051147,
+      "observed_range": [
+        0.8600000143051147,
+        0.8600000143051147
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 2.3399999141693115,
+      "observed_range": [
+        2.3399999141693115,
+        2.3399999141693115
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_MM4TriChorus",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth1": 0.6299999952316284,
+    "Depth2": 0.9100000262260437,
+    "Depth3": 0.5299999713897705,
+    "Level": 0.0,
+    "Mix": 0.8600000143051147,
+    "Speed": 2.3399999141693115,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

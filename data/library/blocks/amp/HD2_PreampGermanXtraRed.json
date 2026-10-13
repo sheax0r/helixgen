@@ -1,0 +1,93 @@
+{
+  "model_id": "HD2_PreampGermanXtraRed",
+  "category": "amp",
+  "display_name": "German Xtra Red (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Boost": {
+      "type": "bool",
+      "default": true
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "PreEQ_Brt": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Structure": {
+      "type": "bool",
+      "default": true
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampGermanXtraRed",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Boost": true,
+    "ChVol": 0.5,
+    "Drive": 0.5,
+    "Master": 0.25,
+    "Mid": 0.5,
+    "PreEQ_Brt": 0,
+    "Structure": true,
+    "Treble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

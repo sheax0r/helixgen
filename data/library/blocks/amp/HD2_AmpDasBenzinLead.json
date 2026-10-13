@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpDasBenzinLead",
+  "category": "amp",
+  "display_name": "Das Benzin Lead",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8199999928474426,
+      "observed_range": [
+        0.8199999928474426,
+        0.8199999928474426
+      ]
+    },
+    "Deep": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.5799999833106995,
+      "observed_range": [
+        0.5799999833106995,
+        0.5799999833106995
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpDasBenzinLead",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.44999998807907104,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.8199999928474426,
+    "Deep": 0.5299999713897705,
+    "Drive": 0.75,
+    "Master": 0.5799999833106995,
+    "Mid": 0.5,
+    "Presence": 0.6100000143051147,
+    "Ripple": 0.5,
+    "Sag": 0.4000000059604645,
+    "Treble": 0.6299999952316284
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

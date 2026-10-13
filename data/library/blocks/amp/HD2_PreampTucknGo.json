@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampTucknGo",
+  "category": "amp",
+  "display_name": "Ampeg B-15NF (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "HighMid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "LowMid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampTucknGo",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6499999761581421,
+    "ChVol": 1.0,
+    "Drive": 0.44999998807907104,
+    "HighMid": 0.5,
+    "Hum": 0.5,
+    "LowMid": 0.5,
+    "Master": 1.0,
+    "Sag": 0.5,
+    "Treble": 0.699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

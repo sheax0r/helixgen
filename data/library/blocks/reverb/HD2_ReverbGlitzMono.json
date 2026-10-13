@@ -1,0 +1,133 @@
+{
+  "model_id": "HD2_ReverbGlitzMono",
+  "category": "reverb",
+  "display_name": "Glitz Mono",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Delay": {
+      "type": "float",
+      "default": 0.04399999976158142,
+      "observed_range": [
+        0.04399999976158142,
+        0.04399999976158142
+      ]
+    },
+    "Depth": {
+      "type": "float",
+      "default": 0.3799999952316284,
+      "observed_range": [
+        0.3799999952316284,
+        0.3799999952316284
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 8000.0,
+      "observed_range": [
+        8000.0,
+        8000.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 118.0,
+      "observed_range": [
+        118.0,
+        118.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.1899999976158142,
+      "observed_range": [
+        0.1899999976158142,
+        0.1899999976158142
+      ]
+    },
+    "Mod Mix": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 1.7999999523162842,
+      "observed_range": [
+        1.7999999523162842,
+        1.7999999523162842
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Xover": {
+      "type": "float",
+      "default": 866.0,
+      "observed_range": [
+        866.0,
+        866.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbGlitzMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 0.4699999988079071,
+    "Delay": 0.04399999976158142,
+    "Depth": 0.3799999952316284,
+    "HighCut": 8000.0,
+    "Level": 0.0,
+    "LowCut": 118.0,
+    "Mix": 0.1899999976158142,
+    "Mod Mix": 0.3499999940395355,
+    "Predelay": 0.009999999776482582,
+    "Rate": 1.7999999523162842,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Xover": 866.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,137 @@
+{
+  "model_id": "HD2_AmpCaliTexasCh2",
+  "category": "amp",
+  "display_name": "Cali Texas Ch2",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.36000001430511475,
+      "observed_range": [
+        0.36000001430511475,
+        0.36000001430511475
+      ]
+    },
+    "Drive 1": {
+      "type": "float",
+      "default": 0.8799999952316284,
+      "observed_range": [
+        0.8799999952316284,
+        0.8799999952316284
+      ]
+    },
+    "Drive 2": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "TS Shape": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpCaliTexasCh2",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6000000238418579,
+    "Bias": 0.5,
+    "BiasX": 0.44999998807907104,
+    "ChVol": 0.36000001430511475,
+    "Drive 1": 0.8799999952316284,
+    "Drive 2": 0.5,
+    "Master": 0.3499999940395355,
+    "Mid": 0.44999998807907104,
+    "Presence": 0.6600000262260437,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "TS Shape": 0,
+    "Treble": 0.7300000190734863
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

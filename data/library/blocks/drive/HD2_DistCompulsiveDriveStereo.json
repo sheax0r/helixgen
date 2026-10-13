@@ -1,0 +1,57 @@
+{
+  "model_id": "HD2_DistCompulsiveDriveStereo",
+  "category": "drive",
+  "display_name": "Compulsive Drive Stereo",
+  "params": {
+    "Gain": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "LPHP": {
+      "type": "bool",
+      "default": false
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Version": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistCompulsiveDriveStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Gain": 0.6600000262260437,
+    "LPHP": false,
+    "Level": 0.6499999761581421,
+    "Tone": 0.5,
+    "Version": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

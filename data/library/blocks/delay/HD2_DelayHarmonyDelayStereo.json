@@ -1,0 +1,196 @@
+{
+  "model_id": "HD2_DelayHarmonyDelayStereo",
+  "category": "delay",
+  "display_name": "Harmony Delay",
+  "params": {
+    "DelayVoice1": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "DelayVoice2": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20100.0,
+      "observed_range": [
+        20100.0,
+        20100.0
+      ]
+    },
+    "IntervalVoice1": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "IntervalVoice2": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Key": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LevelRootVoice": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "LevelVoice1": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "LevelVoice2": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 19.899999618530273,
+      "observed_range": [
+        19.899999618530273,
+        19.899999618530273
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "PanRootVoice": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "PanVoice1": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "PanVoice2": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Scale": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelayHarmonyDelayStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "DelayVoice1": 0.33000001311302185,
+    "DelayVoice2": 0.6600000262260437,
+    "Feedback": 0.5,
+    "HighCut": 20100.0,
+    "IntervalVoice1": 2,
+    "IntervalVoice2": 4,
+    "Key": 0,
+    "Level": 0.0,
+    "LevelRootVoice": 1.0,
+    "LevelVoice1": 1.0,
+    "LevelVoice2": 1.0,
+    "LowCut": 19.899999618530273,
+    "Mix": 0.5,
+    "PanRootVoice": 0.5,
+    "PanVoice1": 0.25,
+    "PanVoice2": 0.75,
+    "Scale": 0,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.75
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

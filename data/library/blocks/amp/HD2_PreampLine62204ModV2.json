@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampLine62204ModV2",
+  "category": "amp",
+  "display_name": "2204 Mod (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5099999904632568,
+      "observed_range": [
+        0.5099999904632568,
+        0.5099999904632568
+      ]
+    },
+    "PreMid": {
+      "type": "float",
+      "default": 4.0,
+      "observed_range": [
+        4.0,
+        4.0
+      ]
+    },
+    "PreMidFc": {
+      "type": "float",
+      "default": 1000.0,
+      "observed_range": [
+        1000.0,
+        1000.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.8100000023841858,
+      "observed_range": [
+        0.8100000023841858,
+        0.8100000023841858
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampLine62204ModV2",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.7699999809265137,
+    "ChVol": 0.7699999809265137,
+    "Drive": 0.33000001311302185,
+    "Master": 0.7599999904632568,
+    "Mid": 0.5099999904632568,
+    "PreMid": 4.0,
+    "PreMidFc": 1000.0,
+    "Sag": 0.5,
+    "Treble": 0.8100000023841858
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

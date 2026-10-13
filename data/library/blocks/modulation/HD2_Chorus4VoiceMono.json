@@ -1,0 +1,97 @@
+{
+  "model_id": "HD2_Chorus4VoiceMono",
+  "category": "modulation",
+  "display_name": "4-Voice Chorus Mono",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "HPFFrq": {
+      "type": "float",
+      "default": 266.0,
+      "observed_range": [
+        266.0,
+        266.0
+      ]
+    },
+    "HighShelf": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "NumVoices": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_Chorus4VoiceMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 0.25,
+    "HPFFrq": 266.0,
+    "HighShelf": 0.0,
+    "Level": 1.0,
+    "Mix": 0.5,
+    "NumVoices": 4,
+    "Speed": 0.5,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

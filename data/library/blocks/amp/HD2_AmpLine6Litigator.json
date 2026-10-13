@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpLine6Litigator",
+  "category": "amp",
+  "display_name": "Litigator",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5199999809265137,
+      "observed_range": [
+        0.5199999809265137,
+        0.5199999809265137
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8500000238418579,
+      "observed_range": [
+        0.8500000238418579,
+        0.8500000238418579
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.3799999952316284,
+      "observed_range": [
+        0.3799999952316284,
+        0.3799999952316284
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpLine6Litigator",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5199999809265137,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.8500000238418579,
+    "Drive": 0.44999998807907104,
+    "Hum": 0.5,
+    "Master": 0.5,
+    "Mid": 0.5600000023841858,
+    "Presence": 0.0,
+    "Ripple": 0.3799999952316284,
+    "Sag": 0.5,
+    "Treble": 0.44999998807907104
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

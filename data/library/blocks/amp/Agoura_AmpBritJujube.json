@@ -1,0 +1,236 @@
+{
+  "model_id": "Agoura_AmpBritJujube",
+  "category": "amp",
+  "display_name": "Brit Jujube",
+  "params": {
+    "AmpCabPeak2Fc": {
+      "type": "float",
+      "default": 1000.0,
+      "observed_range": [
+        1000.0,
+        1000.0
+      ]
+    },
+    "AmpCabPeak2G": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "AmpCabPeak2Q": {
+      "type": "float",
+      "default": 0.7070000171661377,
+      "observed_range": [
+        0.7070000171661377,
+        0.7070000171661377
+      ]
+    },
+    "AmpCabPeakFc": {
+      "type": "float",
+      "default": 100.0,
+      "observed_range": [
+        100.0,
+        100.0
+      ]
+    },
+    "AmpCabPeakG": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "AmpCabPeakQ": {
+      "type": "float",
+      "default": 0.7070000171661377,
+      "observed_range": [
+        0.7070000171661377,
+        0.7070000171661377
+      ]
+    },
+    "AmpCabShelfF": {
+      "type": "float",
+      "default": 1000.0,
+      "observed_range": [
+        1000.0,
+        1000.0
+      ]
+    },
+    "AmpCabShelfG": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "AmpCabZFir": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "AmpCabZUpdate": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Bass": {
+      "type": "float",
+      "default": 0.36800000071525574,
+      "observed_range": [
+        0.36800000071525574,
+        0.36800000071525574
+      ]
+    },
+    "Chan": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.4375,
+      "observed_range": [
+        0.4375,
+        0.4375
+      ]
+    },
+    "Hype": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LeadMaster": {
+      "type": "float",
+      "default": 0.41200000047683716,
+      "observed_range": [
+        0.41200000047683716,
+        0.41200000047683716
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": -6.0,
+      "observed_range": [
+        -6.0,
+        -6.0
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.27399998903274536,
+      "observed_range": [
+        0.27399998903274536,
+        0.27399998903274536
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "TonestackSel": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5659999847412109,
+      "observed_range": [
+        0.5659999847412109,
+        0.5659999847412109
+      ]
+    },
+    "ZPrePost": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "Agoura_AmpBritJujube",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "AmpCabPeak2Fc": 1000.0,
+    "AmpCabPeak2G": 0.0,
+    "AmpCabPeak2Q": 0.7070000171661377,
+    "AmpCabPeakFc": 100.0,
+    "AmpCabPeakG": 0.0,
+    "AmpCabPeakQ": 0.7070000171661377,
+    "AmpCabShelfF": 1000.0,
+    "AmpCabShelfG": 0.0,
+    "AmpCabZFir": 0,
+    "AmpCabZUpdate": 0,
+    "Bass": 0.36800000071525574,
+    "Chan": 2,
+    "Drive": 0.4375,
+    "Hype": 0.0,
+    "LeadMaster": 0.41200000047683716,
+    "Level": -6.0,
+    "Master": 0.550000011920929,
+    "Mid": 0.6100000143051147,
+    "Presence": 0.27399998903274536,
+    "Ripple": 0.0,
+    "Sag": 0.0,
+    "TonestackSel": 0,
+    "Treble": 0.5659999847412109,
+    "ZPrePost": 0.30000001192092896
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

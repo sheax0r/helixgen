@@ -1,0 +1,52 @@
+{
+  "model_id": "HD2_DistDeezOneModStereo",
+  "category": "drive",
+  "display_name": "Deez One Mod Stereo",
+  "params": {
+    "Clipping": {
+      "type": "bool",
+      "default": true
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistDeezOneModStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Clipping": true,
+    "Drive": 0.6299999952316284,
+    "Level": 0.25,
+    "Tone": 0.6200000047683716
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

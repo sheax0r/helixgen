@@ -1,0 +1,88 @@
+{
+  "model_id": "L6PhazeEko",
+  "category": "delay",
+  "display_name": "Phaze Eko",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.5013999938964844,
+      "observed_range": [
+        0.5013999938964844,
+        0.5013999938964844
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "L6PhazeEko",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 1.0,
+    "Feedback": 0.25,
+    "Level": 0.0,
+    "Mix": 0.5,
+    "Speed": 0.25,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.5013999938964844
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

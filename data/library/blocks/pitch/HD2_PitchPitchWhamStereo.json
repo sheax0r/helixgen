@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_PitchPitchWhamStereo",
+  "category": "pitch",
+  "display_name": "Pitch Wham Stereo",
+  "params": {
+    "Heel": {
+      "type": "int",
+      "default": -12,
+      "observed_range": [
+        -12,
+        -12
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pedal": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Toe": {
+      "type": "int",
+      "default": 12,
+      "observed_range": [
+        12,
+        12
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PitchPitchWhamStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Heel": -12,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Pedal": 0.5,
+    "Toe": 12
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

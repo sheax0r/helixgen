@@ -1,0 +1,56 @@
+{
+  "model_id": "HD2_DistValveDriverStereo",
+  "category": "drive",
+  "display_name": "Valve Driver Stereo",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistValveDriverStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.550000011920929,
+    "Gain": 0.6499999761581421,
+    "Level": 0.6600000262260437,
+    "Treble": 0.44999998807907104
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

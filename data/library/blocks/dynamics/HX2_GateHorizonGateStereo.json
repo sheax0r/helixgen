@@ -1,0 +1,52 @@
+{
+  "model_id": "HX2_GateHorizonGateStereo",
+  "category": "dynamics",
+  "display_name": "Horizon Gate Stereo",
+  "params": {
+    "Gate Range": {
+      "type": "bool",
+      "default": false
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mode": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Sensitivity": {
+      "type": "float",
+      "default": 0.8460000157356262,
+      "observed_range": [
+        0.8460000157356262,
+        0.8460000157356262
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_GateHorizonGateStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Gate Range": false,
+    "Level": 0.0,
+    "Mode": 1,
+    "Sensitivity": 0.8460000157356262
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

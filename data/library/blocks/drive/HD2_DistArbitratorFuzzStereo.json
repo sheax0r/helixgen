@@ -1,0 +1,38 @@
+{
+  "model_id": "HD2_DistArbitratorFuzzStereo",
+  "category": "drive",
+  "display_name": "Arbitrator Fuzz Stereo",
+  "params": {
+    "Fuzz": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistArbitratorFuzzStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Fuzz": 0.8999999761581421,
+    "Level": 0.550000011920929
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,179 @@
+{
+  "model_id": "HD2_Rotary3RotorStereo",
+  "category": "modulation",
+  "display_name": "Triple Rotary",
+  "params": {
+    "Drive": {
+      "type": "float",
+      "default": 0.2199999988079071,
+      "observed_range": [
+        0.2199999988079071,
+        0.2199999988079071
+      ]
+    },
+    "FastSpeed": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20100.0,
+      "observed_range": [
+        20100.0,
+        20100.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 19.899999618530273,
+      "observed_range": [
+        19.899999618530273,
+        19.899999618530273
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "RampTime": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Rotor2Level": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Rotor3Level": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "RotorFcDrift": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Separation": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "SlowSpeed": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Speed": {
+      "type": "bool",
+      "default": false
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "SyncSelect2": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "TempoSync2": {
+      "type": "bool",
+      "default": false
+    },
+    "Wobble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_Rotary3RotorStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Drive": 0.2199999988079071,
+    "FastSpeed": 0.6499999761581421,
+    "Headroom": 0.0,
+    "HighCut": 20100.0,
+    "Level": 0.0,
+    "LowCut": 19.899999618530273,
+    "Mix": 1.0,
+    "RampTime": 0.25,
+    "Rotor2Level": 1.0,
+    "Rotor3Level": 1.0,
+    "RotorFcDrift": 0.5,
+    "Separation": 0.5,
+    "SlowSpeed": 0.699999988079071,
+    "Speed": false,
+    "SyncSelect1": 3,
+    "SyncSelect2": 3,
+    "TempoSync1": false,
+    "TempoSync2": false,
+    "Wobble": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

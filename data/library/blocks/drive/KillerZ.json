@@ -1,0 +1,74 @@
+{
+  "model_id": "KillerZ",
+  "category": "drive",
+  "display_name": "Killer Z",
+  "params": {
+    "Contour": {
+      "type": "float",
+      "default": 0.7400000095367432,
+      "observed_range": [
+        0.7400000095367432,
+        0.7400000095367432
+      ]
+    },
+    "Dist": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Mid Amt": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Mid Freq": {
+      "type": "float",
+      "default": 0.8799999952316284,
+      "observed_range": [
+        0.8799999952316284,
+        0.8799999952316284
+      ]
+    },
+    "Smart": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "KillerZ",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Contour": 0.7400000095367432,
+    "Dist": 0.6700000166893005,
+    "Gain": 0.5,
+    "Mid Amt": 0.550000011920929,
+    "Mid Freq": 0.8799999952316284,
+    "Smart": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

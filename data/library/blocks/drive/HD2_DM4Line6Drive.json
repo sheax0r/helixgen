@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4Line6Drive",
+  "category": "drive",
+  "display_name": "L6 Drive",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.8899999856948853,
+      "observed_range": [
+        0.8899999856948853,
+        0.8899999856948853
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.9200000166893005,
+      "observed_range": [
+        0.9200000166893005,
+        0.9200000166893005
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6899999976158142,
+      "observed_range": [
+        0.6899999976158142,
+        0.6899999976158142
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4Line6Drive",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.8899999856948853,
+    "Drive": 0.9200000166893005,
+    "Mid": 0.4699999988079071,
+    "Output": 0.5,
+    "Treble": 0.6899999976158142
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

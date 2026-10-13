@@ -1,0 +1,83 @@
+{
+  "model_id": "HD2_PreampMatchstickCh1",
+  "category": "amp",
+  "display_name": "Matchstick Ch1 (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Ch1Drive": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.7799999713897705,
+      "observed_range": [
+        0.7799999713897705,
+        0.7799999713897705
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5799999833106995,
+      "observed_range": [
+        0.5799999833106995,
+        0.5799999833106995
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampMatchstickCh1",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Ch1Drive": 0.550000011920929,
+    "ChVol": 0.7799999713897705,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Sag": 0.5799999833106995,
+    "Treble": 0.4000000059604645
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampBritPlexiJump",
+  "category": "amp",
+  "display_name": "Brit Plexi Jump (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    },
+    "BrtDrive": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.8100000023841858,
+      "observed_range": [
+        0.8100000023841858,
+        0.8100000023841858
+      ]
+    },
+    "NrmDrive": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampBritPlexiJump",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.8999999761581421,
+    "BrtDrive": 0.7599999904632568,
+    "ChVol": 0.6000000238418579,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.8100000023841858,
+    "NrmDrive": 0.7200000286102295,
+    "Sag": 0.5,
+    "Treble": 0.7300000190734863
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

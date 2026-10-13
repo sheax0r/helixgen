@@ -1,0 +1,83 @@
+{
+  "model_id": "HD2_DistKWBStereo",
+  "category": "drive",
+  "display_name": "KWB Stereo",
+  "params": {
+    "Asym": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Bass": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6919999718666077,
+      "observed_range": [
+        0.6919999718666077,
+        0.6919999718666077
+      ]
+    },
+    "PullDiode": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "PushDiode": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistKWBStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Asym": 0.0,
+    "Bass": 0.0,
+    "Gain": 0.6700000166893005,
+    "Level": 0.6919999718666077,
+    "PullDiode": 3,
+    "PushDiode": 1,
+    "Treble": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

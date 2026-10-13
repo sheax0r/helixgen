@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4Screamer",
+  "category": "drive",
+  "display_name": "Screamer",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.4399999976158142,
+      "observed_range": [
+        0.4399999976158142,
+        0.4399999976158142
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4Screamer",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6100000143051147,
+    "Drive": 0.4399999976158142,
+    "Output": 0.800000011920929,
+    "Tone": 0.7300000190734863,
+    "Treble": 0.5299999713897705
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

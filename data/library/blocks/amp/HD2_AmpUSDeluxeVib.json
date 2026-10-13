@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpUSDeluxeVib",
+  "category": "amp",
+  "display_name": "US Deluxe Vib",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5199999809265137,
+      "observed_range": [
+        0.5199999809265137,
+        0.5199999809265137
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.38999998569488525,
+      "observed_range": [
+        0.38999998569488525,
+        0.38999998569488525
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpUSDeluxeVib",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Bias": 0.5299999713897705,
+    "BiasX": 0.5,
+    "ChVol": 0.8999999761581421,
+    "Drive": 0.3499999940395355,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.5199999809265137,
+    "Presence": 0.0,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Treble": 0.38999998569488525
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

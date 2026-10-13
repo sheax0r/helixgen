@@ -1,0 +1,102 @@
+{
+  "model_id": "HD2_DL4StereoDelay",
+  "category": "delay",
+  "display_name": "Stereo",
+  "params": {
+    "LFeedback": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "LTime": {
+      "type": "float",
+      "default": 0.34200000762939453,
+      "observed_range": [
+        0.34200000762939453,
+        0.34200000762939453
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    },
+    "RFeedback": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "RTime": {
+      "type": "float",
+      "default": 0.9110000133514404,
+      "observed_range": [
+        0.9110000133514404,
+        0.9110000133514404
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "SyncSelect2": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "TempoSync2": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DL4StereoDelay",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "LFeedback": 0.550000011920929,
+    "LTime": 0.34200000762939453,
+    "Level": 0.0,
+    "Mix": 0.7300000190734863,
+    "RFeedback": 0.6600000262260437,
+    "RTime": 0.9110000133514404,
+    "SyncSelect1": 6,
+    "SyncSelect2": 6,
+    "TempoSync1": false,
+    "TempoSync2": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

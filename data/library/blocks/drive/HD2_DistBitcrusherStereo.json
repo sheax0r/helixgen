@@ -1,0 +1,119 @@
+{
+  "model_id": "HD2_DistBitcrusherStereo",
+  "category": "drive",
+  "display_name": "Bitcrusher Stereo",
+  "params": {
+    "BitDepth": {
+      "type": "float",
+      "default": 8.0,
+      "observed_range": [
+        8.0,
+        8.0
+      ]
+    },
+    "CloseThreshold": {
+      "type": "float",
+      "default": -70.0,
+      "observed_range": [
+        -70.0,
+        -70.0
+      ]
+    },
+    "Decay": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20100.0,
+      "observed_range": [
+        20100.0,
+        20100.0
+      ]
+    },
+    "HoldTime": {
+      "type": "float",
+      "default": 0.009999999776482582,
+      "observed_range": [
+        0.009999999776482582,
+        0.009999999776482582
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 19.899999618530273,
+      "observed_range": [
+        19.899999618530273,
+        19.899999618530273
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "OpenThreshold": {
+      "type": "float",
+      "default": -70.0,
+      "observed_range": [
+        -70.0,
+        -70.0
+      ]
+    },
+    "SampleRate": {
+      "type": "float",
+      "default": 18000.0,
+      "observed_range": [
+        18000.0,
+        18000.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistBitcrusherStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "BitDepth": 8.0,
+    "CloseThreshold": -70.0,
+    "Decay": 0.009999999776482582,
+    "Gain": 0.0,
+    "HighCut": 20100.0,
+    "HoldTime": 0.009999999776482582,
+    "Level": 0.0,
+    "LowCut": 19.899999618530273,
+    "Mix": 1.0,
+    "OpenThreshold": -70.0,
+    "SampleRate": 18000.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

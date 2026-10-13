@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_FM4QFilter",
+  "category": "filter",
+  "display_name": "Q Filter",
+  "params": {
+    "Freq": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Q": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Type": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4QFilter",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Freq": 0.27000001072883606,
+    "Gain": 0.6299999952316284,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Q": 0.75,
+    "Type": 1
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

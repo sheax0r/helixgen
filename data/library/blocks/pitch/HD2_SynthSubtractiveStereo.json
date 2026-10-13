@@ -1,0 +1,399 @@
+{
+  "model_id": "HD2_SynthSubtractiveStereo",
+  "category": "pitch",
+  "display_name": "3 OSC Synth",
+  "params": {
+    "DepthEF": {
+      "type": "float",
+      "default": 3500.0,
+      "observed_range": [
+        3500.0,
+        3500.0
+      ]
+    },
+    "DutyVoice1": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "DutyVoice2": {
+      "type": "float",
+      "default": 0.3019999861717224,
+      "observed_range": [
+        0.3019999861717224,
+        0.3019999861717224
+      ]
+    },
+    "DutyVoice3": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    },
+    "EAAttack": {
+      "type": "float",
+      "default": 0.0005000000237487257,
+      "observed_range": [
+        0.0005000000237487257,
+        0.0005000000237487257
+      ]
+    },
+    "EADecay": {
+      "type": "float",
+      "default": 7.260000228881836,
+      "observed_range": [
+        7.260000228881836,
+        7.260000228881836
+      ]
+    },
+    "EARelease": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "EASustain": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "EFAttack": {
+      "type": "float",
+      "default": 0.004999999888241291,
+      "observed_range": [
+        0.004999999888241291,
+        0.004999999888241291
+      ]
+    },
+    "EFDecay": {
+      "type": "float",
+      "default": 0.125,
+      "observed_range": [
+        0.125,
+        0.125
+      ]
+    },
+    "EFRelease": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "EFSustain": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "EnvelopeADSR_EA": {
+      "type": "bool",
+      "default": true
+    },
+    "EnvelopeADSR_EF": {
+      "type": "bool",
+      "default": true
+    },
+    "FM Voice3to1": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Filter": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "FrequencyEF": {
+      "type": "float",
+      "default": 362.0,
+      "observed_range": [
+        362.0,
+        362.0
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20100.0,
+      "observed_range": [
+        20100.0,
+        20100.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LevelVoice1": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "LevelVoice2": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "LevelVoice3": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 19.899999618530273,
+      "observed_range": [
+        19.899999618530273,
+        19.899999618530273
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "OctaveVoice1": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "OctaveVoice2": {
+      "type": "int",
+      "default": -1,
+      "observed_range": [
+        -1,
+        -1
+      ]
+    },
+    "OctaveVoice3": {
+      "type": "int",
+      "default": -1,
+      "observed_range": [
+        -1,
+        -1
+      ]
+    },
+    "PanVoice1": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "PanVoice2": {
+      "type": "float",
+      "default": 0.5440000295639038,
+      "observed_range": [
+        0.5440000295639038,
+        0.5440000295639038
+      ]
+    },
+    "PanVoice3": {
+      "type": "float",
+      "default": 0.4779999852180481,
+      "observed_range": [
+        0.4779999852180481,
+        0.4779999852180481
+      ]
+    },
+    "PitchVoice1": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "PitchVoice2": {
+      "type": "float",
+      "default": -0.10000000149011612,
+      "observed_range": [
+        -0.10000000149011612,
+        -0.10000000149011612
+      ]
+    },
+    "PitchVoice3": {
+      "type": "float",
+      "default": -0.15000000596046448,
+      "observed_range": [
+        -0.15000000596046448,
+        -0.15000000596046448
+      ]
+    },
+    "Portamento": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "ReleaseThresholdEA": {
+      "type": "float",
+      "default": 0.21649999916553497,
+      "observed_range": [
+        0.21649999916553497,
+        0.21649999916553497
+      ]
+    },
+    "ReleaseThresholdEF": {
+      "type": "float",
+      "default": 0.49399998784065247,
+      "observed_range": [
+        0.49399998784065247,
+        0.49399998784065247
+      ]
+    },
+    "ResonanceEF": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    },
+    "ShapeVoice1": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "ShapeVoice2": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "ShapeVoice3": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "SynthPreset": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "TriggerSensitivityEA": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "TriggerSensitivityEF": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_SynthSubtractiveStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "DepthEF": 3500.0,
+    "DutyVoice1": 0.5,
+    "DutyVoice2": 0.3019999861717224,
+    "DutyVoice3": 0.7200000286102295,
+    "EAAttack": 0.0005000000237487257,
+    "EADecay": 7.260000228881836,
+    "EARelease": 0.0,
+    "EASustain": 0.6700000166893005,
+    "EFAttack": 0.004999999888241291,
+    "EFDecay": 0.125,
+    "EFRelease": 0.0,
+    "EFSustain": 0.0,
+    "EnvelopeADSR_EA": true,
+    "EnvelopeADSR_EF": true,
+    "FM Voice3to1": 0.0,
+    "Filter": 0,
+    "FrequencyEF": 362.0,
+    "HighCut": 20100.0,
+    "Level": 0.0,
+    "LevelVoice1": 0.5,
+    "LevelVoice2": 0.5,
+    "LevelVoice3": 0.5,
+    "LowCut": 19.899999618530273,
+    "Mix": 1.0,
+    "OctaveVoice1": 0,
+    "OctaveVoice2": -1,
+    "OctaveVoice3": -1,
+    "PanVoice1": 0.5,
+    "PanVoice2": 0.5440000295639038,
+    "PanVoice3": 0.4779999852180481,
+    "PitchVoice1": 0.0,
+    "PitchVoice2": -0.10000000149011612,
+    "PitchVoice3": -0.15000000596046448,
+    "Portamento": 0.0,
+    "ReleaseThresholdEA": 0.21649999916553497,
+    "ReleaseThresholdEF": 0.49399998784065247,
+    "ResonanceEF": 0.8999999761581421,
+    "ShapeVoice1": 1.0,
+    "ShapeVoice2": 1.0,
+    "ShapeVoice3": 1.0,
+    "SynthPreset": 0,
+    "TriggerSensitivityEA": 1.0,
+    "TriggerSensitivityEF": 0.75
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

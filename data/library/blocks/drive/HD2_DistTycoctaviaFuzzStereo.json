@@ -1,0 +1,38 @@
+{
+  "model_id": "HD2_DistTycoctaviaFuzzStereo",
+  "category": "drive",
+  "display_name": "Tycoctavia Fuzz Stereo",
+  "params": {
+    "Fuzz": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistTycoctaviaFuzzStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Fuzz": 0.75,
+    "Level": 0.6700000166893005
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

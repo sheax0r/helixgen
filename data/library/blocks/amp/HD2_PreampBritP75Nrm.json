@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampBritP75Nrm",
+  "category": "amp",
+  "display_name": "Brit P75 Nrm (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.8999999761581421,
+      "observed_range": [
+        0.8999999761581421,
+        0.8999999761581421
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampBritP75Nrm",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.4000000059604645,
+    "ChVol": 0.6600000262260437,
+    "Drive": 0.47999998927116394,
+    "Hum": 0.5,
+    "Master": 0.800000011920929,
+    "Mid": 0.6700000166893005,
+    "Sag": 0.5,
+    "Treble": 0.8999999761581421
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

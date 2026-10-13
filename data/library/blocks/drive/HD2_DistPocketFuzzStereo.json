@@ -1,0 +1,38 @@
+{
+  "model_id": "HD2_DistPocketFuzzStereo",
+  "category": "drive",
+  "display_name": "Pocket Fuzz Stereo",
+  "params": {
+    "Drive": {
+      "type": "float",
+      "default": 0.49399998784065247,
+      "observed_range": [
+        0.49399998784065247,
+        0.49399998784065247
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistPocketFuzzStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Drive": 0.49399998784065247,
+    "Level": 0.44999998807907104
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

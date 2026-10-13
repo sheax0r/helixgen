@@ -1,0 +1,65 @@
+{
+  "model_id": "SynthString",
+  "category": "pitch",
+  "display_name": "String Theory",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Filter": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Wave": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "SynthString",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.6299999952316284,
+    "Filter": 0.7599999904632568,
+    "Level": 0.0,
+    "Mix": 0.7599999904632568,
+    "Wave": 4
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

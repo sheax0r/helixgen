@@ -1,0 +1,179 @@
+{
+  "model_id": "HD2_DelaySweepEchoStereo",
+  "category": "delay",
+  "display_name": "Sweep Echo Stereo (Delay)",
+  "params": {
+    "Feedback": {
+      "type": "float",
+      "default": 0.5799999833106995,
+      "observed_range": [
+        0.5799999833106995,
+        0.5799999833106995
+      ]
+    },
+    "FilterType": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 8000.0,
+      "observed_range": [
+        8000.0,
+        8000.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 120.0,
+      "observed_range": [
+        120.0,
+        120.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Scale": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "SweepDepth": {
+      "type": "float",
+      "default": 2830.0,
+      "observed_range": [
+        2830.0,
+        2830.0
+      ]
+    },
+    "SweepResonance": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "SweepShape": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "SweepSpeed": {
+      "type": "float",
+      "default": 0.3400000035762787,
+      "observed_range": [
+        0.3400000035762787,
+        0.3400000035762787
+      ]
+    },
+    "SweepSpread": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "SweepStart": {
+      "type": "float",
+      "default": 205.0,
+      "observed_range": [
+        205.0,
+        205.0
+      ]
+    },
+    "SweepSymmetry": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelaySweepEchoStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Feedback": 0.5799999833106995,
+    "FilterType": 1,
+    "Headroom": 0.0,
+    "HighCut": 8000.0,
+    "Level": 0.0,
+    "LowCut": 120.0,
+    "Mix": 0.5,
+    "Scale": 1.0,
+    "SweepDepth": 2830.0,
+    "SweepResonance": 0.44999998807907104,
+    "SweepShape": 0,
+    "SweepSpeed": 0.3400000035762787,
+    "SweepSpread": 1.0,
+    "SweepStart": 205.0,
+    "SweepSymmetry": 0.5,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.44999998807907104
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": [],
+  "pinned_name": true
+}

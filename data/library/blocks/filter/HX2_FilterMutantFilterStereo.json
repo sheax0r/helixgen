@@ -1,0 +1,75 @@
+{
+  "model_id": "HX2_FilterMutantFilterStereo",
+  "category": "filter",
+  "display_name": "Mutant Filter Stereo",
+  "params": {
+    "Drive": {
+      "type": "bool",
+      "default": true
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.15000000596046448,
+      "observed_range": [
+        0.15000000596046448,
+        0.15000000596046448
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mode": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Peak": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Range": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_FilterMutantFilterStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Drive": true,
+    "Gain": 0.15000000596046448,
+    "Level": 1.0,
+    "Mix": 1.0,
+    "Mode": 1,
+    "Peak": 0.800000011920929,
+    "Range": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

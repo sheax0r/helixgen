@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpTweedBluesNrm",
+  "category": "amp",
+  "display_name": "Tweed Blues Nrm",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5400000214576721,
+      "observed_range": [
+        0.5400000214576721,
+        0.5400000214576721
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5699999928474426,
+      "observed_range": [
+        0.5699999928474426,
+        0.5699999928474426
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.41999998688697815,
+      "observed_range": [
+        0.41999998688697815,
+        0.41999998688697815
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6399999856948853,
+      "observed_range": [
+        0.6399999856948853,
+        0.6399999856948853
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpTweedBluesNrm",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5400000214576721,
+    "Bias": 0.5699999928474426,
+    "BiasX": 0.5,
+    "ChVol": 0.6200000047683716,
+    "Drive": 0.41999998688697815,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.6499999761581421,
+    "Presence": 0.27000001072883606,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Treble": 0.6399999856948853
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

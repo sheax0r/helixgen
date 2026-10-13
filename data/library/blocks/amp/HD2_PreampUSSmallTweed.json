@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampUSSmallTweed",
+  "category": "amp",
+  "display_name": "US Small Tweed (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.36000001430511475,
+      "observed_range": [
+        0.36000001430511475,
+        0.36000001430511475
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6800000071525574,
+      "observed_range": [
+        0.6800000071525574,
+        0.6800000071525574
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampUSSmallTweed",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.36000001430511475,
+    "ChVol": 0.800000011920929,
+    "Drive": 0.550000011920929,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.6000000238418579,
+    "Sag": 0.5,
+    "Treble": 0.6800000071525574
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

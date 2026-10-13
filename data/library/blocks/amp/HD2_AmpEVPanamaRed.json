@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpEVPanamaRed",
+  "category": "amp",
+  "display_name": "EV Panama Red",
+  "params": {
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.36000001430511475,
+      "observed_range": [
+        0.36000001430511475,
+        0.36000001430511475
+      ]
+    },
+    "High": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Low": {
+      "type": "float",
+      "default": 0.3799999952316284,
+      "observed_range": [
+        0.3799999952316284,
+        0.3799999952316284
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.47999998927116394,
+      "observed_range": [
+        0.47999998927116394,
+        0.47999998927116394
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.6600000262260437,
+      "observed_range": [
+        0.6600000262260437,
+        0.6600000262260437
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpEVPanamaRed",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "ChVol": 0.75,
+    "Gain": 0.36000001430511475,
+    "High": 0.75,
+    "Hum": 0.0,
+    "Low": 0.3799999952316284,
+    "Master": 0.47999998927116394,
+    "Mid": 0.6600000262260437,
+    "Presence": 0.7200000286102295,
+    "Ripple": 0.5,
+    "Sag": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

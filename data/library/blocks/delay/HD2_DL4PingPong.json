@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_DL4PingPong",
+  "category": "delay",
+  "display_name": "Ping Pong (Legacy)",
+  "params": {
+    "Feedback": {
+      "type": "float",
+      "default": 0.5199999809265137,
+      "observed_range": [
+        0.5199999809265137,
+        0.5199999809265137
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.7200000286102295,
+      "observed_range": [
+        0.7200000286102295,
+        0.7200000286102295
+      ]
+    },
+    "Offset": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Spread": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DL4PingPong",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Feedback": 0.5199999809265137,
+    "Level": 0.0,
+    "Mix": 0.7200000286102295,
+    "Offset": 0.5,
+    "Spread": 1.0,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.4699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

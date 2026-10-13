@@ -1,0 +1,38 @@
+{
+  "model_id": "HX2_DM4BlueCompTreb",
+  "category": "dynamics",
+  "display_name": "Blue Comp Treb",
+  "params": {
+    "Level": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    },
+    "Sustain": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HX2_DM4BlueCompTreb",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Level": 0.6100000143051147,
+    "Sustain": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

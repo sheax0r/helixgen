@@ -1,0 +1,115 @@
+{
+  "model_id": "HD2_DelayPitchStereo",
+  "category": "delay",
+  "display_name": "Pitch Echo Stereo",
+  "params": {
+    "Cents1": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20100.0,
+      "observed_range": [
+        20100.0,
+        20100.0
+      ]
+    },
+    "Interval1": {
+      "type": "int",
+      "default": 5,
+      "observed_range": [
+        5,
+        5
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 19.899999618530273,
+      "observed_range": [
+        19.899999618530273,
+        19.899999618530273
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Scale": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 9,
+      "observed_range": [
+        9,
+        9
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.17599999904632568,
+      "observed_range": [
+        0.17599999904632568,
+        0.17599999904632568
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelayPitchStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Cents1": 0.0,
+    "Feedback": 0.4000000059604645,
+    "HighCut": 20100.0,
+    "Interval1": 5,
+    "Level": 0.0,
+    "LowCut": 19.899999618530273,
+    "Mix": 0.4000000059604645,
+    "Scale": 1.0,
+    "SyncSelect1": 9,
+    "TempoSync1": false,
+    "Time": 0.17599999904632568
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

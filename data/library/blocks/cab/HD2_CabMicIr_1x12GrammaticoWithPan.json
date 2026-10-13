@@ -1,0 +1,110 @@
+{
+  "model_id": "HD2_CabMicIr_1x12GrammaticoWithPan",
+  "category": "cab",
+  "display_name": "1x12 Grammatico",
+  "params": {
+    "Angle": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Delay": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Distance": {
+      "type": "float",
+      "default": 7.0,
+      "observed_range": [
+        7.0,
+        7.0
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 20100.0,
+      "observed_range": [
+        20100.0,
+        20100.0
+      ]
+    },
+    "IrData": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 19.899999618530273,
+      "observed_range": [
+        19.899999618530273,
+        19.899999618530273
+      ]
+    },
+    "Mic": {
+      "type": "int",
+      "default": 11,
+      "observed_range": [
+        11,
+        11
+      ]
+    },
+    "Pan": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Position": {
+      "type": "float",
+      "default": 0.1899999976158142,
+      "observed_range": [
+        0.1899999976158142,
+        0.1899999976158142
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_CabMicIr_1x12GrammaticoWithPan",
+    "@type": "cab",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Angle": 0.0,
+    "Delay": 0.0,
+    "Distance": 7.0,
+    "HighCut": 20100.0,
+    "IrData": 0,
+    "Level": 0.0,
+    "LowCut": 19.899999618530273,
+    "Mic": 11,
+    "Pan": 0.5,
+    "Position": 0.1899999976158142
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

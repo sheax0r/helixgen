@@ -1,0 +1,124 @@
+{
+  "model_id": "HD2_DelayHeliosphereStereo",
+  "category": "delay",
+  "display_name": "Heliosphere Stereo",
+  "params": {
+    "Depth": {
+      "type": "float",
+      "default": 0.44200000166893005,
+      "observed_range": [
+        0.44200000166893005,
+        0.44200000166893005
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.8500000238418579,
+      "observed_range": [
+        0.8500000238418579,
+        0.8500000238418579
+      ]
+    },
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    },
+    "Scale": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "VerbDecay": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "VerbMix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DelayHeliosphereStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Depth": 0.44200000166893005,
+    "Feedback": 0.8500000238418579,
+    "Headroom": 0.0,
+    "Level": 0.0,
+    "Mix": 0.44999998807907104,
+    "Rate": 0.10000000149011612,
+    "Scale": 0.75,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.800000011920929,
+    "VerbDecay": 0.800000011920929,
+    "VerbMix": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

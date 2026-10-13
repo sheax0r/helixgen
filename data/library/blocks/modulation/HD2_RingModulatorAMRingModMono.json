@@ -1,0 +1,98 @@
+{
+  "model_id": "HD2_RingModulatorAMRingModMono",
+  "category": "modulation",
+  "display_name": "AM Ring Mod Mono",
+  "params": {
+    "AM": {
+      "type": "bool",
+      "default": true
+    },
+    "AMFreq": {
+      "type": "float",
+      "default": 1650.800048828125,
+      "observed_range": [
+        1650.800048828125,
+        1650.800048828125
+      ]
+    },
+    "Frequency": {
+      "type": "float",
+      "default": 1280.0,
+      "observed_range": [
+        1280.0,
+        1280.0
+      ]
+    },
+    "LFO": {
+      "type": "bool",
+      "default": false
+    },
+    "LFORate": {
+      "type": "float",
+      "default": 5.0,
+      "observed_range": [
+        5.0,
+        5.0
+      ]
+    },
+    "LFOShape": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 4.5,
+      "observed_range": [
+        4.5,
+        4.5
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_RingModulatorAMRingModMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "AM": true,
+    "AMFreq": 1650.800048828125,
+    "Frequency": 1280.0,
+    "LFO": false,
+    "LFORate": 5.0,
+    "LFOShape": 2,
+    "Level": 4.5,
+    "Mix": 0.6700000166893005,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,84 @@
+{
+  "model_id": "HD2_DistMercatorMono",
+  "category": "drive",
+  "display_name": "Mercator Dist Mono",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bright1": {
+      "type": "bool",
+      "default": false
+    },
+    "Bright2": {
+      "type": "bool",
+      "default": false
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Drive2": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Volume": {
+      "type": "float",
+      "default": 0.375,
+      "observed_range": [
+        0.375,
+        0.375
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistMercatorMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Bright1": false,
+    "Bright2": false,
+    "Drive": 0.550000011920929,
+    "Drive2": 1.0,
+    "Mid": 0.5,
+    "Treble": 0.5,
+    "Volume": 0.375
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

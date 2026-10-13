@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4JetFuzz",
+  "category": "drive",
+  "display_name": "Jet Fuzz",
+  "params": {
+    "Drive": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.7099999785423279,
+      "observed_range": [
+        0.7099999785423279,
+        0.7099999785423279
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.10999999940395355,
+      "observed_range": [
+        0.10999999940395355,
+        0.10999999940395355
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.27000001072883606,
+      "observed_range": [
+        0.27000001072883606,
+        0.27000001072883606
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4JetFuzz",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Drive": 0.5,
+    "Feedback": 1.0,
+    "Output": 0.7099999785423279,
+    "Rate": 0.10999999940395355,
+    "Tone": 0.27000001072883606
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,106 @@
+{
+  "model_id": "HD2_FlangerGrayFlangerStereo",
+  "category": "modulation",
+  "display_name": "Gray Flanger Stereo",
+  "params": {
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Manual": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.1599999964237213,
+      "observed_range": [
+        0.1599999964237213,
+        0.1599999964237213
+      ]
+    },
+    "Regen": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    },
+    "Spread": {
+      "type": "float",
+      "default": 0.125,
+      "observed_range": [
+        0.125,
+        0.125
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Width": {
+      "type": "float",
+      "default": 0.7799999713897705,
+      "observed_range": [
+        0.7799999713897705,
+        0.7799999713897705
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FlangerGrayFlangerStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Headroom": 0.0,
+    "Level": 0.0,
+    "Manual": 0.7699999809265137,
+    "Mix": 0.5,
+    "Rate": 0.1599999964237213,
+    "Regen": 0.5600000023841858,
+    "Spread": 0.125,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Width": 0.7799999713897705
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

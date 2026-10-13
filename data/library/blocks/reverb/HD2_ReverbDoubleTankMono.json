@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_ReverbDoubleTankMono",
+  "category": "reverb",
+  "display_name": "Double Tank Mono",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 0.4300000071525574,
+      "observed_range": [
+        0.4300000071525574,
+        0.4300000071525574
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 6000.0,
+      "observed_range": [
+        6000.0,
+        6000.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 169.0,
+      "observed_range": [
+        169.0,
+        169.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    },
+    "Modulation": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbDoubleTankMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 0.4300000071525574,
+    "HighCut": 6000.0,
+    "Level": 0.0,
+    "LowCut": 169.0,
+    "Mix": 0.30000001192092896,
+    "Modulation": 0.4000000059604645,
+    "Predelay": 0.0,
+    "Rate": 0.25
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

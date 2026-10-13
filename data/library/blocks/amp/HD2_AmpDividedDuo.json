@@ -1,0 +1,128 @@
+{
+  "model_id": "HD2_AmpDividedDuo",
+  "category": "amp",
+  "display_name": "Divided Duo",
+  "params": {
+    "Bias": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.6800000071525574,
+      "observed_range": [
+        0.6800000071525574,
+        0.6800000071525574
+      ]
+    },
+    "Cut": {
+      "type": "float",
+      "default": 0.5699999928474426,
+      "observed_range": [
+        0.5699999928474426,
+        0.5699999928474426
+      ]
+    },
+    "Drive 1": {
+      "type": "float",
+      "default": 0.4099999964237213,
+      "observed_range": [
+        0.4099999964237213,
+        0.4099999964237213
+      ]
+    },
+    "Drive 2": {
+      "type": "float",
+      "default": 0.33000001311302185,
+      "observed_range": [
+        0.33000001311302185,
+        0.33000001311302185
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.05999999865889549,
+      "observed_range": [
+        0.05999999865889549,
+        0.05999999865889549
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.6700000166893005,
+      "observed_range": [
+        0.6700000166893005,
+        0.6700000166893005
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.4300000071525574,
+      "observed_range": [
+        0.4300000071525574,
+        0.4300000071525574
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpDividedDuo",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bias": 0.6000000238418579,
+    "BiasX": 0.5,
+    "ChVol": 0.6800000071525574,
+    "Cut": 0.5699999928474426,
+    "Drive 1": 0.4099999964237213,
+    "Drive 2": 0.33000001311302185,
+    "Hum": 0.5,
+    "Master": 0.800000011920929,
+    "Presence": 0.05999999865889549,
+    "Ripple": 0.5,
+    "Sag": 0.6700000166893005,
+    "Tone": 0.4300000071525574
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

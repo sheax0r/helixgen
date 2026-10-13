@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_PreampCaliBass",
+  "category": "amp",
+  "display_name": "Cali Bass (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6399999856948853,
+      "observed_range": [
+        0.6399999856948853,
+        0.6399999856948853
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.28999999165534973,
+      "observed_range": [
+        0.28999999165534973,
+        0.28999999165534973
+      ]
+    },
+    "HighMid": {
+      "type": "float",
+      "default": 0.75,
+      "observed_range": [
+        0.75,
+        0.75
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.6000000238418579,
+      "observed_range": [
+        0.6000000238418579,
+        0.6000000238418579
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.8600000143051147,
+      "observed_range": [
+        0.8600000143051147,
+        0.8600000143051147
+      ]
+    },
+    "Voice": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampCaliBass",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6399999856948853,
+    "ChVol": 0.800000011920929,
+    "Drive": 0.28999999165534973,
+    "HighMid": 0.75,
+    "Master": 0.6000000238418579,
+    "Mid": 0.5600000023841858,
+    "Sag": 0.30000001192092896,
+    "Treble": 0.8600000143051147,
+    "Voice": 3
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

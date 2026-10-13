@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_DistLegendaryDriveMono",
+  "category": "drive",
+  "display_name": "Legendary Drive Mono",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5400000214576721,
+      "observed_range": [
+        0.5400000214576721,
+        0.5400000214576721
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.7699999809265137,
+      "observed_range": [
+        0.7699999809265137,
+        0.7699999809265137
+      ]
+    },
+    "Middle": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Volume": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistLegendaryDriveMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5400000214576721,
+    "Drive": 0.7699999809265137,
+    "Middle": 0.5,
+    "Presence": 0.550000011920929,
+    "Treble": 0.5,
+    "Volume": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

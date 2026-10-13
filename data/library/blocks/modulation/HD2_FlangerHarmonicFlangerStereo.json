@@ -1,0 +1,111 @@
+{
+  "model_id": "HD2_FlangerHarmonicFlangerStereo",
+  "category": "modulation",
+  "display_name": "Harmonic Flanger Stereo",
+  "params": {
+    "Enhance": {
+      "type": "float",
+      "default": 0.2800000011920929,
+      "observed_range": [
+        0.2800000011920929,
+        0.2800000011920929
+      ]
+    },
+    "Harmonic": {
+      "type": "bool",
+      "default": true
+    },
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Manual": {
+      "type": "float",
+      "default": 0.8399999737739563,
+      "observed_range": [
+        0.8399999737739563,
+        0.8399999737739563
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Rate": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Spread": {
+      "type": "float",
+      "default": 0.125,
+      "observed_range": [
+        0.125,
+        0.125
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Width": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FlangerHarmonicFlangerStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Enhance": 0.2800000011920929,
+    "Harmonic": true,
+    "Headroom": 0.0,
+    "Level": 0.0,
+    "Manual": 0.8399999737739563,
+    "Mix": 0.5,
+    "Rate": 0.3499999940395355,
+    "Spread": 0.125,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Width": 0.800000011920929
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

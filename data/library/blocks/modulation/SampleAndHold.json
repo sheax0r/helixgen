@@ -1,0 +1,79 @@
+{
+  "model_id": "SampleAndHold",
+  "category": "modulation",
+  "display_name": "Random S/H",
+  "params": {
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Q": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Range": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "SampleAndHold",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Level": 0.0,
+    "Mix": 0.5,
+    "Q": 0.7599999904632568,
+    "Range": 0.5,
+    "Speed": 0.699999988079071,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

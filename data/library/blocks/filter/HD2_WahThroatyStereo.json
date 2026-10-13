@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_WahThroatyStereo",
+  "category": "filter",
+  "display_name": "Throaty Stereo",
+  "params": {
+    "FcHigh": {
+      "type": "float",
+      "default": 1735.0,
+      "observed_range": [
+        1735.0,
+        1735.0
+      ]
+    },
+    "FcLow": {
+      "type": "float",
+      "default": 310.0,
+      "observed_range": [
+        310.0,
+        310.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pedal": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_WahThroatyStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "FcHigh": 1735.0,
+    "FcLow": 310.0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Pedal": 0.0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

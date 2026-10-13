@@ -1,0 +1,129 @@
+{
+  "model_id": "HD2_AmpVoltageQueen",
+  "category": "amp",
+  "display_name": "Voltage Queen (Legacy)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8199999928474426,
+      "observed_range": [
+        0.8199999928474426,
+        0.8199999928474426
+      ]
+    },
+    "Drive 1": {
+      "type": "float",
+      "default": 0.2800000011920929,
+      "observed_range": [
+        0.2800000011920929,
+        0.2800000011920929
+      ]
+    },
+    "Drive Trem": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.25,
+      "observed_range": [
+        0.25,
+        0.25
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.8500000238418579,
+      "observed_range": [
+        0.8500000238418579,
+        0.8500000238418579
+      ]
+    },
+    "Ripple": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpVoltageQueen",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5,
+    "Bias": 0.6200000047683716,
+    "BiasX": 0.5,
+    "ChVol": 0.8199999928474426,
+    "Drive 1": 0.2800000011920929,
+    "Drive Trem": 0.25,
+    "Hum": 0.25,
+    "Master": 0.8500000238418579,
+    "Ripple": 0.5,
+    "Sag": 0.5,
+    "Tone": 0.6200000047683716,
+    "Treble": 0.550000011920929
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": [],
+  "pinned_name": true
+}

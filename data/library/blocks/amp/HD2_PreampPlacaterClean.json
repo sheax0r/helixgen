@@ -1,0 +1,83 @@
+{
+  "model_id": "HD2_PreampPlacaterClean",
+  "category": "amp",
+  "display_name": "Placater Clean (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.3400000035762787,
+      "observed_range": [
+        0.3400000035762787,
+        0.3400000035762787
+      ]
+    },
+    "Bright": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8199999928474426,
+      "observed_range": [
+        0.8199999928474426,
+        0.8199999928474426
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5600000023841858,
+      "observed_range": [
+        0.5600000023841858,
+        0.5600000023841858
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6399999856948853,
+      "observed_range": [
+        0.6399999856948853,
+        0.6399999856948853
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampPlacaterClean",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.3400000035762787,
+    "Bright": 2,
+    "ChVol": 0.8199999928474426,
+    "Drive": 0.5600000023841858,
+    "Master": 1.0,
+    "Sag": 0.5,
+    "Treble": 0.6399999856948853
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

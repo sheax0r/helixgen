@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_M13TwoVoiceHarmony",
+  "category": "pitch",
+  "display_name": "Smart Harmony",
+  "params": {
+    "Key": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Scale": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Shift": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_M13TwoVoiceHarmony",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Key": 0,
+    "Level": 0.0,
+    "Mix": 0.5,
+    "Scale": 0,
+    "Shift": 2
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

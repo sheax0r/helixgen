@@ -1,0 +1,88 @@
+{
+  "model_id": "HD2_FM4SynthString",
+  "category": "pitch",
+  "display_name": "Synth String",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Freq": {
+      "type": "float",
+      "default": 0.8899999856948853,
+      "observed_range": [
+        0.8899999856948853,
+        0.8899999856948853
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pitch": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.6899999976158142,
+      "observed_range": [
+        0.6899999976158142,
+        0.6899999976158142
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_FM4SynthString",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 1.0,
+    "Freq": 0.8899999856948853,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Pitch": 0.0,
+    "Speed": 0.6899999976158142,
+    "SyncSelect1": 6,
+    "TempoSync1": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

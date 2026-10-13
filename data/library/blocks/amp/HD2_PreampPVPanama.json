@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampPVPanama",
+  "category": "amp",
+  "display_name": "PV Panama (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.8100000023841858,
+      "observed_range": [
+        0.8100000023841858,
+        0.8100000023841858
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampPVPanama",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.6499999761581421,
+    "ChVol": 0.8100000023841858,
+    "Drive": 0.5299999713897705,
+    "Hum": 0.5,
+    "Master": 0.46000000834465027,
+    "Mid": 0.550000011920929,
+    "Sag": 0.4000000059604645,
+    "Treble": 0.10000000149011612
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

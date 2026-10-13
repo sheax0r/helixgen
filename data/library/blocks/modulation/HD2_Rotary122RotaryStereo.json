@@ -1,0 +1,125 @@
+{
+  "model_id": "HD2_Rotary122RotaryStereo",
+  "category": "modulation",
+  "display_name": "122 Rotary",
+  "params": {
+    "Blend": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.7099999785423279,
+      "observed_range": [
+        0.7099999785423279,
+        0.7099999785423279
+      ]
+    },
+    "FastSpeed": {
+      "type": "float",
+      "default": 0.7300000190734863,
+      "observed_range": [
+        0.7300000190734863,
+        0.7300000190734863
+      ]
+    },
+    "Headroom": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": -5.699999809265137,
+      "observed_range": [
+        -5.699999809265137,
+        -5.699999809265137
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "RampTime": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "SlowSpeed": {
+      "type": "float",
+      "default": 0.23999999463558197,
+      "observed_range": [
+        0.23999999463558197,
+        0.23999999463558197
+      ]
+    },
+    "Speed": {
+      "type": "bool",
+      "default": true
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "SyncSelect2": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "TempoSync2": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_Rotary122RotaryStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Blend": 0.5,
+    "Drive": 0.7099999785423279,
+    "FastSpeed": 0.7300000190734863,
+    "Headroom": 0.0,
+    "Level": -5.699999809265137,
+    "Mix": 1.0,
+    "RampTime": 1,
+    "SlowSpeed": 0.23999999463558197,
+    "Speed": true,
+    "SyncSelect1": 6,
+    "SyncSelect2": 6,
+    "TempoSync1": false,
+    "TempoSync2": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_DistThrifterFuzzStereo",
+  "category": "drive",
+  "display_name": "Thrifter Fuzz Stereo",
+  "params": {
+    "Attack": {
+      "type": "float",
+      "default": 0.36000001430511475,
+      "observed_range": [
+        0.36000001430511475,
+        0.36000001430511475
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.800000011920929,
+      "observed_range": [
+        0.800000011920929,
+        0.800000011920929
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "Notch Freq": {
+      "type": "float",
+      "default": 1600.0,
+      "observed_range": [
+        1600.0,
+        1600.0
+      ]
+    },
+    "Notch Gain": {
+      "type": "float",
+      "default": -3.4000000953674316,
+      "observed_range": [
+        -3.4000000953674316,
+        -3.4000000953674316
+      ]
+    },
+    "Thick": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistThrifterFuzzStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Attack": 0.36000001430511475,
+    "Drive": 0.800000011920929,
+    "Level": 0.550000011920929,
+    "Notch Freq": 1600.0,
+    "Notch Gain": -3.4000000953674316,
+    "Thick": 1
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

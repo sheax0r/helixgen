@@ -1,0 +1,101 @@
+{
+  "model_id": "HD2_ReverbSearchlightsMono",
+  "category": "reverb",
+  "display_name": "Searchlights Mono",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 6500.0,
+      "observed_range": [
+        6500.0,
+        6500.0
+      ]
+    },
+    "Intensity": {
+      "type": "float",
+      "default": 0.6299999952316284,
+      "observed_range": [
+        0.6299999952316284,
+        0.6299999952316284
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 196.0,
+      "observed_range": [
+        196.0,
+        196.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.28999999165534973,
+      "observed_range": [
+        0.28999999165534973,
+        0.28999999165534973
+      ]
+    },
+    "Modulation": {
+      "type": "float",
+      "default": 0.30000001192092896,
+      "observed_range": [
+        0.30000001192092896,
+        0.30000001192092896
+      ]
+    },
+    "Predelay": {
+      "type": "float",
+      "default": 0.07000000029802322,
+      "observed_range": [
+        0.07000000029802322,
+        0.07000000029802322
+      ]
+    },
+    "Speed": {
+      "type": "float",
+      "default": 0.3700000047683716,
+      "observed_range": [
+        0.3700000047683716,
+        0.3700000047683716
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_ReverbSearchlightsMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 0.5,
+    "HighCut": 6500.0,
+    "Intensity": 0.6299999952316284,
+    "Level": 0.0,
+    "LowCut": 196.0,
+    "Mix": 0.28999999165534973,
+    "Modulation": 0.30000001192092896,
+    "Predelay": 0.07000000029802322,
+    "Speed": 0.3700000047683716
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

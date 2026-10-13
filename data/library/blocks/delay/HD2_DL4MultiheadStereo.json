@@ -1,0 +1,129 @@
+{
+  "model_id": "HD2_DL4MultiheadStereo",
+  "category": "delay",
+  "display_name": "Multi-Head",
+  "params": {
+    "F16_meta": {
+      "type": "bool",
+      "default": false
+    },
+    "Feedback": {
+      "type": "float",
+      "default": 0.12999999523162842,
+      "observed_range": [
+        0.12999999523162842,
+        0.12999999523162842
+      ]
+    },
+    "HD1": {
+      "type": "float",
+      "default": -120.0,
+      "observed_range": [
+        -120.0,
+        -120.0
+      ]
+    },
+    "HD2": {
+      "type": "float",
+      "default": -120.0,
+      "observed_range": [
+        -120.0,
+        -120.0
+      ]
+    },
+    "HD3": {
+      "type": "float",
+      "default": -120.0,
+      "observed_range": [
+        -120.0,
+        -120.0
+      ]
+    },
+    "HD4": {
+      "type": "float",
+      "default": -120.0,
+      "observed_range": [
+        -120.0,
+        -120.0
+      ]
+    },
+    "Heads 1-2": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Heads 3-4": {
+      "type": "int",
+      "default": 2,
+      "observed_range": [
+        2,
+        2
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "SyncSelect1": {
+      "type": "int",
+      "default": 6,
+      "observed_range": [
+        6,
+        6
+      ]
+    },
+    "TempoSync1": {
+      "type": "bool",
+      "default": false
+    },
+    "Time": {
+      "type": "float",
+      "default": 0.5540000200271606,
+      "observed_range": [
+        0.5540000200271606,
+        0.5540000200271606
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DL4MultiheadStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "F16_meta": false,
+    "Feedback": 0.12999999523162842,
+    "HD1": -120.0,
+    "HD2": -120.0,
+    "HD3": -120.0,
+    "HD4": -120.0,
+    "Heads 1-2": 1,
+    "Heads 3-4": 2,
+    "Level": 0.0,
+    "Mix": 0.4699999988079071,
+    "SyncSelect1": 6,
+    "TempoSync1": false,
+    "Time": 0.5540000200271606
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

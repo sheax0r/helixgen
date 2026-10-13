@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DistVitalDistStereo",
+  "category": "drive",
+  "display_name": "Vital Dist Stereo",
+  "params": {
+    "Clipping": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Filter": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Octave": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistVitalDistStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Clipping": 0,
+    "Filter": 0.0,
+    "Gain": 1.0,
+    "Level": 0.5,
+    "Octave": 0.4000000059604645
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

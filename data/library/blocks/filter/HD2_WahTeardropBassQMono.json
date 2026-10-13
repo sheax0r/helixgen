@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_WahTeardropBassQMono",
+  "category": "filter",
+  "display_name": "Teardrop Bass Q Mono",
+  "params": {
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Pedal": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Q Trim": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Volume Trim": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_WahTeardropBassQMono",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Level": 0.0,
+    "Mix": 1.0,
+    "Pedal": 0.0,
+    "Q Trim": 1.0,
+    "Volume Trim": 0.699999988079071
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

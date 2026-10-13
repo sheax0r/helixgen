@@ -1,0 +1,65 @@
+{
+  "model_id": "HD2_DM4OctaveFuzz",
+  "category": "drive",
+  "display_name": "Octave Fuzz",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.5299999713897705,
+      "observed_range": [
+        0.5299999713897705,
+        0.5299999713897705
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.14000000059604645,
+      "observed_range": [
+        0.14000000059604645,
+        0.14000000059604645
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Output": {
+      "type": "float",
+      "default": 0.36000001430511475,
+      "observed_range": [
+        0.36000001430511475,
+        0.36000001430511475
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.6100000143051147,
+      "observed_range": [
+        0.6100000143051147,
+        0.6100000143051147
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DM4OctaveFuzz",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.5299999713897705,
+    "Drive": 0.14000000059604645,
+    "Mid": 0.5,
+    "Output": 0.36000001430511475,
+    "Treble": 0.6100000143051147
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

@@ -1,0 +1,65 @@
+{
+  "model_id": "L6SPB_PolyChorus",
+  "category": "modulation",
+  "display_name": "Poly Detune",
+  "params": {
+    "Blend": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Detune": {
+      "type": "float",
+      "default": 10.0,
+      "observed_range": [
+        10.0,
+        10.0
+      ]
+    },
+    "HighCut": {
+      "type": "int",
+      "default": 4,
+      "observed_range": [
+        4,
+        4
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "L6SPB_PolyChorus",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Blend": 1.0,
+    "Detune": 10.0,
+    "HighCut": 4,
+    "Level": 0.0,
+    "LowCut": 0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

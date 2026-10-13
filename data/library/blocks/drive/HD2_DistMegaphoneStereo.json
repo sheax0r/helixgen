@@ -1,0 +1,74 @@
+{
+  "model_id": "HD2_DistMegaphoneStereo",
+  "category": "drive",
+  "display_name": "Megaphone Stereo",
+  "params": {
+    "Focus": {
+      "type": "float",
+      "default": 0.6499999761581421,
+      "observed_range": [
+        0.6499999761581421,
+        0.6499999761581421
+      ]
+    },
+    "Grit": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6800000071525574,
+      "observed_range": [
+        0.6800000071525574,
+        0.6800000071525574
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.7900000214576721,
+      "observed_range": [
+        0.7900000214576721,
+        0.7900000214576721
+      ]
+    },
+    "Space": {
+      "type": "float",
+      "default": 0.4000000059604645,
+      "observed_range": [
+        0.4000000059604645,
+        0.4000000059604645
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistMegaphoneStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Focus": 0.6499999761581421,
+    "Grit": 0.7599999904632568,
+    "Level": 0.6800000071525574,
+    "Mix": 0.7900000214576721,
+    "Space": 0.4000000059604645,
+    "Tone": 0.5
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

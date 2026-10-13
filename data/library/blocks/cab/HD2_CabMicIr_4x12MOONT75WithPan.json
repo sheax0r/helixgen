@@ -1,0 +1,110 @@
+{
+  "model_id": "HD2_CabMicIr_4x12MOONT75WithPan",
+  "category": "cab",
+  "display_name": "4x12 MOO)))N T75",
+  "params": {
+    "Angle": {
+      "type": "float",
+      "default": 45.0,
+      "observed_range": [
+        45.0,
+        45.0
+      ]
+    },
+    "Delay": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Distance": {
+      "type": "float",
+      "default": 1.5,
+      "observed_range": [
+        1.5,
+        1.5
+      ]
+    },
+    "HighCut": {
+      "type": "float",
+      "default": 12000.0,
+      "observed_range": [
+        12000.0,
+        12000.0
+      ]
+    },
+    "IrData": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "LowCut": {
+      "type": "float",
+      "default": 40.0,
+      "observed_range": [
+        40.0,
+        40.0
+      ]
+    },
+    "Mic": {
+      "type": "int",
+      "default": 3,
+      "observed_range": [
+        3,
+        3
+      ]
+    },
+    "Pan": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Position": {
+      "type": "float",
+      "default": 0.38999998569488525,
+      "observed_range": [
+        0.38999998569488525,
+        0.38999998569488525
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_CabMicIr_4x12MOONT75WithPan",
+    "@type": "cab",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Angle": 45.0,
+    "Delay": 0.0,
+    "Distance": 1.5,
+    "HighCut": 12000.0,
+    "IrData": 0,
+    "Level": 0.0,
+    "LowCut": 40.0,
+    "Mic": 3,
+    "Pan": 0.5,
+    "Position": 0.38999998569488525
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

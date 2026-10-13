@@ -1,0 +1,92 @@
+{
+  "model_id": "HD2_PreampUSDoubleVib",
+  "category": "amp",
+  "display_name": "US Double Vib (Preamp)",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.46000000834465027,
+      "observed_range": [
+        0.46000000834465027,
+        0.46000000834465027
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.7599999904632568,
+      "observed_range": [
+        0.7599999904632568,
+        0.7599999904632568
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.3499999940395355,
+      "observed_range": [
+        0.3499999940395355,
+        0.3499999940395355
+      ]
+    },
+    "Hum": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Master": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.699999988079071,
+      "observed_range": [
+        0.699999988079071,
+        0.699999988079071
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.5199999809265137,
+      "observed_range": [
+        0.5199999809265137,
+        0.5199999809265137
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_PreampUSDoubleVib",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.46000000834465027,
+    "ChVol": 0.7599999904632568,
+    "Drive": 0.3499999940395355,
+    "Hum": 0.5,
+    "Master": 1.0,
+    "Mid": 0.699999988079071,
+    "Sag": 0.5,
+    "Treble": 0.5199999809265137
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

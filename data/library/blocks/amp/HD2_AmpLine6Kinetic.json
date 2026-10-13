@@ -1,0 +1,115 @@
+{
+  "model_id": "HD2_AmpLine6Kinetic",
+  "category": "amp",
+  "display_name": "Kinetic",
+  "params": {
+    "Bass": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Bias": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "BiasX": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Boost": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "ChVol": {
+      "type": "float",
+      "default": 0.4699999988079071,
+      "observed_range": [
+        0.4699999988079071,
+        0.4699999988079071
+      ]
+    },
+    "Drive": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    },
+    "HumSwitch": {
+      "type": "bool",
+      "default": true
+    },
+    "Mid": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.10000000149011612,
+      "observed_range": [
+        0.10000000149011612,
+        0.10000000149011612
+      ]
+    },
+    "Sag": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Treble": {
+      "type": "float",
+      "default": 0.550000011920929,
+      "observed_range": [
+        0.550000011920929,
+        0.550000011920929
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_AmpLine6Kinetic",
+    "@type": "amp",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Bass": 0.44999998807907104,
+    "Bias": 0.5,
+    "BiasX": 0.5,
+    "Boost": 0.0,
+    "ChVol": 0.4699999988079071,
+    "Drive": 0.550000011920929,
+    "HumSwitch": true,
+    "Mid": 0.5,
+    "Presence": 0.10000000149011612,
+    "Sag": 0.5,
+    "Treble": 0.550000011920929
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

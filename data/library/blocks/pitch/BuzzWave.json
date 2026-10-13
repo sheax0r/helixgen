@@ -1,0 +1,65 @@
+{
+  "model_id": "BuzzWave",
+  "category": "pitch",
+  "display_name": "Buzz Wave",
+  "params": {
+    "Decay": {
+      "type": "float",
+      "default": 1.0,
+      "observed_range": [
+        1.0,
+        1.0
+      ]
+    },
+    "Filter": {
+      "type": "float",
+      "default": 0.20000000298023224,
+      "observed_range": [
+        0.20000000298023224,
+        0.20000000298023224
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Mix": {
+      "type": "float",
+      "default": 0.44999998807907104,
+      "observed_range": [
+        0.44999998807907104,
+        0.44999998807907104
+      ]
+    },
+    "Wave": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    }
+  },
+  "exemplar": {
+    "@model": "BuzzWave",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Decay": 1.0,
+    "Filter": 0.20000000298023224,
+    "Level": 0.0,
+    "Mix": 0.44999998807907104,
+    "Wave": 0
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}

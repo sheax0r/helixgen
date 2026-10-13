@@ -1,0 +1,79 @@
+{
+  "model_id": "HD2_DistHeirApparentStereo",
+  "category": "drive",
+  "display_name": "Heir Apparent Stereo",
+  "params": {
+    "Clipping": {
+      "type": "int",
+      "default": 0,
+      "observed_range": [
+        0,
+        0
+      ]
+    },
+    "Gain": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "GainMod": {
+      "type": "int",
+      "default": 1,
+      "observed_range": [
+        1,
+        1
+      ]
+    },
+    "Level": {
+      "type": "float",
+      "default": 0.6200000047683716,
+      "observed_range": [
+        0.6200000047683716,
+        0.6200000047683716
+      ]
+    },
+    "Presence": {
+      "type": "float",
+      "default": 0.0,
+      "observed_range": [
+        0.0,
+        0.0
+      ]
+    },
+    "Tone": {
+      "type": "float",
+      "default": 0.5,
+      "observed_range": [
+        0.5,
+        0.5
+      ]
+    },
+    "Voltage": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "exemplar": {
+    "@model": "HD2_DistHeirApparentStereo",
+    "@type": "fx",
+    "@enabled": true,
+    "@position": 0,
+    "@path": 0,
+    "Clipping": 0,
+    "Gain": 0.5,
+    "GainMod": 1,
+    "Level": 0.6200000047683716,
+    "Presence": 0.0,
+    "Tone": 0.5,
+    "Voltage": false
+  },
+  "first_seen": {
+    "preset": "device-defs:p35md-1_4_0_0.bin",
+    "firmware": "0x14000000",
+    "date": "2026-10-13"
+  },
+  "aliases": []
+}
