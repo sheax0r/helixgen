@@ -238,7 +238,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.55.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.55.1"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -1210,7 +1210,7 @@ def test_librarian_import_advice_is_fallback_only() -> None:
 def test_device_skill_describes_the_probe_range_accurately() -> None:
     """`discover --help` documents a netmask-derived range capped at 1024 and
     refusing non-RFC-1918. The skill once said "own /24 only" (wrong in general).
-    Since core 0.55.0 the range is per interface, tunnels/point-to-point links
+    Since core 0.55.1 the range is per interface, tunnels/point-to-point links
     only as a last resort."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
     assert not re.search(r"own\s+\*{0,2}/24\s+only", text, re.IGNORECASE), (
@@ -1224,7 +1224,7 @@ def test_device_skill_describes_the_probe_range_accurately() -> None:
 
 
 def test_device_skill_documents_per_interface_discover_and_local_network() -> None:
-    """Core 0.55.0 (hgc-094, hgc-7he): discover scans every private interface,
+    """Core 0.55.1 (hgc-094, hgc-7he): discover scans every private interface,
     tunnels/bridges last; a macOS Local Network denial is its own error. The old
     "disconnect the VPN" workaround must not survive as current advice."""
     text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
