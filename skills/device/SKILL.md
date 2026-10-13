@@ -1352,6 +1352,14 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   (`helixgen register-irs`) or import it in HX Edit, then re-copy.
 - `--no-irs` skips IR upload entirely — only when the IRs are known to be on the
   device already and you want a faster call.
+- **Firmware 1.4: IR upload is currently broken** (backlog hgc-6r5.11). The
+  device rejects helixgen's file-transfer login, so any IR the device doesn't
+  already have fails with `SFTP connect to hedit@<ip> failed: Authentication
+  failed.` IRs already on the device still resolve by hash, and `list-irs`
+  works. Workaround: import the missing IR WAVs with the Stadium app (drag them
+  into its Cab IR browser), then re-run `device copy`. Same cause breaks
+  `push-ir`, `pull-ir`, and the IR half of `device backup`. Tell the user
+  plainly; don't retry or reboot for this one.
 
 ### 4. Photograph the device
 
@@ -1401,6 +1409,7 @@ Tightly:
 
 | Error / symptom | What it means | Do |
 |---|---|---|
+| `SFTP connect to hedit@<ip> failed: Authentication failed.` | Stadium firmware 1.4 rejects helixgen's IR file-transfer login (hgc-6r5.11, not yet fixed) | import the IR in the Stadium app, then re-copy; not a network flake, don't retry |
 | a device verb fails fast with an error naming `device discover` (no `--ip`, no `$HELIXGEN_HELIX_IP`, no persisted record) | no device address is known — there is **no built-in default IP** (0.24.0); this is an immediate instructive failure, never a stall | run `helixgen device discover` once (persists the record); if it finds nothing, ask the user for the IP and pass `--ip` |
 | device verbs time out / can't connect at the recorded address after working before | the persisted discover record went stale (new network or DHCP lease) | re-run `helixgen device discover`, then retry the verb |
 | a verb exits non-zero rejecting an **empty/whitespace-only `--ip`** | `--ip ""` (usually an unset shell var that expanded to nothing) is a mistake, not a request to fall back (behavior change, #77) | omit `--ip` to fall back to the persisted record, or pass a real address |
