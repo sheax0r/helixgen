@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.55.1'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.55.2'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -169,13 +169,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.55.1`** (the version this plugin release is
+- **Prints `helixgen, version 0.55.2`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.55.1'
+  uv tool install 'helixgen[device]==0.55.2'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -751,7 +751,7 @@ as a silent cab showing **"No Model"**.
 <wav>` is idempotent and *is* the presence check (point lookup, not an
 enumeration), so putting a referenced IR on the Stadium takes about a second
 (except on Stadium firmware 1.4, where the upload currently fails with an SFTP
-authentication error — hgc-6r5.11; import the WAV in the Stadium app instead).
+authentication error — hgc-6r5.11 — until the rotated hedit key is captured once to ~/.helixgen/id_hedit; see the device skill's IR section, or import the WAV in the Stadium app instead).
 But it is a **hardware write, so it is offered, never automatic** — an IR the
 user never wanted is not trivially reclaimable (`device ir-prune` protects IRs
 that a local off-device tone references). The full procedure — the ask, the
