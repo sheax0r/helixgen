@@ -35,7 +35,7 @@ brew install uv                                        # macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh         # or see docs.astral.sh/uv
 ```
 
-The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.55.1'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
+The `setup` skill provisions the engine on first use as an isolated CLI tool — `uv tool install 'helixgen[device]==0.55.2'` (network access required that once; nothing touches your system Python) — and verifies it with `helixgen --version`. That's the whole setup — nothing to `pip install` yourself.
 
 **Using the Python CLI directly** (no plugin)? Same binary — see [`docs/CLI.md`](docs/CLI.md). A standalone install starts with an empty library at `~/.helixgen/library/`, so seed it first with `helixgen bootstrap` (the plugin's skills instead point `HELIXGEN_LIBRARY` at the bundled `data/library`).
 
@@ -59,7 +59,7 @@ In Claude Code, ask the skill to register an IR — it runs `helixgen register-i
 
 **Prerequisite for direct IR hashing:** computing an IR's hash from a WAV (`register-irs <wav>`, `ir-scan`) needs **libsndfile** (`brew install libsndfile` on macOS; `apt install libsndfile1` on Debian/Ubuntu). Only 48 kHz sources are supported for direct hashing.
 
-**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be on the device. Over the LAN, helixgen uploads it for you — `helixgen device copy` pushes each referenced IR automatically (and `device push-ir` does one by hand); if you load presets via HX Edit/USB instead, import the WAV via the Stadium app's **Librarian → Cab IRs → Import**. If a slot displays "No Model" on the device after loading a preset, that IR isn't on the device yet. **Stadium firmware 1.4:** helixgen's IR upload currently fails (SFTP authentication, hgc-6r5.11); import new IRs via the Stadium app until that's fixed — IRs already on the device keep working.
+**Caveat:** for the `irhash` in a generated preset to actually resolve on the device, the matching WAV must also be on the device. Over the LAN, helixgen uploads it for you — `helixgen device copy` pushes each referenced IR automatically (and `device push-ir` does one by hand); if you load presets via HX Edit/USB instead, import the WAV via the Stadium app's **Librarian → Cab IRs → Import**. If a slot displays "No Model" on the device after loading a preset, that IR isn't on the device yet. **Stadium firmware 1.4:** the editor rotated the SFTP `hedit` key and no longer bundles it, so IR upload needs a one-time local key capture to `~/.helixgen/id_hedit` (hgc-6r5.11); until then, import new IRs via the Stadium app — IRs already on the device keep working.
 
 See [`ir-hash-algorithm.md`](https://github.com/sheax0r/helixgen-core/blob/main/docs/ir-hash-algorithm.md) for the hash algorithm and the field-validated reference implementation.
 

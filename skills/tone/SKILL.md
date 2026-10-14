@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.55.1'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.55.2'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -1055,8 +1055,9 @@ then:
   confirm), and it heals a wedged orphan silently in that case rather than
   warning. So if the user later reports "No Model" on an IR you pushed, believe
   them over the exit code: `device list-irs` to check for the hash, and
-  `device delete-ir --force-wedge` then re-push is the sure clear (not on
-  firmware 1.4, where both need the broken IR file transfer — hgc-6r5.11).
+  `device delete-ir --force-wedge` then re-push is the sure clear (both use IR
+  file transfer, which on firmware 1.4 needs the one-time hedit-key capture
+  first — hgc-6r5.11; see the device skill's IR section).
 
 ### 8. Report back
 
@@ -1241,12 +1242,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.55.1'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.55.2'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.55.1'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.55.2'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
