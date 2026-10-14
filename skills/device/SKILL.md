@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.55.2'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.56.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -512,8 +512,8 @@ copy fails for one of a small, concrete set of reasons:
 - **setlist not on the device** — `device setlist create <name>`, then re-copy.
 - **`SFTP connect to hedit@<ip> failed: Authentication failed.`** — firmware
   1.4 needs a one-time `hedit`-key capture to `~/.helixgen/id_hedit` (hgc-6r5.11;
-  see the IR section). Capture it, or import the WAV in the Stadium app, then
-  re-copy. Not a network flake; don't retry.
+  see the IR section). Run `helixgen device link-key` (macOS), or import the WAV
+  in the Stadium app, then re-copy. Not a network flake; don't retry.
 - **`ir_cap`** — the device's 2048-IR limit; free space, then re-copy.
 - **dropped connection / device unresponsive** — not a tone failure at all; the
   flaky network stack. Re-run; reboot the Helix if it persists.
@@ -1366,15 +1366,25 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   1.4 editor stopped bundling the `hedit` SFTP key and rotated it, so until the
   new key is on this machine any IR the device lacks fails with `SFTP connect to
   hedit@<ip> failed: Authentication failed.` (IRs already on the device still
-  resolve by hash, and `list-irs` works — it's OSC, not SFTP.) **Fix: capture
-  the key once to `~/.helixgen/id_hedit`** — the 1.4 app writes it to a temp file
-  at connect; `tools/resign-debug-app.sh` then `tools/frida_sftp_auth.py` in
-  helixgen-core grab it while you import one IR (a `device link-key` verb to
-  automate this is planned, hgc-6r5.15). Once captured, the engine (≥0.55.2)
-  finds it automatically and `copy` / `push-ir` / `pull-ir` / `backup` work
-  normally. If capturing isn't an option, fall back to importing the WAVs in the
-  Stadium app's Cab IR browser, then re-run `device copy`. This is a credential
-  setup step, not a network flake — don't retry or reboot to "fix" it.
+  resolve by hash, and `list-irs` works — it's OSC, not SFTP.) **Fix (macOS):
+  run `helixgen device link-key` once** (hgc-6r5.15). It re-signs a debuggable
+  copy of your installed Stadium app, attaches, and — while you import one new IR
+  in the app's Cab IR browser — captures the key to `~/.helixgen/id_hedit`, where
+  the engine (≥0.56.0) finds it automatically. It needs the `linkkey` extra, so
+  install it alongside device first:
+
+  ```bash
+  uv tool install --force 'helixgen[device,linkkey]==0.56.0'
+  helixgen device link-key          # follow the printed prompt; import one IR
+  ```
+
+  Then `copy` / `push-ir` / `pull-ir` / `backup` work normally. The key stays on
+  this machine — it is never uploaded, committed, or shared. If `link-key` can't
+  attach (non-macOS, or a locked-down app), fall back to the manual
+  `tools/resign-debug-app.sh` + `tools/frida_sftp_auth.py` in helixgen-core, or
+  just import the WAVs in the Stadium app's Cab IR browser and re-run `device
+  copy`. This is a credential setup step, not a network flake — don't retry or
+  reboot to "fix" it.
 
 ### 4. Photograph the device
 
@@ -1424,7 +1434,7 @@ Tightly:
 
 | Error / symptom | What it means | Do |
 |---|---|---|
-| `SFTP connect to hedit@<ip> failed: Authentication failed.` | Stadium firmware 1.4 rotated the `hedit` key and no longer bundles it (hgc-6r5.11) | capture it once to `~/.helixgen/id_hedit` (IR section), or import the IR in the Stadium app; then re-copy. Not a network flake |
+| `SFTP connect to hedit@<ip> failed: Authentication failed.` | Stadium firmware 1.4 rotated the `hedit` key and no longer bundles it (hgc-6r5.11) | run `helixgen device link-key` once (macOS; IR section), or import the IR in the Stadium app; then re-copy. Not a network flake |
 | a device verb fails fast with an error naming `device discover` (no `--ip`, no `$HELIXGEN_HELIX_IP`, no persisted record) | no device address is known — there is **no built-in default IP** (0.24.0); this is an immediate instructive failure, never a stall | run `helixgen device discover` once (persists the record); if it finds nothing, ask the user for the IP and pass `--ip` |
 | device verbs time out / can't connect at the recorded address after working before | the persisted discover record went stale (new network or DHCP lease) | re-run `helixgen device discover`, then retry the verb |
 | a verb exits non-zero rejecting an **empty/whitespace-only `--ip`** | `--ip ""` (usually an unset shell var that expanded to nothing) is a mistake, not a request to fall back (behavior change, #77) | omit `--ip` to fall back to the persisted record, or pass a real address |
@@ -1433,7 +1443,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.55.2'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.56.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
