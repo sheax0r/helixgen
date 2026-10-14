@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.56.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.57.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -75,6 +75,7 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen library doc <name> (--from-file <md> \| -) [--variant <guitar-slug>]` | author/update the tone's `description_md` (or a variant's `notes_md`) — replaces the old companion `.md` sidecar | updates metadata in place |
 | `helixgen describe <tone>` | read a tone back: identity + variants table + `description_md` verbatim | text |
 | `helixgen library show <name> [--json]` | compact/JSON tone- OR guitar-profile metadata (resolved as a TONE first — logical slug / metadata filename / variant preset_name — else a guitar profile by slug/name/short_name) | text or JSON |
+| `helixgen library tag <name> [KEY=VALUE ...] [--rm QUERY ...]` | add/remove/list a tone's **key/value tags** (`genre=rock`; bare words still allowed). `library list --tag QUERY` filters by them. See `library tag --help` for the match rule | updates metadata in place |
 | `helixgen list-irs [--json]` | user IRs registered **locally** (helixgen's `mapping.json`) — NOT what is on the device | `<hash>  <wav-path>` lines; `--json` = array of `{hash, path}` |
 | `helixgen device push-ir <wav>` | make a referenced IR present **on the Stadium** — idempotent, and *is* the presence check (no listing needed) | `already on device`, or uploads + registers in ~0.1-1 s under the preset's `irhash` (**upload fails on Stadium firmware 1.4** — hgc-6r5.11; see failure modes in 7d) |
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
@@ -1242,12 +1243,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.56.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.57.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.56.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.57.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
