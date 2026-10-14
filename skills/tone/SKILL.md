@@ -1055,8 +1055,9 @@ then:
   confirm), and it heals a wedged orphan silently in that case rather than
   warning. So if the user later reports "No Model" on an IR you pushed, believe
   them over the exit code: `device list-irs` to check for the hash, and
-  `device delete-ir --force-wedge` then re-push is the sure clear (not on
-  firmware 1.4, where both need the broken IR file transfer — hgc-6r5.11).
+  `device delete-ir --force-wedge` then re-push is the sure clear (both use IR
+  file transfer, which on firmware 1.4 needs the one-time hedit-key capture
+  first — hgc-6r5.11; see the device skill's IR section).
 
 ### 8. Report back
 
