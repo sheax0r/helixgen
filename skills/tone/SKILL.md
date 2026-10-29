@@ -145,7 +145,7 @@ State your call briefly so the user can redirect before you commit:
 - Modern metal: tube-screamer boost → high-gain amp → 4x12 V30 → noise gate front
 - Clean: comp → clean amp (AC15/Twin/Deluxe-style) → 1x12 → optional chorus → plate/spring
 - Lead: stack drive higher → less compression → longer delay → bigger verb
-- Bass: comp → bass amp → 4x10/8x10 → optional drive parallel
+- Bass: comp → bass amp → 4x10/8x10, with any dirt on a PARALLEL lane beside a clean DI (never in series — see **Bass tones**)
 
 ### 3. Pick blocks from the library
 
@@ -1290,6 +1290,49 @@ touching the tone:
 
 Measured from Line 6's 16 factory bass presets (`${CLAUDE_PLUGIN_ROOT}/docs/factory-corpus-bass.md`); not yet ear-validated on hardware.
 
+**RULE — driven/distorted bass is PARALLEL, never series.** Any bass tone
+with grit — amp `Drive`/`2Drive` pushed, a drive/fuzz pedal (`Ampeg Scrambler
+Mono`, `Triangle Fuzz Mono`, `Teemah! Mono`, `ZeroAmp Bass DI Mono`), or a
+high-gain amp — MUST keep the fundamental on a **clean parallel lane**.
+Distortion on a full-range bass signal generates harmonics down in the lows and
+turns the note to mud — the "fake, not realistic" bass sound, and it is worst
+exactly when the dirt is on. Real bass rigs and pedals avoid this with a clean
+blend (why bass drive/fuzz pedals almost all ship a Blend knob); it is also what
+Line 6's own factory layout below does. Author it in one of the two forms this
+section already describes:
+
+- **Dirt on the amp lane + a clean DI beside it** — the factory layout below:
+  **two DSP paths** by default (step 5 case A — one amp+cab lane, one DI lane,
+  each fed from the jack), or the **single-DSP `split`/`join`** form when path 2
+  is taken (`mic_input` on). The amp lane carries `Drive` and/or a pedal → cab;
+  the `Regal Bass DI Mono` / clean `ZeroAmp Bass DI Mono` lane carries the lows.
+- **Blend under one shared amp** — `split` *before* the amp, dirt pedal on one
+  branch and clean on the other, `join`, then amp+cab (step 5 "share an amp").
+  For heavy **fuzz**, make the split a `"crossover"` (high-pass the dirt branch,
+  `Frequency` ~250–500 Hz) so only the highs distort and the lows stay clean.
+
+Sum at unity: two paths → match the path `output` levels; a `join` → master
+`"Level": 0.0` (device default is **+3 dB**, hot). Sit the clean DI under the
+amp (`join` `"B Level"` ≈ −6…−8 dB, dB) when it only restores lows; near unity
+when the DI *is* the voiced tone (SansAmp grind). Dirt blocks are
+base-**ENABLED** with a clean snapshot that `disable`s them (snapshots can only
+disable, never enable — 5.5). **This cannot be retrofitted:** `patch` /
+`add-block` cannot add a `split`/`join`, so a series bass tone must be rebuilt
+with `generate`, not edited.
+
+**RULE — "replace the signal" effects: check `Mix`, several default 100% wet.**
+Some pitch shifters and envelope/synth filters ship at **`Mix` 1.0 — fully wet**
+(`Pitch Wham Mono` and `Mutant Filter Mono` both do; others blend — `Simple
+Pitch Mono` defaults 0.5 — so `show-block` the block, never assume). Fully wet,
+no dry fundamental survives: on bass a resonant filter can drop to **silence**
+between note attacks and a pitch block detunes the whole note — the same
+fundamental-destruction as series dirt, by a different block. On **bass**, never
+leave such a block at a full-wet `Mix`: set a dry blend (~0.3–0.5), or — only
+when authoring with `generate` (`patch` / `add-block` cannot add a `split`/`join`,
+see above) — run it on a parallel lane beside the clean fundamental. On an
+existing tone, `Mix` is the only lever. On guitar a fully-wet pitch/filter is a
+voicing choice, not a bug.
+
 **Amps.** Agoura first, as for guitar — 16 Agoura amp instances to 10 legacy.
 Agoura: `Ampeg SVT 50th` (5), `Ampeg B15NF 66` (4), `US Drip Bass` (3),
 `Mandarin Plus 200`, `Brit MegaBass`, `Agua 751` (1 each; plus one `WhoWatt 103`).
@@ -1399,6 +1442,8 @@ the write-up rather than nudging the value into the band.
 | Recommending a block not in the user's library | Always verify with `list-blocks --category <cat>` first |
 | Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
+| Distorted bass on a single series lane | Dirt on a full-range bass = flabby, muddy, unreal (worst with any grit on). Split off a clean/DI lane for the fundamental — see **Bass tones** RULE |
+| Pitch/filter block left at a full-wet `Mix` on bass | Some default 100% wet (`Pitch Wham Mono`, `Mutant Filter Mono`) — no dry fundamental, so bass mutes between notes or detunes. `show-block` to check, then blend `Mix` ~0.3–0.5 (or author parallel via `generate`) — see the wet-`Mix` rule in **Bass tones** |
 | A stereo drive/wah/comp in front of the amp | Pre-amp blocks are Mono — Line 6's 66-preset factory set (guitar and bass mixed) runs 1 stereo drive to 108 mono. Stereo belongs after the cab (step 3) |
 | A mono delay/reverb after the cab on a stereo rig | 69% of post-cab blocks in the 66-preset factory set (guitar and bass mixed) are stereo; use the Stereo variant unless the player's rig is mono |
 | A second path with blocks but no `input` | `paths[1].input` defaults to `"none"` — the path is silent. Set it explicitly (step 5, "Two paths") |
