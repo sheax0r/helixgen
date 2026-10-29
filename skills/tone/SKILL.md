@@ -81,6 +81,10 @@ descriptions used to play). The verbs this skill drives:
 | `helixgen patch <preset.hsp> <ops.json\|-> [--json]` | atomic batch of surgical edits, in place | warnings on stderr; `--json` = `{path, warnings}` |
 | `helixgen view <preset.hsp>` | read-only recipe-shaped projection of a `.hsp` | JSON by default |
 | `helixgen controllers [--json]` | assignable-controller vocabulary (FS/EXP) with English names + positions | text lines or JSON array |
+| `helixgen set-footswitch <hsp> <FS\|EXP1Toe> <block> [--behavior …] [--param … --min … --max …] [--label …] [--color …]` | assign/replace a footswitch (bypass or param toggle) in place (0.58.0) | `Patched …` |
+| `helixgen remove-footswitch <hsp> <FS\|EXP>` | remove every binding for a switch in place (0.58.0) | `Patched …` |
+| `helixgen set-expression <hsp> <EXP1\|EXP2> <block> <param> [--min … --max …]` | sweep a param with an expression pedal in place (0.58.0) | `Patched …` |
+| `helixgen remove-expression <hsp> <EXP1\|EXP2>` | remove a pedal's sweep assignment in place (0.58.0) | `Patched …` |
 
 ## Workflow
 
@@ -637,6 +641,8 @@ By default, wire the chain for live use: give every toggle-able effect a footswi
 - Route a wah or whammy's `Pedal` to **EXP1**; route a volume block's `Pedal` to **EXP2**. If only a volume pedal is present (no wah/whammy), put it on EXP1 instead. Full `min: 0.0, max: 1.0` sweep by default.
 - **Wah ships bypassed, engaged by the toe switch** — set `"enabled": false` on the wah block and assign its bypass to `"switch": "EXP1Toe"` (the real expression-pedal toe switch — push the pedal fully forward to click it on, then sweep with EXP1). This is the standard Helix wah behavior. Do **not** spend a regular `FS` slot on the wah, and do not count it against the FS budget. Unless research says the reference keeps the wah always inline.
 - If the user already claimed a pedal (e.g. "EXP2 sweeps amp Master"), that wins; auto-routing only fills what's left, and skips a target it can't place — telling the user — rather than overriding the user's mapping.
+
+This step wires controls at generate time via the recipe's `footswitches`/expression fields. To **add, change, or remove** a footswitch or expression assignment on an **already-generated** `.hsp`, don't regenerate — edit it in place with the `set_footswitch`/`remove_footswitch`/`set_expression`/`remove_expression` patch ops (see **Adjusting an existing tone**; core 0.58.0).
 
 **Snapshot/footswitch relationship:** a change that touches ≥2 blocks/params is a snapshot (5.5, including the solo snapshot); a single live on/off or sweep is a footswitch/EXP (here). Auto-wire footswitches and EXP even on a preset that already has snapshots — they're complementary, not competing: the snapshot sets the scene's base bypass state, and the footswitch toggles from there.
 
@@ -1233,6 +1239,7 @@ Rules of thumb for translating ear-language to param moves:
 - **"Delay is washy / too long"** → drop `Mix` 0.05 OR drop `Time` 0.05
 - **"Reverb feels too loud"** → drop `Mix` 0.03–0.05 (Stadium plates run hot, small moves matter)
 - **"Swap X for something Y"** → run `list-blocks --category <cat>`, scan for candidates, `show-block` the chosen one, then a `swap_model` op in a `helixgen patch` call
+- **"Put/move/remove a footswitch or expression pedal"** → edit in place with `set_footswitch`/`remove_footswitch`/`set_expression`/`remove_expression` (core 0.58.0) — do NOT regenerate. See **Adjusting an existing tone**.
 - **Feedback about ONE snapshot** ("the lead snapshot is too loud", "clean scene needs less drive") → a per-snapshot override, not a base edit: add `"snapshot": "<name-or-0-based-index>"` to the `set_param`/`set_enabled` patch op (or the single-op form `helixgen set-param <hsp> <block> <param> <value> --snapshot <name-or-index>`, 0.23.0). The param must already carry a base value and the preset must define snapshots; overrides reach the device on the next `device copy`. Once a param varies per-snapshot, a later plain base edit of it is inaudible on-device (`set-param` warns) — keep editing that param per-snapshot.
 
 **Objective numbers from a recording (optional).** If the user has (or makes)
@@ -1565,6 +1572,27 @@ regenerate round-trip.
    - "…but only in the Lead snapshot" → add `"snapshot": "Lead"` (a name, or
      a 0-based index) to the `set_param`/`set_enabled` op — a per-snapshot
      override instead of a base edit (0.23.0; see step 10's per-snapshot rule).
+   - "put a footswitch on the boost" / "move the delay to FS8" →
+     `set_footswitch` (`{"op": "set_footswitch", "switch": "FS4", "block":
+     "Kinky Boost", "behavior": "latching", "label": "Boost", "color":
+     "dkorange"}`). Add `"param"`/`"min"`/`"max"` to toggle a param instead of
+     bypass. **This is an in-place edit — do NOT regenerate to add or change a
+     footswitch** (core 0.58.0).
+   - "remove the footswitch from X" / "unassign FS4" → `remove_footswitch`
+     (`{"op": "remove_footswitch", "switch": "FS4"}`; add `"block"` to clear
+     just one of a merge switch's targets). `remove_expression` (`{"op":
+     "remove_expression", "pedal": "EXP1"}`) clears a pedal's sweep.
+   - "route the wah to the pedal" / "sweep the filter with EXP1" →
+     `set_expression` (`{"op": "set_expression", "pedal": "EXP1", "targets":
+     [{"block": "Teardrop 310 Mono", "param": "Pedal", "min": 0.0, "max":
+     1.0}]}`). For a wah, also wire its bypass to the toe switch with a
+     `set_footswitch` op on `"switch": "EXP1Toe"`.
+
+   Single-op verb forms exist too: `helixgen set-footswitch <hsp> FS4
+   "<block>" [--param … --min … --max …] [--label … --color …]`, `helixgen
+   remove-footswitch <hsp> FS4`, `helixgen set-expression <hsp> EXP1 "<block>"
+   "<param>"`, `helixgen remove-expression <hsp> EXP1`. Switch/pedal
+   vocabulary + English names: `helixgen controllers`.
 
    Run `helixgen patch --help` for the full ops schema.
 3. `patch` edits the file **in place** — the user just re-imports the same
