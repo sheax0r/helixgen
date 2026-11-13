@@ -238,7 +238,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.59.1"  # the core version this plugin release is built against
+ENGINE_PIN = "0.60.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -270,6 +270,31 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
 
 
 # --- core 0.22.0 vocabulary (advisory device locks, manifest v3) --------------
+
+
+def test_device_skill_documents_live_editor() -> None:
+    """`device live` (core 0.60.0): the agent must know it is long-running, that
+    the human drives it, and — the one way it can lose the user's work — that
+    its Save does not update the tone library."""
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    flat = " ".join(text.split())
+    for phrase in (
+        "helixgen device live",
+        "live editor: http://127.0.0.1",        # where the URL comes from
+        "Run it in the background",
+        "Then stop.",                            # do not narrate / poll
+        "Every control writes to the device immediately",
+        "Save on the page saves on the DEVICE only",
+        "The tone library is not updated",
+        "overwrite what they just dialed in",
+        "device to-hsp",
+        "the page's writes are refused",         # an agent's own session lock blocks it
+        "add, remove or move a block",           # what it cannot do
+    ):
+        assert phrase in flat, f"device skill lost the live-editor contract phrase {phrase!r}"
+    fm = _parse_frontmatter(text)
+    assert "device live" in fm["description"]
+    assert "tweak the knobs" in fm["description"]
 
 
 def test_device_skill_documents_device_locks() -> None:

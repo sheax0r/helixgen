@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — copy a tone onto the device, remove one, reorder a setlist, back up / restore. Drives the `helixgen device` CLI verbs (`device copy` / `rm` / `move` / `backup` / `restore`). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, `device calibrate`), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`). Runs after `tone` authored the `.hsp`. Triggers on "put this on my Helix", "copy these presets to the device", "take this tone off my Helix", "reorder my setlist", "back up my Helix", "what changed on my device", "restore my presets", "find my Helix's IP", "normalize my tones", "calibrate my rig", "clean up my IRs", "delete/duplicate a setlist", "I edited this on the amp, get it back into my library".
+description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — copy a tone onto the device, remove one, reorder a setlist, back up / restore (`helixgen device copy` / `rm` / `move` / `backup` / `restore`) — or wants to TWEAK THE LOADED TONE BY HAND in the live knob editor (`device live`: the whole signal chain as knobs in a browser page). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, `device calibrate`), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`). Triggers on "put this on my Helix", "copy these presets to the device", "take this tone off my Helix", "reorder my setlist", "back up my Helix", "restore my presets", "find my Helix's IP", "normalize my tones", "calibrate my rig", "clean up my IRs", "let me tweak the knobs", "open the live editor", "dial it in by hand", "I edited this on the amp, get it back into my library".
 ---
 
 # device
@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.59.1'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.60.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -469,6 +469,8 @@ protocol — re-run first, reboot second.
 - User wants to **back up** the device, see **what changed** on it, or **restore**
   it.
 - A generated preset "isn't loading on the device" and you need to re-copy it.
+- User wants to **tweak the loaded tone by hand** — knobs, switches, bypass —
+  and hear it as they go: start `device live` (see "The live chain editor").
 - User wants a preset they made **on the amp or in HX Edit** brought back into
   their library as an editable `.hsp` — `device to-hsp` (see "The other
   direction" above).
@@ -728,6 +730,54 @@ verbs operate on that setlist's **references**; write verbs put the content in
 the pool and add a reference at `--pos`. (There is no special `throwaway` token
 — target a real setlist by its name.)
 
+### The live chain editor: `device live` (0.60.0) — hand the knobs to the human
+
+When the user wants to **dial the loaded tone in themselves** — "let me tweak
+it", "open the knobs", "I want to adjust this by ear", or simply after you have
+put a tone on the device and they start asking for small changes one at a time
+— do **not** run a string of `set-param` calls. Start the editor and get out of
+the way:
+
+```bash
+helixgen device live --no-open     # LONG-RUNNING. First output line: `live editor: http://127.0.0.1:8765/`
+```
+
+- **Run it in the background** — it serves until it is stopped (Ctrl-C /
+  SIGTERM) — and read its first output line for the URL. Give the user that
+  URL; where you can open a browser view for them (the Claude desktop app's
+  browser pane), do. In a plain terminal drop `--no-open` and it opens their
+  default browser itself. `--port-http 0` picks a free port; "could not serve
+  the page … is another `helixgen device live` already running?" means one
+  already is — reuse it.
+- **Then stop.** The human turns the knobs. Do not narrate the page, do not
+  poll it, do not re-read params to "check on" them. It is localhost-only and
+  needs nothing from you while it runs.
+- **What it is:** the ACTIVE tone as a signal chain — every block of every DSP
+  path, input and output blocks included, parallel sections as side-by-side
+  lanes between their split and merge — each parameter a knob, switch or list
+  showing the same numbers as the Helix screen, a bypass switch per block,
+  undo/redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z). **Every control writes to the
+  device immediately**, and the page follows the device: a knob turned on the
+  hardware, a footswitch, a snapshot or preset switch all show up on it.
+- **Save on the page saves on the DEVICE only** — it is the hardware's own
+  Save, in place, for a preset in the user pool. **The tone library is not
+  updated.** Say this to the user once, and act on it yourself afterwards:
+  the library `.hsp` for that tone is now **stale**, and a `device copy` of it
+  would **overwrite what they just dialed in**. Before you edit or re-copy
+  that tone, bring the device's version back with `device to-hsp` (see "The
+  other direction" above).
+- **It does not hog the device.** Unlike the other live-ops verbs it holds the
+  `editbuffer` lock only while the user is actually turning something (released
+  ~2 s later), so `device load`, `device copy` and friends keep working while
+  the page is open — load the next tone and the page follows. The reverse
+  matters too: **if you are holding a `device lock` session, the page's writes
+  are refused** ("locked by …" on the page) — `device unlock` before handing
+  the knobs over.
+- **What it cannot do:** add, remove or move a block, or swap a model (that is
+  still the `tone` skill's edit verbs + `device copy`); a dual cab's second cab
+  and harness settings such as Trails are not shown.
+- When the user is done, stop the background process.
+
 ### Live ops on the ACTIVE tone (blocks / params / bypass / model / set-param)
 
 For interactive, immediately-audible tweaks to whatever tone is live on the
@@ -756,6 +806,10 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   lists each param's numeric pid, name, current value, type, and range.
 - **Param values are in RAW units** — dB, Hz, 0–1 knob positions, enum ints,
   exactly as `device params` reports them — **not** normalized 0–1.
+- **Lists and switches work as of 0.60.0.** `set-param` now sends each param
+  in its own wire type; before that, an enum/int or on-off param was silently
+  dropped by the device (no error, no change). For a switch pass `0`/`1`; for
+  a list pass the enum int `device params` shows.
 - **Live ops hit whatever preset the player has ACTIVE.** Before mutating,
   read `helixgen device active [--json]` — the device's active preset (cid +
   name + pool slot; it tracks the player's own panel selection too). When
@@ -1374,7 +1428,7 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   install it alongside device first:
 
   ```bash
-  uv tool install --force 'helixgen[device,linkkey]==0.59.1'
+  uv tool install --force 'helixgen[device,linkkey]==0.60.0'
   helixgen device link-key          # follow the printed prompt; import one IR
   ```
 
@@ -1443,7 +1497,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.59.1'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.60.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

@@ -23,3 +23,6 @@ irs/
 # ralphex runtime state (worktrees + progress logs); .ralphex/config IS tracked
 .ralphex/worktrees/
 .ralphex/progress/
+
+# superpowers brainstorm mockups
+.superpowers/
