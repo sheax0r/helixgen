@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.58.1'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.59.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -169,13 +169,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.58.1`** (the version this plugin release is
+- **Prints `helixgen, version 0.59.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.58.1'
+  uv tool install 'helixgen[device]==0.59.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -270,6 +270,9 @@ say you did.
 **Ask, because you cannot know:**
 
 - **`default_guitar`** — which guitar they actually reach for. Only they know.
+- **`default_venue`** — what they normally play through (`headphones`, `direct`
+  or `amp-in`). Ask once; write it to `preferences.json` only on confirmation,
+  same write-back rule as the other preferences. Unset means no venue talk.
 - **Anything destructive**: deleting stale device records, pruning IRs,
   running `library migrate` for real, overwriting a file that already has
   content.
@@ -283,7 +286,7 @@ Report gaps you did NOT act on as a short list, not as a queue of questions to
 work through one at a time.
 
 Keys this skill owns: `device.model`, `favor_irs`, `reveal_in_finder`,
-`guard_paid_irs_in_git`, `default_guitar`, and the `normalization` block
+`guard_paid_irs_in_git`, `default_guitar`, `default_venue`, and the `normalization` block
 (below). (`author` is consumed by the `tone` skill.) The user's guitars are no longer a preferences key — they are guitar
 **profiles** under `library/guitars/` (see **Guitar profiles** below).
 `instruments` and `preset_output_dir` are **deprecated** (replaced by guitar
