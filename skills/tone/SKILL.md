@@ -1077,7 +1077,7 @@ Tell the user, in this order:
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
 6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop. Once it's on the device, offer the measured level-match (step 9).
 7. **IRs** (only if the chain uses a user IR) — this is where step 7d's offer goes. If the user has not answered it yet, ask here: `Uses YA MRSH 412 T75 Mix 04 — want me to put it on your Stadium now? Otherwise it goes up when you install the preset.` If they already answered, report only what you actually observed — `already on your Stadium`, `uploaded just now`, or `will go up on install`. Never tell the user to import an IR by hand after a push reported success, and never promise the cab will sound — the push's "already" answer can be trusting (see 7d's wedge note).
-8. **Venue** (only if one applied) — one clause: `Venue: headphones — room IR, FS4`.
+8. **Venue** (only if one applied) — one clause: `Venue: headphones — room IR, <footswitch the command reported>`.
 9. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
@@ -1448,7 +1448,7 @@ recording, not an amp, and the Helix adds no room stage of its own. The
 preferences → unspecified. **Never ask about venue on a routine tone request.**
 With no venue named and `default_venue` unset, say nothing about venues and
 behave exactly as before. When one applies, state it in one clause in the
-report (`Venue: headphones — room IR, FS4 blends it`).
+report (`Venue: headphones — room IR; <footswitch the command reported> blends it`).
 
 **How.** Author the recipe in its plain (direct) form — a recipe never carries a
 venue — and let the engine transform it. Never hand-build the room split.
@@ -1459,6 +1459,8 @@ venue — and let the engine transform it. Never hand-build the room split.
 | Same tone, another venue, as its own variant | `helixgen library fork "<tone>" --venue amp-in` (`--venue` alone is a valid fork) |
 | Convert a variant in place | `helixgen library venue "<variant>" headphones\|direct\|amp-in [--dry-run]` |
 
+- `--room tile` forces the Tile-only form; `HELIXGEN_DEFAULT_VENUE` overrides the
+  preference for one call.
 - `default_venue` never creates a second copy of an existing tone; only an
   explicit `--venue` does. A second venue on the same guitar lands at key
   `<guitar>@<venue>` with a name suffix `(HP)` / `(Direct)` / `(Amp In)`.
@@ -1481,8 +1483,16 @@ mic is what was validated by ear; Tile alone was not. Re-run with
 (`helixgen list-irs`, grep ROOM), and remember the choice (preferences/memory)
 so it is applied without asking next time.
 
-**Tweaks, in ear language** (edit the room IR block's `Level` / Tile `Mix` with
-the surgical-edit flow below):
+**Tweaks, in ear language** (edit with the surgical-edit flow below). The preset
+has two blocks named "IR": the close IR on lane 0 and the **room IR on lane 1**.
+Always address the room IR by coordinate, e.g. `{"op":"set_param","block":"IR","path":0,"lane":1,"pos":<N>,"param":"Level","value":<dB>}`,
+taking `pos` from `helixgen view "<hsp>"` (see **Addressing duplicate blocks**
+below). A bare `"IR"` is ambiguous. The Tile block name is unique, so no
+coordinate is needed. The ROOM MIC footswitch toggles that same `Level` between
+-60 and the blended value, so after changing the blend level, re-point the
+switch's `max` at the new value (`helixgen set-footswitch <hsp> <FS> IR --param
+Level --min -60 --max <dB> --path 0 --lane 1 --pos <N>`); otherwise the switch
+snaps back to the old level.
 
 | They say | Do |
 |----------|----|

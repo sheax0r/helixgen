@@ -1276,7 +1276,7 @@ def test_tone_skill_has_venue_section() -> None:
     s = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
     for needle in ("## Venue", "default_venue", "generate", "--venue", "library fork",
                    "library venue", "ROOM MIC", "--room-ir", "that variant only",
-                   "minimum-phase", "normalized"):
+                   "minimum-phase", "normalized", "lane 1"):
         assert needle in s, needle
 
 
