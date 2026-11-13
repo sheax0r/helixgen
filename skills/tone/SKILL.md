@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.58.1'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.59.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -912,6 +912,7 @@ chat:
 - **The chain** — one line per block: position, model, and the 2–3 settings that matter
 - **IRs referenced** — basenames, so the user knows what must be loaded on the device
 - **Snapshots** — one line each (only if the recipe has them)
+- **Venue** — one line, only if a venue applied (`headphones` / `amp-in`, and the treatment the command reported)
 - **Levels** — the intended relative balance line from step 8 (or that normalization was off per preferences)
 - **Footswitches** — one line per assigned switch, rendered in **English name + position**, not a bare identifier (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …). Get the English string from `helixgen controllers` (`--json` for the machine shape). Only if the recipe has them.
 - **Expression** — one line per pedal mapping, also in English (`Expression Pedal 1 (onboard pedal, EXP 1) → Teardrop 310 Mono Pedal`, …), only if the recipe has them
@@ -1076,7 +1077,8 @@ Tell the user, in this order:
 5. **Controls** (only if 5.6 wired any) — render every controller in **English (name + physical position)**, never a bare `FS#`: the footswitch map (`Footswitch 1 (top row, 1st from left) → Compulsive Drive`, …), the expression routing (`Expression Pedal 1 → wah Pedal`, …), and any toe-switch engage (`Expression pedal toe switch → Teardrop 310 Mono (bypass)`). Use `helixgen controllers` (or `--json`) for the exact strings. Conversely, if the **user** describes a switch in plain language, run it through the small-model controller-translation sub-agent (fed the `helixgen controllers --json` mapping) to get the canonical identifier before wiring it, and validate the result against the canonical set.
 6. **The file** — the `.hsp` in the tone library (`library/tones/<variant-slug>.hsp`), with its description authored into the tone metadata (step 7a; read it back with `helixgen describe "<tone>"`). *"Open Line 6's HX Edit, connect your device via USB, and import that file."* Per user preference, run `open -R "<path-to>/<variant-slug>.hsp"` so it's pre-selected in Finder. If the user instead wants it pushed **straight onto the Stadium over the LAN** (no HX Edit), hand off to the `device` skill — a live install is more involved than a file drop. Once it's on the device, offer the measured level-match (step 9).
 7. **IRs** (only if the chain uses a user IR) — this is where step 7d's offer goes. If the user has not answered it yet, ask here: `Uses YA MRSH 412 T75 Mix 04 — want me to put it on your Stadium now? Otherwise it goes up when you install the preset.` If they already answered, report only what you actually observed — `already on your Stadium`, `uploaded just now`, or `will go up on install`. Never tell the user to import an IR by hand after a push reported success, and never promise the cab will sound — the push's "already" answer can be trusting (see 7d's wedge note).
-8. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
+8. **Venue** (only if one applied) — one clause: `Venue: headphones — room IR, FS4`.
+9. **One concrete tweak** they can try after loading (e.g. "if it's too dark, raise Treble to 0.65"; "for a thicker lead, push Tape Echo Mix to 0.25")
 
 Don't hedge with a list of 5 things to maybe try; pick one.
 
@@ -1250,12 +1252,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.58.1'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.59.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.58.1'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.59.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1434,6 +1436,73 @@ snapshot value that deliberately moves a param is expected (a factory bass prese
 corpus that way). And most bass rows have n < 8: there, read a FAIL as a NOTE — name the choice in
 the write-up rather than nudging the value into the band.
 
+## Venue
+
+A venue is what the tone is played *through*: `headphones`, `direct` (PA /
+recording / the plain cab chain) or `amp-in` (into a real guitar amp's input).
+A close-mic IR is a near-field capture; through headphones it sounds like a
+recording, not an amp, and the Helix adds no room stage of its own. The
+`headphones` venue supplies one.
+
+**Resolve it like the guitar:** named by the user → `default_venue` from
+preferences → unspecified. **Never ask about venue on a routine tone request.**
+With no venue named and `default_venue` unset, say nothing about venues and
+behave exactly as before. When one applies, state it in one clause in the
+report (`Venue: headphones — room IR, FS4 blends it`).
+
+**How.** Author the recipe in its plain (direct) form — a recipe never carries a
+venue — and let the engine transform it. Never hand-build the room split.
+
+| Want | Command |
+|------|---------|
+| New tone for a venue | `helixgen generate … --venue headphones` (no flag → `default_venue`; `--venue direct` opts out; not allowed with `-o`) |
+| Same tone, another venue, as its own variant | `helixgen library fork "<tone>" --venue amp-in` (`--venue` alone is a valid fork) |
+| Convert a variant in place | `helixgen library venue "<variant>" headphones\|direct\|amp-in [--dry-run]` |
+
+- `default_venue` never creates a second copy of an existing tone; only an
+  explicit `--venue` does. A second venue on the same guitar lands at key
+  `<guitar>@<venue>` with a name suffix `(HP)` / `(Direct)` / `(Amp In)`.
+- `headphones` adds a parallel room IR (pack-matched to the close IR, level
+  energy-matched) with a **ROOM MIC** footswitch that moves its `Level`, never
+  a bypass, plus a Tile ambience block (off, own switch). Fallback order, never
+  an error for lack of space: room IR + Tile → room IR alone → Tile only → no
+  treatment with a warning. The command names the fallback and why on stderr.
+- Tile-only is also what you get for: two live cabs, a cab bypassed per
+  snapshot or with a bypass switch, a cab disabled at base, a stock cab, a path
+  that already has a split, or an IR pack with no ROOM capture.
+- `library venue` converts in place (key, filename, name unchanged) and clears
+  the variant's `normalized` record: re-run `device normalize` afterwards.
+  `direct` removes exactly the stage the variant recorded. `amp-in` drops the
+  cabs and adds a post-amp EQ; it is one-way and refuses a cab inside a split.
+
+**Tile-only because the pack has no ROOM capture: do not stop there.** The room
+mic is what was validated by ear; Tile alone was not. Re-run with
+`--room-ir <hash>` naming a ROOM capture from the closest cab the user owns
+(`helixgen list-irs`, grep ROOM), and remember the choice (preferences/memory)
+so it is applied without asking next time.
+
+**Tweaks, in ear language** (edit the room IR block's `Level` / Tile `Mix` with
+the surgical-edit flow below):
+
+| They say | Do |
+|----------|----|
+| too roomy / washy / distant | room IR `Level` down 2–3 dB |
+| can't hear the difference | room IR `Level` up 2–3 dB |
+| low end thins when the room is on | phase cancellation against the close mic: swap to the minimum-phase copy of the same room IR |
+| wants width, not depth | enable Tile; the room mic is mono |
+| Tile is fatiguing | lower its `Mix` or leave it off |
+
+**Do not** raise `HighCut`, add a plate/hall, or change amps to fix "doesn't
+sound real in headphones"; that is the room stage's job.
+
+**Other venues.** `amp-in`: cab off, EQ on; the real amp is set clean and flat.
+`direct` for a PA: check it in mono, tighten the low cut, pull reverb and delay
+mix back (the room adds its own). `direct` for recording: judge by the recorded
+track, not an interface's direct monitor.
+
+**Siblings.** A tweak lands on that variant only. Never offer or ask to
+propagate it to the other venues' variants.
+
 ## Common Mistakes
 
 | Mistake | Fix |
@@ -1442,6 +1511,9 @@ the write-up rather than nudging the value into the band.
 | Recommending a block not in the user's library | Always verify with `list-blocks --category <cat>` first |
 | Running `helixgen` without the library env | Prefix every library-touching call with `HELIXGEN_LIBRARY` (see Prerequisites) — a wrong/empty library makes every block lookup fail |
 | Stacking too much gain | Drive `Gain` + amp `Drive` compound; back one off |
+| Hand-building a room split for headphones | Use `generate --venue headphones` / `library venue`; never build the split yourself |
+| Bypass-toggling a parallel room IR | Its footswitch moves `Level` (ROOM MIC); a bypass drops the split's balance |
+| Applying a room stage to a tone bound for a PA | PA = `direct`; the real room supplies the ambience |
 | Distorted bass on a single series lane | Dirt on a full-range bass = flabby, muddy, unreal (worst with any grit on). Split off a clean/DI lane for the fundamental — see **Bass tones** RULE |
 | Pitch/filter block left at a full-wet `Mix` on bass | Some default 100% wet (`Pitch Wham Mono`, `Mutant Filter Mono`) — no dry fundamental, so bass mutes between notes or detunes. `show-block` to check, then blend `Mix` ~0.3–0.5 (or author parallel via `generate`) — see the wet-`Mix` rule in **Bass tones** |
 | A stereo drive/wah/comp in front of the amp | Pre-amp blocks are Mono — Line 6's 66-preset factory set (guitar and bass mixed) runs 1 stereo drive to 108 mono. Stereo belongs after the cab (step 3) |

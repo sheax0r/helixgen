@@ -238,7 +238,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.58.1"  # the core version this plugin release is built against
+ENGINE_PIN = "0.59.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -1270,3 +1270,16 @@ def test_tone_skill_has_a_measured_bass_section() -> None:
     assert "not ear-validated" in bass.lower() or "not yet ear-validated" in bass.lower()
     # gate early in the workflow so the agent reads it before picking blocks
     assert text.index("Bass tones") < text.index("### 3. Pick blocks from the library")
+
+
+def test_tone_skill_has_venue_section() -> None:
+    s = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    for needle in ("## Venue", "default_venue", "generate", "--venue", "library fork",
+                   "library venue", "ROOM MIC", "--room-ir", "that variant only",
+                   "minimum-phase", "normalized"):
+        assert needle in s, needle
+
+
+def test_tone_skill_has_no_doubling_guidance() -> None:
+    s = (SKILLS_ROOT / "tone" / "SKILL.md").read_text()
+    assert "Haas" not in s and "doubled preset" not in s
