@@ -1,6 +1,6 @@
 ---
 name: device
-description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — copy a tone onto the device, remove one, reorder a setlist, back up / restore (`helixgen device copy` / `rm` / `move` / `backup` / `restore`) — or wants to TWEAK THE LOADED TONE BY HAND in the live knob editor (`device live`: the whole signal chain as knobs in a browser page). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, `device calibrate`), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`). Triggers on "put this on my Helix", "copy these presets to the device", "take this tone off my Helix", "reorder my setlist", "back up my Helix", "restore my presets", "find my Helix's IP", "normalize my tones", "calibrate my rig", "clean up my IRs", "let me tweak the knobs", "open the live editor", "dial it in by hand", "I edited this on the amp, get it back into my library".
+description: Use when the user wants helixgen presets ONTO their Helix Stadium over the network — copy a tone onto the device, remove one, reorder a setlist, back up / restore (`helixgen device copy` / `rm` / `move` / `backup` / `restore`) — or wants to TWEAK THE LOADED TONE BY HAND in the live knob editor (`device live`: the whole signal chain as knobs in a browser page). Also covers finding the device on the LAN (`device discover`), level-matching loudness (`device normalize`, `device calibrate`), on-device housekeeping (setlists, IRs, preset color + notes), and converting device content BACK into an editable `.hsp` (`device to-hsp`). Triggers on "put this on my Helix", "take this tone off my Helix", "reorder my setlist", "back up my Helix", "what changed on my device", "restore my presets", "find my Helix's IP", "normalize my tones", "calibrate my rig", "clean up my IRs", "let me tweak the knobs", "open the live editor", "dial it in by hand", "I edited this on the amp, get it back into my library".
 ---
 
 # device
@@ -55,7 +55,8 @@ Per-invocation environment (prefix each Bash call — exports don't persist):
   real address. See **Finding the device** below; `HELIXGEN_HELIX_IP` is
   an override for special cases, not the primary path.
 - `HELIXGEN_LIBRARY` — needed by verbs that touch the block library
-  (`install`/`sync` transcode `.hsp` content). Same resolution as the other
+  (`install`/`sync` transcode `.hsp` content; `device to-hsp` uses it for the
+  helixgen param-name vocabulary). `device live` itself does not need it. Same resolution as the other
   skills (see the `setup` skill's "Invoking helixgen"): honor a pre-set env
   var, else a populated `~/.helixgen/library/`, else the plugin's bundled
   `HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library"`. Carrying both
@@ -732,51 +733,88 @@ the pool and add a reference at `--pos`. (There is no special `throwaway` token
 
 ### The live chain editor: `device live` (0.60.0) — hand the knobs to the human
 
-When the user wants to **dial the loaded tone in themselves** — "let me tweak
-it", "open the knobs", "I want to adjust this by ear", or simply after you have
-put a tone on the device and they start asking for small changes one at a time
-— do **not** run a string of `set-param` calls. Start the editor and get out of
-the way:
+When the user wants to **dial a tone in themselves** — "let me tweak it", "open
+the knobs", "I want to adjust this by ear", or they keep asking for small
+changes one at a time — do **not** run a string of `set-param` calls. Start the
+editor and get out of the way.
+
+**Before you start it — the page edits whatever is ACTIVE on the device.**
+`device copy` does not load anything, so "I just copied the tone" does not mean
+the user is hearing it. Run `helixgen device active --json`: if it is not the
+tone they mean, `device load <cid>` it (or have them select it) first — and if
+you just re-copied a revision of the *active* preset, load it again too, or
+the page shows (and Save would write back) the old revision.
 
 ```bash
-helixgen device live --no-open     # LONG-RUNNING. First output line: `live editor: http://127.0.0.1:8765/`
+helixgen device live --no-open     # LONG-RUNNING. Prints `live editor: http://127.0.0.1:<port>/` once it is up
 ```
 
 - **Run it in the background** — it serves until it is stopped (Ctrl-C /
-  SIGTERM) — and read its first output line for the URL. Give the user that
-  URL; where you can open a browser view for them (the Claude desktop app's
-  browser pane), do. In a plain terminal drop `--no-open` and it opens their
-  default browser itself. `--port-http 0` picks a free port; "could not serve
-  the page … is another `helixgen device live` already running?" means one
-  already is — reuse it.
+  SIGTERM). The `live editor: http://127.0.0.1:…/` line appears a few seconds
+  after start (it connects and reads the tone first). **Never hand over a URL
+  you have not seen printed.** If the process exited instead, read its error:
+  it needs a reachable device on **firmware 1.4 or later** (on older firmware
+  fall back to `set-param`), and a free port — "could not serve the page … is
+  another `helixgen device live` already running?" *probably* means one is:
+  check that `http://127.0.0.1:8765/state` answers before reusing it,
+  otherwise re-run with `--port-http 0` (picks a free port).
+- **Do not start it with `HELIXGEN_LOCK_TOKEN` set**, and release any
+  `device lock` session you hold first (`device unlock`): a session covering
+  `editbuffer` or `all` makes the page refuse every knob ("locked by …"), and
+  one covering `library` makes it refuse Save — at the end, after the user has
+  done all the work.
+- Give the user the URL; where you can open a browser view for them (the
+  Claude desktop app's browser pane), do. In a plain terminal drop `--no-open`
+  and it opens their default browser itself.
 - **Then stop.** The human turns the knobs. Do not narrate the page, do not
-  poll it, do not re-read params to "check on" them. It is localhost-only and
-  needs nothing from you while it runs.
+  poll it, do not re-read params to "check on" them.
 - **What it is:** the ACTIVE tone as a signal chain — every block of every DSP
   path, input and output blocks included, parallel sections as side-by-side
   lanes between their split and merge — each parameter a knob, switch or list
   showing the same numbers as the Helix screen, a bypass switch per block,
   undo/redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z). **Every control writes to the
-  device immediately**, and the page follows the device: a knob turned on the
-  hardware, a footswitch, a snapshot or preset switch all show up on it.
-- **Save on the page saves on the DEVICE only** — it is the hardware's own
-  Save, in place, for a preset in the user pool. **The tone library is not
-  updated.** Say this to the user once, and act on it yourself afterwards:
-  the library `.hsp` for that tone is now **stale**, and a `device copy` of it
-  would **overwrite what they just dialed in**. Before you edit or re-copy
-  that tone, bring the device's version back with `device to-hsp` (see "The
-  other direction" above).
-- **It does not hog the device.** Unlike the other live-ops verbs it holds the
-  `editbuffer` lock only while the user is actually turning something (released
-  ~2 s later), so `device load`, `device copy` and friends keep working while
-  the page is open — load the next tone and the page follows. The reverse
-  matters too: **if you are holding a `device lock` session, the page's writes
-  are refused** ("locked by …" on the page) — `device unlock` before handing
-  the knobs over.
+  device immediately** and is heard at once, and the page follows the device: a
+  knob turned on the hardware, a footswitch, a snapshot or preset switch all
+  show up on it.
+- **Heard is not saved. Nothing is stored until the user presses Save on the
+  page** (it shows *Unsaved* until then, and `device active --json` reports
+  `"edited": true`). Unsaved tweaks live only in the device's edit buffer:
+  **`device load` — or any verb that loads a preset — discards them, and
+  `device to-hsp` does not return them** (it reads the stored preset). Stopping
+  the editor does not save. So while `edited` is true: load nothing, convert
+  nothing, copy nothing — ask the user to press Save (or confirm they want the
+  changes dropped). "Load the next tone and the page follows" is true, and it
+  throws away whatever was unsaved.
+- **Save on the page saves on the DEVICE only** — the hardware's own Save, in
+  place, into the user preset that holds the tone (for a tone loaded from a
+  setlist, the pool preset its setlist entry points at — so it changes in every
+  setlist that has it). **The tone library is not updated**, which leaves the
+  library `.hsp` **stale**: a `device copy` of it would **overwrite what they
+  just dialed in**. Close that gap yourself, **as soon as the user says they
+  are done and has saved — do not leave it for later** (a later session will
+  not know):
+
+  ```bash
+  helixgen device active --json                      # need "edited": false; take "pool_cid" (NOT "cid")
+  helixgen device to-hsp <pool_cid> -o <the tone's library .hsp>
+  ```
+
+  (`pool_cid` matters: for a tone loaded from a setlist, `cid` is the setlist
+  entry, not the preset.) Then say so in one line — the library copy now
+  matches the device.
+- **If Save is refused** ("only a user preset can be saved in place" — a
+  factory preset): the tweaks are still only in the edit buffer. Load nothing.
+  `helixgen device save` stores the edit buffer as a NEW preset (see its
+  `--help`); `to-hsp` that preset.
+- **It does not hog the device.** It holds the `editbuffer` lock only while
+  the user is actually turning something (released ~2 s later), so other
+  verbs keep working while the page is open.
 - **What it cannot do:** add, remove or move a block, or swap a model (that is
-  still the `tone` skill's edit verbs + `device copy`); a dual cab's second cab
-  and harness settings such as Trails are not shown.
-- When the user is done, stop the background process.
+  still the `tone` skill's edit verbs + `device copy` — after pulling the
+  device's version back as above); a dual cab's second cab and harness settings
+  such as Trails are not shown.
+- When the user is done (and the library is back in step), stop the background
+  process.
 
 ### Live ops on the ACTIVE tone (blocks / params / bypass / model / set-param)
 
@@ -816,6 +854,10 @@ helixgen device set-param <path> <block> <pid> <value>   # set one param live (v
   the work is done (or if the session loads other presets via
   `device load`/install/sync), restore the player's selection with
   `device load <cid>` using the cid you noted.
+- **`device load` discards unsaved edits.** `device active --json` reports
+  `"edited": true` when the edit buffer holds changes nobody has saved — the
+  player's own knob-turning on the hardware or in `device live` included.
+  Check it before loading anything, and ask before throwing their work away.
 
 ### Loudness: `device measure` (0.22.0) + `device normalize` (0.23.0; library recording 0.26.0, loop source 0.27.0, USB capture + protocol profile 0.35.0)
 
@@ -1180,8 +1222,8 @@ hardware:
   a hardware one** ([MEASURED] Stadium XL fw 1.3.2, 2026-07-29: a `set-param`
   write of `25` was accepted, read back as `25.0`, and the hardware applied a
   faithful +5.00 dB over the +20 setting — capture peak −0.59 dBFS, so not a
-  clipping artifact; see he-b9i. `device set-param` does not range-check
-  either, so a typo'd value lands silently). Treat +20 as the ceiling to design
+  clipping artifact; see he-b9i. `device set-param` refuses an out-of-range
+  value unless `--force` — the device itself still clamps nothing). Treat +20 as the ceiling to design
   against, not as a physical wall. Pick the target at or below the **quietest
   chain's ceiling** (the dry-run report shows every target's measured gain —
   read it before choosing `--target-db`).

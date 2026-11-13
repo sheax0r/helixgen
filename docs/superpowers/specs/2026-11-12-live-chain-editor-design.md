@@ -305,10 +305,19 @@ the XL, down from ~2 s).
 model and harness params (`hgc-5gh`); applying a snapshot recall's value batch
 in place instead of re-reading (`hgc-9qd`); a stream gap shorter than the
 6-second silence threshold is not detected (the 2001 frame header carries a
-sequence number that could be used); whether the active preset id of a tone
-loaded from a setlist is the pool preset or the setlist reference — Save
-refuses anything that is not a pool preset, so the failure mode is a refusal,
-not a wrong write.
+sequence number that could be used).
+
+**Found by the review of the plugin skill, and fixed in the engine before
+release:** a tone loaded *from a setlist* is active under its setlist
+reference, not its pool preset (checked on the XL), so the pool-only Save
+guard would have refused nearly everything Michael loads. Save now resolves
+the reference to the pool preset behind it — verified on throwaway objects
+that this is what persists. The same review showed an agent had no way to
+tell whether the edit buffer held unsaved work, or which preset to pull back:
+`device active` now reports `edited` and `pool_cid`, and the skill is written
+around them (heard is not saved; load discards; `to-hsp` reads the stored
+preset; pull the device's version back into the library as soon as the user
+has saved).
 
 ## Reference
 
