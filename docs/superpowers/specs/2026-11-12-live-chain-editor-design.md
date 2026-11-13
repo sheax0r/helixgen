@@ -319,6 +319,14 @@ around them (heard is not saved; load discards; `to-hsp` reads the stored
 preset; pull the device's version back into the library as soon as the user
 has saved).
 
+**Release note — 0.60.0 was published broken for this feature.** The wheel
+did not contain `liveedit/page.html` (package-data was never updated for the
+new package; the suite was green because tests import from the source tree).
+Caught by installing the published package into a throwaway environment
+before the plugin was released; fixed in 0.60.1 with a packaging test that
+fails if any non-Python file under the package is not declared, and verified
+by running the *built wheel* against the hardware. The plugin pins 0.60.1.
+
 ## Reference
 
 - Spike: `docs/superpowers/specs/assets/live-chain-editor/chain_spike.py`
