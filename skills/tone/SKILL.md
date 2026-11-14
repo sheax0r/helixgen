@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.59.1'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.60.1'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -1227,7 +1227,7 @@ ear-language table).
 
 ### 10. Iterate on feedback (when the user loads it and says it's not quite right)
 
-After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. If the change is worth recording, refresh the tone's `description_md` with `helixgen library doc` (7a). Don't git-commit library paths yourself — core auto-commits (7c).
+After the user loads the preset and reports back ("the lead is too compressed", "verses are too dark", "swap that delay for something slappier", "clean snapshot needs a touch of reverb"), don't start over. The `.hsp` you saved is the source of truth — **unless the tone has been changed on the device since you copied it** (the user turned knobs on the hardware or in the `device live` editor): then the device is ahead, and patching and re-copying your `.hsp` would overwrite their work. Check `helixgen device active --json` and pull the device's version back first (`device to-hsp` — see the `device` skill's live-editor section; unsaved edits must be saved on the device before they can be pulled). Then make the smallest edit that addresses the feedback with a single in-place `helixgen patch` call (see **Adjusting an existing tone** above; do NOT regenerate from the recipe), and tell the user what changed in one line so they can A/B. If the change is worth recording, refresh the tone's `description_md` with `helixgen library doc` (7a). Don't git-commit library paths yourself — core auto-commits (7c).
 
 Rules of thumb for translating ear-language to param moves:
 - **"Too compressed"** on a lead → back amp `Drive` off ~0.10, raise `Master`; or back drive pedal `Gain` off ~0.10
@@ -1252,12 +1252,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.59.1'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.60.1'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.59.1'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.60.1'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is

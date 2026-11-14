@@ -238,7 +238,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.59.1"  # the core version this plugin release is built against
+ENGINE_PIN = "0.60.1"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -270,6 +270,78 @@ def test_engine_pin_is_consistent_across_surfaces() -> None:
 
 
 # --- core 0.22.0 vocabulary (advisory device locks, manifest v3) --------------
+
+
+def _live_editor_section() -> str:
+    text = (SKILLS_ROOT / "device" / "SKILL.md").read_text()
+    start = text.index("### The live chain editor: `device live`")
+    end = text.index("### Live ops on the ACTIVE tone")
+    return " ".join(text[start:end].split())
+
+
+def test_device_skill_documents_live_editor() -> None:
+    """`device live` (core 0.60.0). Pinned against the SECTION, not the whole
+    file (most of these words appear elsewhere in the skill too)."""
+    sec = _live_editor_section()
+    for phrase in (
+        "helixgen device live --no-open",
+        "Run it in the background",
+        "Never hand over a URL you have not seen printed",
+        "firmware 1.4 or later",
+        "--port-http 0",
+        "Then stop.",                                   # do not narrate / poll
+        "Every control writes to the device immediately",
+        "add, remove or move a block",                  # what it cannot do
+    ):
+        assert phrase in sec, f"live-editor section lost {phrase!r}"
+
+
+def test_live_editor_section_protects_hand_dialed_work() -> None:
+    """The ways an agent following this skill could lose what the user just
+    dialed in by hand — each found by adversarial review, each must stay
+    spelled out."""
+    sec = _live_editor_section()
+    for phrase in (
+        # the page edits whatever is ACTIVE; copy does not load
+        "the page edits whatever is ACTIVE on the device",
+        "`device copy` does not load anything",
+        # heard is not saved; load discards; to-hsp reads the stored preset
+        "Nothing is stored until the user presses Save",
+        '"edited": true',
+        "discards them, and `device to-hsp` does not return them",
+        "Stopping the editor does not save",
+        # device-only save leaves the library stale; pull back NOW, by pool_cid
+        "Save on the page saves on the DEVICE only",
+        "The tone library is not updated",
+        "overwrite what they just dialed in",
+        "do not leave it for later",
+        "helixgen device to-hsp <pool_cid>",
+        "`pool_cid` matters",
+        # refused save, and the agent's own lock blocking the page
+        "If Save is refused",
+        "Do not start it with `HELIXGEN_LOCK_TOKEN` set",
+        "`device unlock`",
+    ):
+        assert phrase in sec, f"live-editor section lost the safeguard {phrase!r}"
+    # the warnings must not be reversed while keeping their words
+    assert "The tone library is updated" not in sec
+    assert "Stopping the editor saves" not in sec
+    fm = _parse_frontmatter((SKILLS_ROOT / "device" / "SKILL.md").read_text())
+    assert "device live" in fm["description"]
+    assert "tweak the knobs" in fm["description"]
+
+
+def test_tone_skill_knows_the_device_can_be_ahead_of_the_library() -> None:
+    text = " ".join((SKILLS_ROOT / "tone" / "SKILL.md").read_text().split())
+    assert "unless the tone has been changed on the device since you copied it" in text
+    assert "device live" in text and "device to-hsp" in text
+
+
+def test_device_skill_says_load_discards_unsaved_edits() -> None:
+    text = " ".join((SKILLS_ROOT / "device" / "SKILL.md").read_text().split())
+    assert "`device load` discards unsaved edits" in text
+    # the old claim that set-param does not range-check is gone
+    assert "does not range-check" not in text
 
 
 def test_device_skill_documents_device_locks() -> None:

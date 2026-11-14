@@ -1,0 +1,182 @@
+<h2>Signal chain — with splits &amp; joins</h2>
+<p class="subtitle">Still a vertical flow. Where the path splits, it opens into side-by-side lanes (A / B), then a <b>Merge</b> block rejoins them with its own mix knobs. Drag knobs, click bypass pills and split-type.</p>
+
+<style>
+  .rig { display:flex; flex-direction:column; gap:0; }
+  .blk { background:#1b1e27; border:1px solid #2c313f; border-radius:14px; padding:12px 14px 14px; position:relative; }
+  .blk.off { opacity:.45; }
+  .blk-hd { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+  .blk-role { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#8a90a2; }
+  .blk-name { font-size:14px; font-weight:650; color:#eef1f7; }
+  .spacer { flex:1; }
+  .byp { font-size:10px; font-weight:600; letter-spacing:.05em; padding:4px 10px; border-radius:999px;
+    border:1px solid #3a4152; cursor:pointer; user-select:none; color:#9aa0b2; background:#222634; }
+  .byp.on { background:#1f3a2b; border-color:#36d399; color:#4ade9a; }
+  .arrow { display:flex; justify-content:center; color:#3a4152; font-size:15px; padding:2px 0; }
+  .params { display:flex; flex-wrap:wrap; gap:14px 18px; align-items:flex-start; }
+  .knob { width:70px; text-align:center; }
+  .knob > div { cursor:ns-resize; }
+  .knob .pname { font-size:9px; color:#8a90a2; text-transform:uppercase; letter-spacing:.05em; }
+  .knob .pval { font-size:11px; color:#dfe3ec; font-weight:600; margin-top:1px; }
+  .sw { min-width:110px; }
+  .sw .pname { font-size:9px; color:#8a90a2; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+  .sw select { width:100%; background:#222634; color:#dfe3ec; border:1px solid #3a4152; border-radius:7px; padding:5px 7px; font-size:11px; }
+
+  /* split/join scaffolding */
+  .node { align-self:center; display:flex; align-items:center; gap:10px; background:#171a22;
+    border:1px dashed #44506b; border-radius:999px; padding:6px 14px; margin:4px 0; }
+  .node .tag { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#8ea0c8; font-weight:700; }
+  .node select { background:#222634; color:#cfe0ff; border:1px solid #3a4152; border-radius:7px; padding:3px 6px; font-size:11px; }
+  .lanes { display:grid; grid-template-columns:1fr 1fr; gap:14px; position:relative; margin:2px 0; }
+  .lane { border:1px solid #273049; border-radius:12px; padding:8px; background:#15171f; }
+  .lane-hd { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color:#6f86c0; margin:2px 2px 8px; display:flex; align-items:center; gap:6px; }
+  .lane.b .lane-hd { color:#c08a6f; }
+  .lane .arrow { font-size:13px; padding:1px 0; }
+  .branch { display:flex; justify-content:space-around; color:#44506b; font-size:15px; padding:0 22% 2px; }
+</style>
+
+<div class="mockup">
+  <div class="mockup-header">Path 1 · active snapshot: <b>2 — Chorus</b> &nbsp; <span style="color:#36d399">●</span> live</div>
+  <div class="mockup-body" style="background:#13151c; padding:16px;">
+    <div class="rig" id="rig"></div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:14px;">A split opens two lanes; the dashed pills are the <b>split</b> (with its type) and the <b>merge</b> (with mix knobs). Does this read clearly? Should lanes be able to hold different block counts (they can here), and do you want per-lane bypass on the whole lane too?</p>
+
+<script>
+const CHAIN = [
+  {k:"blk", role:"Gate", name:"Noise Gate", on:true, params:[
+    {t:"knob", n:"Threshold", v:-54, min:-96, max:0, u:"dB"},
+    {t:"knob", n:"Decay", v:38, min:0, max:100, u:"%"}]},
+  {k:"blk", role:"Comp", name:"LA Studio Comp", on:true, params:[
+    {t:"knob", n:"Peak Redux", v:42, min:0, max:100, u:"%"},
+    {t:"knob", n:"Gain", v:3.5, min:0, max:10, u:"dB"}]},
+  {k:"split", type:"A/B", types:["A/B","Y","Crossover"],
+   A:[
+     {k:"blk", role:"Drive", name:"Minotaur", on:true, params:[
+       {t:"knob", n:"Gain", v:62, min:0, max:100, u:"%"},
+       {t:"knob", n:"Tone", v:55, min:0, max:100, u:"%"},
+       {t:"knob", n:"Level", v:70, min:0, max:100, u:"%"}]},
+     {k:"blk", role:"Amp", name:"Brit 2204", on:true, params:[
+       {t:"knob", n:"Drive", v:67, min:0, max:10, u:""},
+       {t:"knob", n:"Bass", v:4.8, min:0, max:10, u:""},
+       {t:"knob", n:"Treble", v:5.5, min:0, max:10, u:""}]},
+     {k:"blk", role:"Cab", name:"4x12 · V30", on:true, params:[
+       {t:"sw", n:"Mic", opts:["57 Dyn","421 Dyn","121 Ribbon"], sel:"57 Dyn"},
+       {t:"knob", n:"High Cut", v:6800, min:1000, max:20000, u:"Hz"}]},
+   ],
+   B:[
+     {k:"blk", role:"Amp", name:"US Deluxe Nrm", on:true, params:[
+       {t:"knob", n:"Drive", v:35, min:0, max:10, u:""},
+       {t:"knob", n:"Bass", v:5.5, min:0, max:10, u:""},
+       {t:"knob", n:"Treble", v:6.0, min:0, max:10, u:""}]},
+     {k:"blk", role:"Cab", name:"1x12 · Blue", on:true, params:[
+       {t:"sw", n:"Mic", opts:["57 Dyn","67 Cond","121 Ribbon"], sel:"67 Cond"},
+       {t:"knob", n:"High Cut", v:7500, min:1000, max:20000, u:"Hz"}]},
+   ],
+   merge:{name:"Merge", params:[
+     {t:"knob", n:"A Vol", v:0, min:-60, max:12, u:"dB"},
+     {t:"knob", n:"B Vol", v:-2.5, min:-60, max:12, u:"dB"},
+     {t:"knob", n:"A Pan", v:-20, min:-100, max:100, u:""},
+     {t:"knob", n:"B Pan", v:20, min:-100, max:100, u:""}]}},
+  {k:"blk", role:"Delay", name:"Simple Delay", on:false, params:[
+    {t:"knob", n:"Time", v:420, min:0, max:2000, u:"ms"},
+    {t:"knob", n:"Feedback", v:28, min:0, max:100, u:"%"},
+    {t:"knob", n:"Mix", v:22, min:0, max:100, u:"%"}]},
+  {k:"blk", role:"Reverb", name:"Glitz", on:true, params:[
+    {t:"knob", n:"Decay", v:4.2, min:0, max:10, u:"s"},
+    {t:"knob", n:"Mix", v:30, min:0, max:100, u:"%"}]},
+];
+
+function knobSVG(p){
+  const frac=(p.v-p.min)/(p.max-p.min), a0=135,a1=405;
+  const ang=(a0+frac*(a1-a0))*Math.PI/180, cx=24,cy=24,r=18;
+  const px=cx+r*Math.cos(ang),py=cy+r*Math.sin(ang);
+  const s=a0*Math.PI/180, sx=cx+r*Math.cos(s), sy=cy+r*Math.sin(s);
+  const large=frac*(a1-a0)>180?1:0;
+  return `<svg width="48" height="48" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="18" fill="none" stroke="#2c313f" stroke-width="5"/>
+    <path d="M ${sx.toFixed(1)} ${sy.toFixed(1)} A 18 18 0 ${large} 1 ${px.toFixed(1)} ${py.toFixed(1)}" fill="none" stroke="#5b8cff" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="24" cy="24" r="11" fill="#262b38"/>
+    <line x1="24" y1="24" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="#eef1f7" stroke-width="2"/></svg>`;
+}
+function fmt(p){ let v=p.v; if(p.u==="Hz"&&v>=1000)return (v/1000).toFixed(1)+"k";
+  if(Number.isInteger(v))return v+(p.u?" "+p.u:""); return v.toFixed(1)+(p.u?" "+p.u:""); }
+function paramsHTML(params,addr){
+  return params.map((p,j)=>{
+    if(p.t==="knob") return `<div class="knob"><div data-addr="${addr}-${j}">${knobSVG(p)}</div><div class="pname">${p.n}</div><div class="pval" id="pv-${addr}-${j}">${fmt(p)}</div></div>`;
+    return `<div class="sw"><div class="pname">${p.n}</div><select>`+p.opts.map(o=>`<option ${o===p.sel?"selected":""}>${o}</option>`).join("")+`</select></div>`;
+  }).join("");
+}
+function blockHTML(b,addr){
+  return `<div class="blk ${b.on?"":"off"}"><div class="blk-hd">
+    <span class="blk-role">${b.role}</span><span class="blk-name">${b.name}</span>
+    <span class="spacer"></span><span class="byp ${b.on?"on":""}" data-byp="${addr}">${b.on?"ON":"BYP"}</span>
+    </div><div class="params">${paramsHTML(b.params,addr)}</div></div>`;
+}
+const PARAMREF={}; // addr -> param obj
+function reg(params,addr){ params.forEach((p,j)=>{ if(p.t==="knob") PARAMREF[addr+"-"+j]=p; }); }
+
+function render(){
+  PARAMREF.length=0; for(const k in PARAMREF) delete PARAMREF[k];
+  const rig=document.getElementById("rig"); rig.innerHTML="";
+  CHAIN.forEach((node,i)=>{
+    if(i>0 && node.k==="blk" && CHAIN[i-1].k==="blk"){ rig.insertAdjacentHTML("beforeend",'<div class="arrow">↓</div>'); }
+    if(node.k==="blk"){
+      const addr="c"+i; reg(node.params,addr);
+      rig.insertAdjacentHTML("beforeend", blockHTML(node,addr));
+      node._addr=addr;
+    } else {
+      // split node
+      rig.insertAdjacentHTML("beforeend",'<div class="arrow">↓</div>');
+      rig.insertAdjacentHTML("beforeend",
+        `<div class="node"><span class="tag">▲ Split</span><select data-split="${i}">`+
+        node.types.map(t=>`<option ${t===node.type?"selected":""}>${t}</option>`).join("")+`</select></div>`);
+      rig.insertAdjacentHTML("beforeend",'<div class="branch"><span>↙</span><span>↘</span></div>');
+      // lanes
+      let aH="", bH="";
+      node.A.forEach((b,j)=>{ const addr=`a${i}-${j}`; reg(b.params,addr); b._addr=addr;
+        aH += (j>0?'<div class="arrow">↓</div>':"")+blockHTML(b,addr); });
+      node.B.forEach((b,j)=>{ const addr=`b${i}-${j}`; reg(b.params,addr); b._addr=addr;
+        bH += (j>0?'<div class="arrow">↓</div>':"")+blockHTML(b,addr); });
+      rig.insertAdjacentHTML("beforeend",
+        `<div class="lanes"><div class="lane a"><div class="lane-hd">● Lane A</div>${aH}</div>
+         <div class="lane b"><div class="lane-hd">● Lane B</div>${bH}</div></div>`);
+      rig.insertAdjacentHTML("beforeend",'<div class="branch"><span>↘</span><span>↙</span></div>');
+      // merge
+      const maddr="m"+i; reg(node.merge.params,maddr);
+      rig.insertAdjacentHTML("beforeend",
+        `<div class="node" style="flex-direction:column; border-radius:14px; align-items:stretch; padding:10px 14px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span class="tag">▼ Merge</span></div>
+          <div class="params">${paramsHTML(node.merge.params,maddr)}</div></div>`);
+    }
+  });
+  bind();
+}
+function bind(){
+  document.querySelectorAll("[data-byp]").forEach(e=>{
+    e.onclick=()=>{ const a=e.dataset.byp; // find block by _addr
+      const toggle=(arr)=>arr.forEach(n=>{ if(n._addr===a)n.on=!n.on; if(n.k==="split"){toggle(n.A);toggle(n.B);} });
+      toggle(CHAIN); render(); };
+  });
+  document.querySelectorAll("[data-addr]").forEach(h=>{
+    const p=PARAMREF[h.dataset.addr]; if(!p)return;
+    const down=(e)=>{ const sy=(e.touches?e.touches[0].clientY:e.clientY), sv=p.v;
+      const mv=(e2)=>{ const y=(e2.touches?e2.touches[0].clientY:e2.clientY);
+        let nv=sv+(sy-y)/120*(p.max-p.min); nv=Math.max(p.min,Math.min(p.max,nv));
+        p.v=(p.max-p.min)>50?Math.round(nv):Math.round(nv*10)/10;
+        h.innerHTML=knobSVG(p); const pv=document.getElementById("pv-"+h.dataset.addr); if(pv)pv.textContent=fmt(p); };
+      const up=()=>{ ["mousemove","mouseup","touchmove","touchend"].forEach(ev=>document.removeEventListener(ev,ev.startsWith("mouse")?(ev==="mousemove"?mv:up):(ev==="touchmove"?mv:up))); };
+      const upF=()=>{ document.removeEventListener("mousemove",mv); document.removeEventListener("mouseup",upF);
+        document.removeEventListener("touchmove",mv); document.removeEventListener("touchend",upF); };
+      document.addEventListener("mousemove",mv); document.addEventListener("mouseup",upF);
+      document.addEventListener("touchmove",mv,{passive:false}); document.addEventListener("touchend",upF);
+      e.preventDefault();
+    };
+    h.addEventListener("mousedown",down); h.addEventListener("touchstart",down,{passive:false});
+  });
+}
+render();
+</script>
