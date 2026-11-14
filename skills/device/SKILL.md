@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.60.1'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.61.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -764,8 +764,12 @@ helixgen device live --no-open     # LONG-RUNNING. Prints `live editor: http://1
   one covering `library` makes it refuse Save — at the end, after the user has
   done all the work.
 - Give the user the URL; where you can open a browser view for them (the
-  Claude desktop app's browser pane), do. In a plain terminal drop `--no-open`
-  and it opens their default browser itself.
+  Claude desktop app's browser pane), do.
+- **How it opens (0.61.0):** by default `device live` opens in a standalone,
+  chromeless app window with its own profile — no `127.0.0.1` URL in the user's
+  browser history — and closing that window stops the editor. `--browser` opens
+  a tab in their default browser instead. `--no-open` (the agent/background
+  path) is unchanged: it prints the URL and opens nothing.
 - **Then stop.** The human turns the knobs. Do not narrate the page, do not
   poll it, do not re-read params to "check on" them.
 - **What it is:** the ACTIVE tone as a signal chain — every block of every DSP
@@ -776,6 +780,14 @@ helixgen device live --no-open     # LONG-RUNNING. Prints `live editor: http://1
   device immediately** and is heard at once, and the page follows the device: a
   knob turned on the hardware, a footswitch, a snapshot or preset switch all
   show up on it.
+- **Switch snapshot or preset from the page (0.61.0):** the page can now change
+  the active snapshot and load a different preset itself — not only follow
+  changes made on the hardware. Loading a preset while there are unsaved edits
+  prompts Save / Discard / Cancel first.
+- **Adjective search (0.61.0):** a search box takes a tone adjective (type-ahead
+  over known adjectives) and highlights the knobs in active (non-bypassed)
+  blocks that affect that quality, dimming the rest. It points at the real knobs
+  to turn — it is not a dial.
 - **Heard is not saved. Nothing is stored until the user presses Save on the
   page** (it shows *Unsaved* until then, and `device active --json` reports
   `"edited": true`). Unsaved tweaks live only in the device's edit buffer:
@@ -1470,7 +1482,7 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   install it alongside device first:
 
   ```bash
-  uv tool install --force 'helixgen[device,linkkey]==0.60.1'
+  uv tool install --force 'helixgen[device,linkkey]==0.61.0'
   helixgen device link-key          # follow the printed prompt; import one IR
   ```
 
@@ -1539,7 +1551,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.60.1'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.61.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
