@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.63.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.64.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -1252,12 +1252,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.63.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.64.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.63.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.64.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1458,6 +1458,7 @@ venue — and let the engine transform it. Never hand-build the room split.
 | New tone for a venue | `helixgen generate … --venue headphones` (no flag → `default_venue`; `--venue direct` opts out; not allowed with `-o`) |
 | Same tone, another venue, as its own variant | `helixgen library fork "<tone>" --venue amp-in` (`--venue` alone is a valid fork) |
 | Convert a variant in place | `helixgen library venue "<variant>" headphones\|direct\|amp-in [--dry-run]` |
+| Bring old headphones variants up to the room High Cut | `helixgen library venue-retrofit [--apply]` (dry-run by default) |
 
 - `--room tile` forces the Tile-only form; `HELIXGEN_DEFAULT_VENUE` overrides the
   preference for one call.
@@ -1469,6 +1470,18 @@ venue — and let the engine transform it. Never hand-build the room split.
   a bypass, plus a Tile ambience block (off, own switch). Fallback order, never
   an error for lack of space: room IR + Tile → room IR alone → Tile only → no
   treatment with a warning. The command names the fallback and why on stderr.
+- **High Cut on both mics.** The room mic carries more top-end hash than the
+  close mic, which is harsh through headphones. So `headphones` darkens the
+  whole cab stage: it clamps a wide-open close IR's `HighCut` to the
+  `headphones_highcut_hz` preference (default **8000 Hz**) and mirrors the close
+  mic's `HighCut`/`LowCut` onto the room IR (an author's own close cut is kept,
+  not re-clamped, and still mirrored). `--room-highcut <Hz>` overrides the
+  preference for one call; `--room-highcut off` (or `headphones_highcut_hz:
+  null`) disables the ceiling. `direct` restores the close mic to wide open.
+- **Variants built before 0.64.0** have the room mic wide open. Bring them in
+  line with `helixgen library venue-retrofit` (dry-run; `--apply` to write) — it
+  mirrors the cut onto every old room-IR variant and **leaves alone** any room
+  IR whose `HighCut` was set by hand.
 - Tile-only is also what you get for: two live cabs, a cab bypassed per
   snapshot or with a bypass switch, a cab disabled at base, a stock cab, a path
   that already has a split, or an IR pack with no ROOM capture.
@@ -1498,6 +1511,7 @@ snaps back to the old level.
 |----------|----|
 | too roomy / washy / distant | room IR `Level` down 2–3 dB |
 | can't hear the difference | room IR `Level` up 2–3 dB |
+| harsh / sharp / fizzy with the room mic on | the room IR is passing full-range top: cut its `HighCut` to match the close mic (by coordinate), e.g. 8000 → 6500. The venue cuts both mics by default, so this is a brighter-than-wanted result or an old variant — consider `venue-retrofit`, or lower `headphones_highcut_hz` |
 | low end thins when the room is on | phase cancellation against the close mic: swap to the minimum-phase copy of the same room IR |
 | wants width, not depth | enable Tile; the room mic is mono |
 | Tile is fatiguing | lower its `Mix` or leave it off |
