@@ -9,7 +9,7 @@ Claude Code plugin + single-plugin marketplace for helixgen: generate Line 6 Hel
 No MCP server, no `.mcp.json`. Skills drive `helixgen` **CLI**, provisioned as isolated tool:
 
 ```bash
-uv tool install 'helixgen[device]==0.64.0'
+uv tool install 'helixgen[device]==0.65.0'
 ```
 
 `setup` skill step 0 performs/verifies this (`helixgen --version`), handles stale-shadow failure mode (broken `helixgen` earlier on PATH — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` — `NO_COLOR=1` matters: with `FORCE_COLOR` set, uv emits ANSI codes inside substitution — or fall back to plain `~/.local/bin/helixgen` path, never touch ambient Python), upgrades with `uv tool install --force 'helixgen[device]==X.Y.Z'`.
@@ -34,6 +34,7 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 
 - **Worktrees, branched from fresh `origin/main`.** All non-trivial work in git worktree whose branch starts from freshly-fetched `origin/main` — never commit directly on local `main`. Fetch again before picking release version number.
 - **Adversarial review before shipping.** Before merging PR, dispatch at least one independent review subagent prompted to *break* change. Confirmed findings fixed or explicitly deferred to backlog.
+- **Watch CI and merge green PRs — don't wait to be asked.** The default here is to get work landed: once a PR this session opened is green (CI passing, review findings fixed, mergeable), merge it. Respect the release order: core PR → merge → **the owner pushes the `vX.Y.Z` tag** that publishes to PyPI (do not push core release tags or move plugin `stable` by hand — those are owner/workflow-owned) → then the plugin PR (whose pin needs the PyPI release) merges. Re-fetch both repos' `origin/main` before merging: concurrent releases move `main` and take version numbers, so reconcile (merge, not rebase) and re-pick the next free version first.
 - **Agent-facing surfaces ship in sync — across repos.** Skills describe CLI behavior implemented in helixgen-core. Core behavior change that skills describe needs companion PR here updating `skills/*` + synced `docs/` copies (`CLI.md`, `recipe-reference.md`, `helix-protocol.md`); land two PRs together, cross-reference.
 - **Skills operate through CLI, not source.** Skills must let agent work purely via `helixgen` CLI; behavioral contracts live in CLI's per-verb `--help` (pinned by core's `tests/test_cli_parity.py`) + synced docs. Running engine = uv-tool-installed package — reading local checkout source can mislead about running version.
 - **Never commit paid IR packs or personal device exports.**
