@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.65.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.66.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -612,6 +612,8 @@ Rules:
 - Snapshot 1 (index 0) is the one that loads on hardware boot.
 - Block names in `disable` / `params` must already exist in the path's `blocks`.
 - Param names in `params` are validated like base params — run `show-block` if unsure.
+
+**Editing snapshots on an existing `.hsp` (no regenerate).** The `snapshots` array above authors scenes at `generate` time. To add, name, clone, activate, or remove a snapshot on a preset that **already exists** — one generated earlier and since surgically edited, or one pulled from the hardware with `device to-hsp` — use the in-place verbs `helixgen set-snapshot` / `helixgen remove-snapshot` (or the `set_snapshot` / `remove_snapshot` `patch` ops), the same decompile-free way the controller ops (5.6) add footswitches. `set-snapshot` synthesizes the 8-slot snapshot meta for a preset authored without any, so a snapshot-less preset can gain scenes in place; `--clone-from` copies a scene's full state (never its name); inline `--param`/`--disable`/`--enable` are byte-identical to `set-param --snapshot`. Reach for these instead of regenerating, which discards prior in-place edits. Full semantics in `docs/CLI.md`.
 
 Common patterns:
 - **Rhythm/Lead**: lead = higher amp `Drive` + `Master`, +0.10 reverb `Mix`, +0.15 delay `Mix`
@@ -1252,12 +1254,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.65.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.66.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.65.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.66.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
