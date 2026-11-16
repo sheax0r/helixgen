@@ -1502,16 +1502,19 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
 `device backup` reads **every** preset off the device, so it is not free — back
 up only when it buys recoverability the library's own git history doesn't:
 
-- **Before a destructive device op** — `rm`, `restore`, `sync`, or any
-  `--prune`. The pre-op photograph is the only undo for bytes you're about to
-  overwrite or delete on the hardware.
+- **Before a destructive device op** — `rm`, `restore` (above all `--prune`),
+  `delete-ir`, or `ir-prune --yes`. The pre-op photograph is the only undo for
+  bytes you're about to overwrite or delete on the hardware.
 - **Once, at the end of a multi-tone session** — to record the final device
   state as a readable diff.
 
-**Do not back up after a routine single-tone push.** That tone is already in
-`~/.helixgen` git history; re-photographing the whole device adds nothing and
-just re-reads every preset. Same for "offer a backup every round" — one
-photograph per session, not one per change.
+**Do not back up after a routine single-tone push.** A tone copied from the
+tracked library is already in `~/.helixgen` git history, so re-photographing the
+whole device adds nothing and just re-reads every preset. Same for "offer a
+backup every round" — one photograph per session, not one per change. (A tone
+pushed from an **ad-hoc path outside the library** isn't in that history —
+there, the recoverable copy is the source `.hsp`, so keep it rather than reach
+for a device backup.)
 
 ```bash
 helixgen device backup --dry-run     # what drifted since the last photograph?
@@ -1552,8 +1555,9 @@ Tightly:
 4. **IRs** — uploaded vs any that couldn't be resolved (so the user registers
    them).
 5. **Whether it's backed up** — for a destructive op or the end of a multi-tone
-   session, offer to back up / commit. After a single-tone push, say it's in the
-   library git history and skip the device backup.
+   session, offer to back up / commit. After a single-tone push from the tracked
+   library, say it's in the library git history and skip the device backup (for
+   a push from an ad-hoc path, point at the source `.hsp` instead).
 
 ## Failure playbook — the exact errors
 
