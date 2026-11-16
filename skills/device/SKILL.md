@@ -1499,8 +1499,22 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
 
 ### 4. Photograph the device
 
-After a session of changes, take a backup so the state is recoverable and the
-diff is readable:
+`device backup` reads **every** preset off the device, so it is not free — back
+up only when it buys recoverability the library's own git history doesn't:
+
+- **Before a destructive device op** — `rm`, `restore` (above all `--prune`),
+  `delete-ir`, or `ir-prune --yes`. The pre-op photograph is the only undo for
+  bytes you're about to overwrite or delete on the hardware.
+- **Once, at the end of a multi-tone session** — to record the final device
+  state as a readable diff.
+
+**Do not back up after a routine single-tone push.** A tone copied from the
+tracked library is already in `~/.helixgen` git history, so re-photographing the
+whole device adds nothing and just re-reads every preset. Same for "offer a
+backup every round" — one photograph per session, not one per change. (A tone
+pushed from an **ad-hoc path outside the library** isn't in that history —
+there, the recoverable copy is the source `.hsp`, so keep it rather than reach
+for a device backup.)
 
 ```bash
 helixgen device backup --dry-run     # what drifted since the last photograph?
@@ -1509,8 +1523,9 @@ git -C ~/.helixgen diff              # read the change (textconv renders .sbe)
 git -C ~/.helixgen add -A backup && git -C ~/.helixgen commit -m "device: <what>"
 ```
 
-Committing the backup is the user's call, not an automatic engine action — offer
-it, don't assume it. This is also how you answer "what changed on my Helix?":
+Both **running** and **committing** the backup are the user's call, not
+automatic — offer, don't assume (the pre-destructive-op backup is the one you
+may just take). This is also how you answer "what changed on my Helix?":
 `backup --dry-run` against live, or `git log`/`git diff` against history.
 
 ### 5. Restore
@@ -1539,7 +1554,10 @@ Tightly:
 3. **What errored and the fix** — each failure with its remedy.
 4. **IRs** — uploaded vs any that couldn't be resolved (so the user registers
    them).
-5. **Whether it's backed up** — and offer to commit if not.
+5. **Whether it's backed up** — for a destructive op or the end of a multi-tone
+   session, offer to back up / commit. After a single-tone push from the tracked
+   library, say it's in the library git history and skip the device backup (for
+   a push from an ad-hoc path, point at the source `.hsp` instead).
 
 ## Failure playbook — the exact errors
 
