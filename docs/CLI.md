@@ -352,7 +352,7 @@ or ambiguous name exits 1. This resolution order is shared by `library show`,
   is always saved, and the command exits nonzero if any file failed; a
   failure after a file was placed (manifest registration) names the exact
   recovery command (copy the `.hsp` into the library directory).
-- `helixgen library venue <variant> headphones|direct|amp-in [--room-ir HASH_OR_WAV] [--room auto|tile] [--room-highcut HZ|off] [--dry-run] [--json]` —
+- `helixgen library venue <variant> headphones|direct|amp-in [--room-ir HASH_OR_WAV] [--room auto|tile] [--room-highcut HZ|off] [--force] [--dry-run] [--json]` —
   convert a variant **in place** to another venue. `<variant>` resolves like
   `library fork`'s source (an ambiguous multi-variant slug errors listing the
   `preset_name`s). The `.hsp` is rewritten and the variant's `venue` /
@@ -364,12 +364,30 @@ or ambiguous name exits 1. This resolution order is shared by `library show`,
   recorded and restores the close mic's cut; `amp-in` removes the cabs and adds
   a post-amp EQ (one-way). The venue the variant already has errors
   (`already <venue>`); a variant with no recorded venue counts as direct.
+  **Venue-drop guard (hgc-es5):** a conversion that would drop a recorded
+  **room-IR** treatment (its parallel room-mic lane) — e.g. an in-place
+  `direct`/`amp-in` of a room-ir headphones variant — is **refused** unless
+  `--force`, with a message naming the dropped lane and pointing at
+  `library room-level`. It is a requested-vs-recorded `treatment` compare (no
+  structural parsing); `--force` proceeds, `--dry-run` previews without tripping
+  it, and a variant whose recorded treatment is not room-ir is never guarded.
   `--room-highcut <Hz>` sets the headphones close-mic High Cut ceiling (mirrored
   onto the room IR); `off` disables it; default is the `headphones_highcut_hz`
   preference (8000). Warnings on stderr + a one-line `venue:` summary;
   `--dry-run` runs the transform in memory and writes nothing. `--library` /
   `--irs-dir` (or `$HELIXGEN_LIBRARY` / `$HELIXGEN_IRS`) choose the block
   library and IRs used.
+- `helixgen library room-level <variant> LEVEL_DB [--library L]` — turn a
+  **room-IR headphones** variant's parallel room-mic lane up or down **in
+  place**, to tame a too-loud/noisy room **without rebuilding the tone** (the
+  full-regenerate hammer that drops the lane, hgc-3am). `<variant>` resolves like
+  `library venue`'s. `LEVEL_DB` is the room IR's new `Level` in dB; a **negative**
+  value needs the `--` sentinel (`helixgen library room-level MyTone -- -45`).
+  The venue, the `treatment` and the lane's **structure** are untouched — only
+  the room IR's `Level` moves, and the ROOM MIC footswitch's "on" level (its
+  controller `max`) moves with it, so toggling the room on lands at the new
+  blend. `venue_detail.room_level_db` is updated and the variant's loudness
+  stamp cleared. Refuses a variant whose recorded treatment is not room-ir.
 - `helixgen library venue-retrofit [--room-highcut HZ|off] [--apply] [--json] [--library DIR] [--irs-dir DIR]` —
   sweep every room-IR `headphones` variant and bring its room mic in line with
   the current High Cut behaviour (mirror the close mic's cut, re-match the room
