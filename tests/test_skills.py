@@ -1055,7 +1055,7 @@ def test_skills_live_where_the_plugin_loader_scans_them() -> None:
         "a second copy under .claude/skills/ will load as duplicates or "
         "shadow the real ones")
     assert {p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()} == {
-        "setup", "tone", "device"}
+        "setup", "tone", "device", "live"}
 
 
 def test_no_command_stubs_shadow_the_skills() -> None:
