@@ -29,7 +29,7 @@ A throwaway spike proved the loop on the Stadium XL on 2026-11-12 (see *Evidence
 - **No structural editing** **[Michael]** — no adding, removing, reordering blocks, no creating splits, no model swaps. *"I don't want to build an arbitrary editor yet. But I don't want to close the door to that."* See *Decisions* 9 for what "not closing the door" requires.
 - **No optimistic load from the library** **[Michael]** — the page renders from the device, not from a guessed library file.
 - **No device-vs-library drift report** in this work — wanted later, tracked as `hgc-wv1` in the core beads tracker.
-- **No intent dials.** The adjective-dial tweaker on core's unmerged `tweak-ui` branch is a different UI and is not part of this (see *Decisions* 1).
+- **No intent dials.** The adjective-dial tweaker from an earlier abandoned prototype was a different UI and is not part of this (see *Decisions* 1).
 - **No adjective search yet** **[Michael]** — wanted later, tracked as `hgc-nci`: a search box over known tone adjectives that *highlights* the knobs (in non-bypassed blocks) affecting that quality and dims the rest. This is how adjectives return — as a highlight layer over the real knobs, not as dials. The only thing it asks of this build: every control on the page is addressable by (DSP path, grid slot, param id) so a highlight can be applied without re-rendering.
 - Not remote, not multi-user, no phone/tablet access: localhost only.
 - No snapshot editing tools (clone, rename) and no controller/footswitch assignment UI.
@@ -70,22 +70,22 @@ The spike is preserved at `docs/superpowers/specs/assets/live-chain-editor/chain
 - `helixgen.device.untranscode` — already derives lane structure (split↔join pairing, which row-1 blocks a split brackets) when converting device content to `.hsp`; `view.branch_span` and `transcode._split_branch_gps` are the matching readers.
 - Advisory device locks (`_locked("editbuffer", …)` in `cli_device.py`).
 
-**On the unmerged `tweak-ui` branch** (core, local only, 31 commits ahead of main, no PR) — generic pieces worth lifting, independent of its intent-dial logic:
+**From an earlier abandoned prototype** (core, local only, never merged) — generic pieces worth lifting, independent of its intent-dial logic:
 
-- `tweak/server.py`: the localhost-only `ThreadingHTTPServer` with Host/Origin/Content-Type guards (anti DNS-rebind / cross-origin), the **two-lock split** (`devlock` serializes device I/O, `cond` guards in-memory state + SSE — commit `4583a1a`), the SSE push loop, and the **coalescing subscriber loop** (commit `bff9684`: param events apply inline from the event payload, at most one rebuild per poll batch, a preset switch rebuilds from the pushed `/setEditBuffer` blob with zero device I/O).
-- `tweak/events.py`: decoders for `/setParamValue [origin, seq, path, block, snap, pid, value]`, `/activateSnapshot`, `/setEditBuffer` (pushed live blob), `/loadContentRef`.
+- its `server.py`: the localhost-only `ThreadingHTTPServer` with Host/Origin/Content-Type guards (anti DNS-rebind / cross-origin), the **two-lock split** (`devlock` serializes device I/O, `cond` guards in-memory state + SSE), the SSE push loop, and the **coalescing subscriber loop** (param events apply inline from the event payload, at most one rebuild per poll batch, a preset switch rebuilds from the pushed `/setEditBuffer` blob with zero device I/O).
+- its `events.py`: decoders for `/setParamValue [origin, seq, path, block, snap, pid, value]`, `/activateSnapshot`, `/setEditBuffer` (pushed live blob), `/loadContentRef`.
 - `device/client.py`: `blocks_meta_from_edit_buffer()` / `blocks_meta_from_blob()` (pure parsers).
-- `tests/test_tweak_server.py`: the fake-client / fake-subscriber test pattern.
+- its server tests: the fake-client / fake-subscriber test pattern.
 
 ## Decisions
 
-1. **Independent of the intent-dial tweaker; built from fresh `origin/main`.** **[call]** A new package in core (working name `helixgen/liveedit/`) lifts the generic server/event/parser pieces listed above out of `tweak-ui` (copy with attribution in the commit message; do not merge the branch). `tweak-ui` stays parked and untouched; its intent library (`tweak/_intents.json`) is the starting material for the later adjective-highlight feature (`hgc-nci`). Rationale: the editor needs none of `tweak-ui`'s intent, resolve, or `.hsp` dual-write code, and that code carries its own unresolved hardware questions.
+1. **Independent of the intent-dial tweaker; built from fresh `origin/main`.** **[call]** A new package in core (working name `helixgen/liveedit/`) lifts the generic server/event/parser pieces listed above out of the earlier prototype (copy with attribution in the commit message; do not merge it). The prototype stays parked and untouched; its intent library (`_intents.json`) is the starting material for the later adjective-highlight feature (`hgc-nci`). Rationale: the editor needs none of the prototype's intent, resolve, or `.hsp` dual-write code, and that code carries its own unresolved hardware questions.
 
-2. **The device is the truth; the server holds no `.hsp`.** **[call]** `tweak-ui` kept an in-memory `.hsp` and dual-wrote every change, mapping device blocks to `.hsp` blocks by ordinal — a mapping its own docstring flags as unvalidated, and one that cannot represent input/output/split/merge params at all. The editor instead keeps one in-memory structure parsed from the live edit buffer (all blocks, all params, raw units) and writes only to the device. This removes the mapping problem entirely and is what makes goal 1's input/output params free.
+2. **The device is the truth; the server holds no `.hsp`.** **[call]** The earlier prototype kept an in-memory `.hsp` and dual-wrote every change, mapping device blocks to `.hsp` blocks by ordinal — a mapping its own docstring flags as unvalidated, and one that cannot represent input/output/split/merge params at all. The editor instead keeps one in-memory structure parsed from the live edit buffer (all blocks, all params, raw units) and writes only to the device. This removes the mapping problem entirely and is what makes goal 1's input/output params free.
 
 3. **One process, one device connection, in-process client.** The verb starts a server bound to `127.0.0.1`, opens one `HelixClient` and one `HelixSubscriber`, and serves a single page. Working verb name: **`helixgen device live`** **[call]** (options `--port-http`, `--no-open`, plus the standard `--ip/--port`). It holds the `editbuffer` advisory lock for its lifetime **[call]**, so other helixgen processes on the machine that mutate the edit buffer wait rather than fight the page.
 
-4. **Load = one read.** On start, on reconnect, and on the page's explicit "re-read" control: one `read_edit_buffer()`, parsed into the chain structure. Never a per-block read. A preset switch rebuilds from the pushed `/setEditBuffer` blob (no device I/O), as `tweak-ui` does.
+4. **Load = one read.** On start, on reconnect, and on the page's explicit "re-read" control: one `read_edit_buffer()`, parsed into the chain structure. Never a per-block read. A preset switch rebuilds from the pushed `/setEditBuffer` blob (no device I/O), as the prototype does.
 
 5. **Live write path.**
    - *Server:* a write is `/ParamValueSet` / `/BlockEnableSet` sent with no settle-drain and a short ack wait. This becomes a **supported option on the public client methods** (e.g. a keyword on `set_param` / `set_block_enable`) — not a call into `_rpc` from outside the client. Default behavior of every existing caller is unchanged. The server clamps to the advertised range from its own cached state (no per-write device read) before sending.
@@ -138,8 +138,8 @@ helixgen device live   (127.0.0.1 only; Host/Origin guards; holds `editbuffer` l
 Endpoint names and payload shapes are illustrative; the builder owns them. Requirements that are not illustrative:
 
 - **Deltas, not full-state pushes, for value changes.** A param event from the device updates one control on the page; it must not re-render the chain (that would kill an in-progress drag elsewhere and thrash at event rates).
-- **`/setBlockEnable` must be decoded** from the 2001 stream (it is documented in `docs/helix-protocol.md` but `tweak-ui`'s decoder does not handle it) so hardware/footswitch bypass changes reach the page.
-- **Snapshot switch** (from the device): the page must show the new snapshot's values. One coalesced `read_edit_buffer()` is acceptable; rebuilding from cached per-snapshot data with no I/O (as `tweak-ui` does for effect blocks) is an optimization the builder may take if it covers all block types.
+- **`/setBlockEnable` must be decoded** from the 2001 stream (it is documented in `docs/helix-protocol.md` but the prototype's decoder does not handle it) so hardware/footswitch bypass changes reach the page.
+- **Snapshot switch** (from the device): the page must show the new snapshot's values. One coalesced `read_edit_buffer()` is acceptable; rebuilding from cached per-snapshot data with no I/O (as the prototype does for effect blocks) is an optimization the builder may take if it covers all block types.
 - **Connection loss** is a visible state on the page; controls are disabled or clearly marked while disconnected; on reconnect the server re-reads and pushes fresh structure.
 - **Write failure** is reported to the page and shown on the affected control; the control reverts to the device's last known value.
 
@@ -175,7 +175,7 @@ Endpoint names and payload shapes are illustrative; the builder owns them. Requi
 ## Questions for Michael
 
 1. **Should Save also update the library?** Device-only save leaves the library's `.hsp` stale — and `device copy` upserts by name, so a later copy of that tone from the library would overwrite the tweaks on the device. Options: (a) Save = device save, then pull the saved preset back into the library file of the same name via the existing `to-hsp` path (one button; relies on round-trip fidelity; the library is git-tracked so it is recoverable); (b) device-only Save plus a separate "update library" button; (c) device-only in v1, library sync stays a manual `device to-hsp`, with the future drift report (`hgc-wv1`) as the safety net.
-2. **Intent dials stay parked** on `tweak-ui`, untouched by this work — agreed?
+2. **Intent dials stay parked** (the earlier prototype, untouched by this work) — agreed?
 3. **Snapshot buttons on the page** (switch snapshot from the browser, not only from the footswitch) — in v1 or later? It is cheap (`activate_snapshot` exists) but is the first step past "tweak and bypass only".
 
 ## Revision 2026-11-12 — after the builder check and the first hardware probes
@@ -331,6 +331,4 @@ by running the *built wheel* against the hardware. The plugin pins 0.60.1.
 
 - Spike: `docs/superpowers/specs/assets/live-chain-editor/chain_spike.py`
 - Layout mockup: `docs/superpowers/specs/assets/live-chain-editor/layout-mockup-splits.html`
-- Prior design this departs from: `docs/superpowers/specs/2026-10-27-tone-tweaker-ui-design.md`
-- Core: branch `tweak-ui` (worktree `~/git/helixgen-core/.worktrees/tweak-ui`), commits `4583a1a`, `bff9684`, `113ddff`, `d8e504d`
 - Deferred: `hgc-wv1` (device-vs-library drift report), `hgc-nci` (adjective search → knob highlight)
