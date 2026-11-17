@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.76.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.77.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -817,6 +817,11 @@ helixgen device live --no-open     # LONG-RUNNING. Prints `live editor: http://1
   (`pool_cid` matters: for a tone loaded from a setlist, `cid` is the setlist
   entry, not the preset.) Then say so in one line — the library copy now
   matches the device.
+- **Library drawer (0.77.0).** `device live` also carries the tone + IR
+  **library drawer** (browse / diff / reconcile library vs device), and
+  `/helixgen:live` is the launcher for the whole workspace. After a Save, the
+  drawer's **pull ←** on the stale row reconciles the library copy, so the manual
+  `to-hsp` above is now the fallback, not the only path.
 - **If Save is refused** ("only a user preset can be saved in place" — a
   factory preset): the tweaks are still only in the edit buffer. Load nothing.
   `helixgen device save` stores the edit buffer as a NEW preset (see its
@@ -1485,7 +1490,7 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   install it alongside device first:
 
   ```bash
-  uv tool install --force 'helixgen[device,linkkey]==0.76.0'
+  uv tool install --force 'helixgen[device,linkkey]==0.77.0'
   helixgen device link-key          # follow the printed prompt; import one IR
   ```
 
@@ -1572,7 +1577,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.76.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.77.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes

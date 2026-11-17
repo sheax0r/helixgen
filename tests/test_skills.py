@@ -238,7 +238,7 @@ def test_setup_skill_documents_cli_provisioning() -> None:
     assert "helixgen device --help" in text
 
 
-ENGINE_PIN = "0.76.0"  # the core version this plugin release is built against
+ENGINE_PIN = "0.77.0"  # the core version this plugin release is built against
 
 
 def test_engine_pin_is_consistent_across_surfaces() -> None:
@@ -1055,7 +1055,7 @@ def test_skills_live_where_the_plugin_loader_scans_them() -> None:
         "a second copy under .claude/skills/ will load as duplicates or "
         "shadow the real ones")
     assert {p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()} == {
-        "setup", "tone", "device"}
+        "setup", "tone", "device", "live"}
 
 
 def test_no_command_stubs_shadow_the_skills() -> None:
