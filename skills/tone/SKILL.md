@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.75.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.76.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -1254,12 +1254,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.75.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.76.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.75.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.76.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1460,6 +1460,7 @@ venue — and let the engine transform it. Never hand-build the room split.
 | New tone for a venue | `helixgen generate … --venue headphones` (no flag → `default_venue`; `--venue direct` opts out; not allowed with `-o`) |
 | Same tone, another venue, as its own variant | `helixgen library fork "<tone>" --venue amp-in` (`--venue` alone is a valid fork) |
 | Convert a variant in place | `helixgen library venue "<variant>" headphones\|direct\|amp-in [--dry-run]` |
+| Tame a too-loud or noisy room, keeping the lane | `helixgen library room-level "<variant>" -- <dB>` (in place; a negative dB needs the `--`) |
 | Bring old headphones variants up to the room High Cut | `helixgen library venue-retrofit [--apply]` (dry-run by default) |
 
 - `--room tile` forces the Tile-only form; `HELIXGEN_DEFAULT_VENUE` overrides the
@@ -1491,6 +1492,16 @@ venue — and let the engine transform it. Never hand-build the room split.
   the variant's `normalized` record: re-run `device normalize` afterwards.
   `direct` removes exactly the stage the variant recorded. `amp-in` drops the
   cabs and adds a post-amp EQ; it is one-way and refuses a cab inside a split.
+- **Too loud or noisy room? Tame it — don't replace the venue.** The "amp in
+  room" feel IS the parallel room-mic lane, so reach for
+  `helixgen library room-level "<variant>" -- <dB>`: it moves the room IR's
+  `Level` **in place**, the venue / treatment / lane structure stay, the ROOM
+  MIC footswitch's "on" level moves with it, and the `normalized` stamp clears
+  (re-run `device normalize`). A negative dB needs the `--` sentinel. Converting
+  to `direct`/`amp-in` would **drop** that lane entirely — so `library venue`
+  **refuses** a room-ir drop unless `--force` (`--dry-run` previews without
+  tripping it). Use `room-level` to adjust the room; `venue --force` only to
+  truly replace it.
 
 **Tile-only because the pack has no ROOM capture: do not stop there.** The room
 mic is what was validated by ear; Tile alone was not. Re-run with
