@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.77.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.78.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -68,8 +68,9 @@ descriptions used to play). The verbs this skill drives:
 
 | Verb | Use | Output |
 |---|---|---|
-| `helixgen list-blocks [--category <cat>] [--json]` | survey the library (categories: amp/cab/drive/delay/reverb/modulation/filter/eq/dynamics/pitch/volume/send) | text grouped by category, one `<display_name>  [<model_id>]` per line; `--json` = array of `{display_name, model_id, category}` |
-| `helixgen show-block "<name-or-id>" [--json]` | exact param names/types/defaults/ranges for one block | text or `{display_name, model_id, category, aliases, params}` |
+| `helixgen list-blocks [--category <cat>] [--json]` | survey the library (categories: amp/cab/drive/delay/reverb/modulation/filter/eq/dynamics/pitch/volume/send) | text grouped by category, one `<display_name>  [<model_id>]` per line, with `-> superseded by <name> [<id>]` on a legacy model that has a native successor (step 3); `--json` = array of `{display_name, model_id, category, superseded_by}` |
+| `helixgen show-block "<name-or-id>" [--json]` | exact param names/types/defaults/ranges for one block, plus a `superseded by:` line when it is a legacy model with a native successor | text or `{display_name, model_id, category, aliases, superseded_by, params}` |
+| `helixgen library audit [--json]` | READ-ONLY: which library tones still use a superseded legacy model, and its successor | text or `{"tones": [{hsp, superseded: [...]}]}` |
 | `helixgen generate <recipe.json> [--artist A --song S \| --descriptor D] [--guitar G]` | author a tone into the library (default flow): writes `library/tones/<variant-slug>.hsp` + per-tone metadata JSON, keyed by identity + target guitar | writes the `.hsp` + metadata; warnings on stderr |
 | `helixgen generate <recipe.json> -o <out.hsp>` | LEGACY ad-hoc output: writes there, auto-registers, naming flags IGNORED, no metadata JSON | writes the `.hsp`; warnings on stderr |
 | `helixgen library doc <name> (--from-file <md> \| -) [--variant <guitar-slug>]` | author/update the tone's `description_md` (or a variant's `notes_md`) — replaces the old companion `.md` sidecar | updates metadata in place |
@@ -151,6 +152,59 @@ State your call briefly so the user can redirect before you commit:
 
 For each slot, run `helixgen list-blocks --category <cat>` and scan the output for display names that read closest to the reference gear. Categories are amp / cab / drive / delay / reverb / modulation / filter / eq / dynamics / pitch / volume / send.
 
+#### Native first: never pick a legacy model that has a Stadium-native successor
+
+The Stadium runs two generations of models side by side: its own
+(`Agoura_*` amps, `VIC_*` "Dynamic" reverbs) and the ported **HX/legacy** set
+(`HD2_*`), kept so presets from older Helix hardware still load. Where a
+legacy model has a native successor of the same kind, the successor is the
+better one — **use it for every new tone.**
+
+`list-blocks` marks exactly those models, and `show-block` repeats it:
+
+```
+Plate  [HD2_ReverbPlateStereo]  -> superseded by Dynamic Plate Stereo [VIC_DynPlateStereo]
+```
+
+(`--json`: `superseded_by` is `{display_name, model_id}` or `null`.) `generate`
+prints a stderr `warning:` naming the successor when a recipe uses one — treat
+that warning as a defect in the recipe and fix it, unless the user asked for
+the legacy model by name. Say so in the report when you keep one, and why.
+
+**The marker is the rule — the `HD2_` prefix is not.** Every cab, and nearly
+every drive, delay and modulation block, is `HD2_` with nothing newer: an
+unmarked block is the right choice, not a compromise. Legacy models with no
+native counterpart stay fully in play — `'63 Spring`, `Spring`, `Hot Springs`,
+`Ganymede`, `Plateaux`, `Tile` (the engine's own headphones-venue ambience
+block), and amps like `Cali IV Lead`, `A30 Fawn Brt`, `Jazz Rivet 120`,
+`Das Benzin Mega`. Do not go hunting for a "newer" stand-in for those.
+
+**Reverbs.** Legacy `Plate` → **`Dynamic Plate Stereo`**, `Hall` →
+**`Dynamic Hall Stereo`**, `Room` → **`Dynamic Room Stereo`** (each has a
+`… Mono` sibling). Line 6's 50 factory guitar presets use Dynamic Plate 21
+times to legacy Plate's 5. The other native reverbs — `Dynamic Ambience`,
+`Dynamic Bloom`, `Shimmer` — have no legacy twin; reach for them on merit.
+The two generations do **not** share a param vocabulary, so never carry
+values across by name:
+
+- **`Decay` is seconds on the Dynamic reverbs** (`Dynamic Plate` 0.1..45.1 s,
+  default 2; `Dynamic Room` 0.1..3 s) **and a 0..1 knob on the legacy ones.**
+  A legacy habit of `Decay: 0.4` written onto a Dynamic Plate is a 0.4-second
+  plate — nearly no tail. Pick a time: ~1.2–2.5 s for a rhythm/lead plate.
+- Predelay is `PreDelay` (0..0.1) on Dynamic Plate/Room but `Predelay`
+  (0..0.2) on Dynamic Hall and the legacy three; `HighCut`/`LowCut` defaults
+  are brighter (6.3–10 kHz vs 2.8–5.6 kHz); and there are new knobs (`Damping`,
+  `BassBoost`, motion). `show-block` the successor every time.
+- `Mix` and `Level` mean the same thing on both — those do carry over.
+
+**Converting an existing tone** (the user asks, or `helixgen library audit`
+lists it — a read-only report of library tones still on a superseded model):
+`swap-model` the block, then re-set every param from the successor's
+`show-block`. If the old block had **per-snapshot** values, rewrite the
+param in **all 8 snapshot slots**, not just the ones the tone names — a slot
+left holding the old 0..1 `Decay` recalls as a fraction of a second the
+moment that snapshot loads. Never bulk-convert a library unasked.
+
 #### Amps: Agoura first — this is the single biggest choice in the preset
 
 The library carries **30 Agoura amps** (24 guitar, 6 bass; 3 of them new in firmware 1.4, listed below). Everything else in the
@@ -173,9 +227,16 @@ HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen list-blocks --cat
   | python3 -c 'import json,sys; [print(b["display_name"]) for b in json.load(sys.stdin) if b["model_id"].startswith("Agoura")]'
 ```
 
-Common swaps: legacy `US Double Nrm` → Agoura **`US Double Black`** (Fender Twin);
-legacy `Brit 2204`/`Brit Plexi Brt` → Agoura **`Brit 2203MV`** / **`Brit Plexi`**;
-legacy `Litigator` → Agoura **`Prosecutor`**.
+Every legacy amp with an Agoura model of the same real amplifier carries the
+`-> superseded by` marker in `list-blocks` (above) — that is the swap list,
+read it there rather than from memory. Typical: legacy `US Double Nrm`/`Vib` →
+Agoura **`US Double Black`** (Fender Twin); `Brit 2204`/`Brit 2203` →
+**`Brit 2203MV`**; `Brit Plexi Nrm`/`Brt`/`Jump` → **`Brit Plexi`**;
+`Solo Lead *` → **`Solid 100`**; `Litigator` → **`Prosecutor`**. Where the
+legacy set split one amp into per-channel models, the single Agoura model has
+a `Channel`/`Jack` param instead — set it. An unmarked legacy amp has no
+Agoura twin: pick the closest-sounding Agoura if one fits the reference,
+otherwise use the legacy model.
 Say in the report when you had to fall back to a legacy model, and why.
 
 **Firmware 1.4 amps — need the device on Stadium firmware 1.4+** (an older
@@ -291,7 +352,7 @@ Minimal shape:
         {"block": "Brit Plexi",       "params": {"NormDrv": 0.5, "Master": 1.0, "Level": -8.0}},
         {"block": "4x12 Greenback 25", "params": {}},
         {"block": "Tape Echo", "params": {"Mix": 0.33}},
-        {"block": "Plate",     "params": {"Mix": 0.32}}
+        {"block": "Dynamic Plate Stereo", "params": {"Mix": 0.32}}
       ]
     }
   ]
@@ -1254,12 +1315,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.77.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.78.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.77.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.78.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
@@ -1579,6 +1640,8 @@ propagate it to the other venues' variants.
 | Writing a companion `.md` next to the `.hsp` | Gone — descriptions live in `description_md` via `library doc` (per-variant notes → `notes_md`); read back with `helixgen describe` |
 | Naming a tone without its target guitar | Pass `--guitar <label>` so the display name/slug carry the guitar (`"$Artist - $Song - $Guitar"` / `"$Descriptor - $Guitar"`, step 5); omit it only when the tone is explicitly guitar-agnostic |
 | Hand-formatting the old `"<Tone> — <Guitar>"` title in the recipe | Identity comes from `generate`'s `--artist`/`--song` or `--descriptor` + `--guitar` flags, not the recipe `"name"` (step 5 naming) |
+| Picking a legacy model that `list-blocks` marks `-> superseded by …` (legacy `Plate`/`Hall`/`Room`, a legacy amp with an Agoura twin) | The native successor is the Stadium's own engine and what the factory presets use (Dynamic Plate 21 uses to legacy Plate's 5). Use the successor; `generate` warns when you don't. But the marker is the rule, not the `HD2_` prefix — cabs, most effects, `'63 Spring`, `Tile` have no successor and are correct as they are (step 3) |
+| Carrying a legacy reverb's params onto its Dynamic successor | `Decay` is **seconds** on Dynamic Plate/Hall/Room and a 0..1 knob on legacy — `Decay: 0.4` becomes a 0.4 s tail. Re-set from `show-block`; when converting an existing tone, rewrite per-snapshot values in **all 8** slots (step 3) |
 | Picking a legacy HX amp when an Agoura model exists | Agoura is the Stadium's own engine (SIC amp/cab interaction, real touch response) and is what 44 of the 50 factory guitar presets are built on, 53 amp uses to 12. Legacy models exist for backward compatibility — reaching for one by name-similarity is how a preset ends up feeling flat (step 3) |
 | Writing an Agoura amp's `Level` as if it were a 0..1 knob | `Level` is **dB** (`-40..10`, default ~`-10`); `ChVol` is the 0..1 one. `Level: 0.5` is +10.5 dB and clips. `show-block` prints the unit — read it (step 5 level-units box) |
 | Overriding the amp's power-amp volume by habit | Half of factory guitar amps (28 of 58) sit at the model default (usually 1.0) — the power-amp saturation is what the Agoura models are for. When Line 6 does move it, they move it DOWN (median 0.52), and the high-gain Agouras run 0.40–0.52 (p25–p75; median 0.46). Start from the model's default, and check `by_model` before overriding. The knob is `MasterVol` on `US Double Black`, absent on `Mandarin Rock 3` — `show-block` first (step 5) |
@@ -1670,7 +1733,7 @@ regenerate round-trip.
    ```bash
    HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen patch "<dir>/<slug>.hsp" - --json <<'EOF'
    [{"op": "set_param", "block": "4x12 Greenback 25", "param": "HighCut", "value": 9000},
-    {"op": "set_enabled", "block": "Plate", "enabled": false}]
+    {"op": "set_enabled", "block": "Dynamic Plate Stereo", "enabled": false}]
    EOF
    ```
 
