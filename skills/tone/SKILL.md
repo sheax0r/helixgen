@@ -184,6 +184,8 @@ block), and amps like `Cali IV Lead`, `A30 Fawn Brt`, `Jazz Rivet 120`,
 `… Mono` sibling). Line 6's 50 factory guitar presets use Dynamic Plate 21
 times to legacy Plate's 5. The other native reverbs — `Dynamic Ambience`,
 `Dynamic Bloom`, `Shimmer` — have no legacy twin; reach for them on merit.
+(Names here are shortened — most carry a `Mono`/`Stereo` suffix; copy the
+exact one from `list-blocks`.)
 The two generations do **not** share a param vocabulary, so never carry
 values across by name:
 
