@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.78.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.80.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -601,7 +601,7 @@ helixgen device setlist export-hss Gigs out.hss               # export a DEVICE 
 ```bash
 helixgen device list-irs [--json]                    # IRs ON the device; --json rows include `file`
 helixgen device pull-ir <file-basename> <out.wav>    # download an IR by its on-device file basename
-helixgen device delete-ir <name-or-hash> --yes       # registry entry + backing .wav
+helixgen device delete-ir <name-or-hash> --yes [--force]  # registry + .wav; --force past the usage guard
 helixgen device rename-ir <name-or-hash> <new-name>  # display name only; hash keeps resolving
 helixgen device ir-prune                             # DRY-RUN report: referenced / protected / orphans
 helixgen device ir-prune --yes [--force] [--ignore-warnings] [--only <name-or-hash>]
@@ -625,11 +625,17 @@ helixgen device set-info <cid>... --color green --notes "..."   # batch color + 
 - An IR referenced by any preset ON the device (or by the live edit buffer)
   is never a prune candidate. Execute mode re-verifies the plan right before
   deleting and aborts if the device listings changed — just re-run.
+- **`delete-ir` is guarded (fail-closed, 0.80.0).** It refuses while any
+  on-device preset still references the IR (it would be left a silent cab), or
+  while any preset can't be read to check. It lists the referencing presets;
+  clear them first — in `device live`'s IR tab, "Used by…" → "Remove N tones
+  from device" — or pass **`--force`** to delete anyway.
 - **`delete-ir --force-wedge`** exists only for the wedged file-only state (a
   hash whose file still resolves but has no registry entry, after a delete →
   quick re-import). Never use it on an IR you just imported — the listing may
   merely be lagging. If a plain delete-ir errors suggesting the flag, wait a
-  minute and retry without it first.
+  minute and retry without it first. (`--force-wedge` does not skip the usage
+  guard — pass `--force` too if tones reference the IR.)
 - `set-info` colors: `auto, white, red, dark orange, light orange, yellow,
   green, turquoise, blue, violet, pink, off` (or a raw index 0-11). Notes are
   written without activating the preset.
@@ -817,11 +823,16 @@ helixgen device live --no-open     # LONG-RUNNING. Prints `live editor: http://1
   (`pool_cid` matters: for a tone loaded from a setlist, `cid` is the setlist
   entry, not the preset.) Then say so in one line — the library copy now
   matches the device.
-- **Library drawer (0.77.0).** `device live` also carries the tone + IR
-  **library drawer** (browse / diff / reconcile library vs device), and
+- **Library drawer (0.77.0; tabs + IR usage 0.80.0).** `device live` also
+  carries the tone + IR **library drawer** (browse / diff / reconcile library
+  vs device), now split into **Tones / Setlists / IRs** tabs, and
   `/helixgen:live` is the launcher for the whole workspace. After a Save, the
   drawer's **pull ←** on the stale row reconciles the library copy, so the manual
-  `to-hsp` above is now the fallback, not the only path.
+  `to-hsp` above is now the fallback, not the only path. In the **IRs** tab,
+  **Used by…** lists the on-device tones that reference an IR and offers
+  **Remove N tones from device** (device-only — the local `.hsp` library is
+  untouched); deleting an IR is **refused while on-device tones still
+  reference it** (clear them first, or "Delete anyway").
 - **If Save is refused** ("only a user preset can be saved in place" — a
   factory preset): the tweaks are still only in the edit buffer. Load nothing.
   `helixgen device save` stores the edit buffer as a NEW preset (see its
@@ -1490,7 +1501,7 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   install it alongside device first:
 
   ```bash
-  uv tool install --force 'helixgen[device,linkkey]==0.78.0'
+  uv tool install --force 'helixgen[device,linkkey]==0.80.0'
   helixgen device link-key          # follow the printed prompt; import one IR
   ```
 
@@ -1577,7 +1588,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.78.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.80.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
