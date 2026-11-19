@@ -13,10 +13,12 @@ single window — the chain editor is the frame, the library is a drawer.
   parameter a knob/switch, bypass per block, undo/redo, device-native Save,
   adjective-search knob highlighting. Every control writes to the device and
   is heard at once; the page follows the hardware.
-- **Library drawer:** search the authored tone + IR library, see each tone's
-  drift from the Stadium (a "changed — pull ←" badge), copy a tone onto the
-  device, pull an edited preset back into the library, manage setlists and IRs,
-  and **load any library tone into the chain editor** to tweak it.
+- **Library drawer** (**Tones / Setlists / IRs** tabs): search the authored tone
+  + IR library, see each tone's drift from the Stadium (a "changed — pull ←"
+  badge), copy a tone onto the device, pull an edited preset back into the
+  library, manage setlists and IRs (the IRs tab shows each IR's "Used by…" and a
+  guarded remove/delete), and **load any library tone into the chain editor** to
+  tweak it.
 
 This verb **supersedes the old `library ui` command** — there is no separate
 library launcher any more; the drawer is part of this one surface.
@@ -50,6 +52,11 @@ HELIXGEN_LIBRARY="<resolved>" helixgen device live --no-open
   and the drawer's library actions.
 - **Then stop.** The human turns the knobs and drives the drawer. Do **not**
   narrate the page, poll it, or re-read state to "check on" it.
+- **You can keep working while it's open (0.79.0).** The page holds **no** device
+  lock for its lifetime, so you can go on generating tones and `device copy` /
+  `push-ir`-ing them onto the Stadium while the user has the page up — the drawer
+  reflects each write live, no reload. (Every drawer/CLI write still takes its
+  scope for the instant it runs, so concurrent writes don't trample each other.)
 
 ## Saving keeps the library in step for you
 

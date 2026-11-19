@@ -33,7 +33,7 @@ the whole-library sync that existed only to enforce it.
 
 The engine is the `helixgen` CLI, installed as an isolated uv tool (the
 `setup` skill's step 0 provisions it: `uv tool install
-'helixgen[device]==0.78.0'`). If `helixgen` isn't found or errors with a
+'helixgen[device]==0.80.0'`). If `helixgen` isn't found or errors with a
 traceback, run the setup skill's step 0 — do not improvise an install; if a
 stale `helixgen` shadows the uv tool on PATH, invoke
 `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by absolute path (`NO_COLOR=1`
@@ -601,7 +601,7 @@ helixgen device setlist export-hss Gigs out.hss               # export a DEVICE 
 ```bash
 helixgen device list-irs [--json]                    # IRs ON the device; --json rows include `file`
 helixgen device pull-ir <file-basename> <out.wav>    # download an IR by its on-device file basename
-helixgen device delete-ir <name-or-hash> --yes       # registry entry + backing .wav
+helixgen device delete-ir <name-or-hash> --yes [--force]   # registry entry + backing .wav (refuses while on-device tones reference it)
 helixgen device rename-ir <name-or-hash> <new-name>  # display name only; hash keeps resolving
 helixgen device ir-prune                             # DRY-RUN report: referenced / protected / orphans
 helixgen device ir-prune --yes [--force] [--ignore-warnings] [--only <name-or-hash>]
@@ -625,6 +625,14 @@ helixgen device set-info <cid>... --color green --notes "..."   # batch color + 
 - An IR referenced by any preset ON the device (or by the live edit buffer)
   is never a prune candidate. Execute mode re-verifies the plan right before
   deleting and aborts if the device listings changed — just re-run.
+- **`delete-ir` is fail-closed (0.80.0).** Before deleting it sweeps the device
+  USER pool and **refuses** (non-zero exit, nothing deleted) while any on-device
+  preset still references the IR — or while any preset can't be read to check (an
+  untranscode failure counts as a possible referencer, not a free pass). The
+  message names the referencing tones. Clear them first — the `device live`
+  drawer's **IRs tab** does it in place (**"Used by…"** → **"Remove N tones from
+  device"**, device-only; the local `.hsp` library is untouched) — or pass
+  `--force` to delete anyway.
 - **`delete-ir --force-wedge`** exists only for the wedged file-only state (a
   hash whose file still resolves but has no registry entry, after a delete →
   quick re-import). Never use it on an IR you just imported — the listing may
@@ -817,18 +825,24 @@ helixgen device live --no-open     # LONG-RUNNING. Prints `live editor: http://1
   (`pool_cid` matters: for a tone loaded from a setlist, `cid` is the setlist
   entry, not the preset.) Then say so in one line — the library copy now
   matches the device.
-- **Library drawer (0.77.0).** `device live` also carries the tone + IR
-  **library drawer** (browse / diff / reconcile library vs device), and
-  `/helixgen:live` is the launcher for the whole workspace. After a Save, the
-  drawer's **pull ←** on the stale row reconciles the library copy, so the manual
-  `to-hsp` above is now the fallback, not the only path.
+- **Library drawer (0.77.0; tabbed since 0.80.0).** `device live` also carries
+  the tone + IR **library drawer** (browse / diff / reconcile library vs device),
+  split into **Tones / Setlists / IRs** tabs; `/helixgen:live` is the launcher for
+  the whole workspace. After a Save, the drawer's **pull ←** on the stale row
+  reconciles the library copy, so the manual `to-hsp` above is now the fallback,
+  not the only path. The **IRs tab** shows each IR's **"Used by…"** (which
+  on-device tones reference it) and a guarded **"Remove N tones from device"** /
+  delete.
 - **If Save is refused** ("only a user preset can be saved in place" — a
   factory preset): the tweaks are still only in the edit buffer. Load nothing.
   `helixgen device save` stores the edit buffer as a NEW preset (see its
   `--help`); `to-hsp` that preset.
-- **It does not hog the device.** It holds the `editbuffer` lock only while
-  the user is actually turning something (released ~2 s later), so other
-  verbs keep working while the page is open.
+- **It does not hog the device (0.79.0).** It takes a device lock only for the
+  instant each write runs — `editbuffer` for a knob (released ~2 s later),
+  `library`/`irs` for a drawer copy or IR push — and holds **nothing** for the
+  page's lifetime. So your other work keeps running while the page is open: an
+  agent can `generate` tones and `device copy` / `push-ir` them onto the device,
+  and the drawer picks those writes up live (its badges refresh, no reload).
 - **What it cannot do:** add, remove or move a block, or swap a model (that is
   still the `tone` skill's edit verbs + `device copy` — after pulling the
   device's version back as above); a dual cab's second cab and harness settings
@@ -1490,7 +1504,7 @@ under the tone's exact hash), so **you normally do nothing**. Two caveats:
   install it alongside device first:
 
   ```bash
-  uv tool install --force 'helixgen[device,linkkey]==0.78.0'
+  uv tool install --force 'helixgen[device,linkkey]==0.80.0'
   helixgen device link-key          # follow the printed prompt; import one IR
   ```
 
@@ -1577,7 +1591,7 @@ Tightly:
 | cab silent / "No Model" after sync | referenced IR not in local `mapping.json` | `helixgen register-irs` the WAV, then re-sync (or import in HX Edit) |
 | sync fails partway / device stops responding | the Stadium's flaky network stack dropped the connection | **re-run** the same sync (idempotent); if it persists, **reboot the Helix**, then re-run |
 | `device setlist add` raises a name-collision error | the tone's `meta.name` is already registered to a **different** `.hsp` file (unique-name rule) — NOT triggered by adding the same tone to another setlist | rename one tone, or point at the already-registered file |
-| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.78.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
+| `helixgen: command not found` / `ModuleNotFoundError` traceback | the CLI isn't provisioned, or a stale install shadows the uv tool on PATH | run the `setup` skill's step 0 (`uv tool install 'helixgen[device]==0.80.0'`), or invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` (or `~/.local/bin/helixgen`) by absolute path |
 | a mutating verb waits ~30 s then exits non-zero naming a lock **holder** (label / pid / host / age) | another helixgen process or agent on this machine holds that scope's advisory lease | wait and retry, or coordinate with whatever the label names — do **NOT** reach for `--no-lock` (see **Device locks** above) |
 
 ## Common Mistakes
