@@ -93,7 +93,12 @@ input/output sourcing, and the per-block Focus View deep editors.
 [the-focus-view](https://manuals.line6.com/en/helix-stadium/live/the-focus-view),
 [matrix-mixer](https://manuals.line6.com/en/helix-stadium/live/matrix-mixer).
 
-**Depends on:** the model decision above (protocol spike).
+**Depends on:** the model decision above (protocol spike) — **RESOLVED 2026-11-21**:
+unified-live model, design in
+`docs/superpowers/specs/2026-11-21-signalflow-editor-parity-design.md`. The editor is
+now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** epic
+(`docs/superpowers/specs/2026-11-21-topology-synthesis-engine-design.md`, handoff in
+`docs/superpowers/plans/2026-11-21-topology-synthesis-core-handoff.md`), built first.
 
 ### Parity checklist — what the Stadium editor can do that we can't yet
 
