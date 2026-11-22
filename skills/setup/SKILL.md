@@ -36,7 +36,7 @@ When NOT to use:
 ## Invoking helixgen (binary + library env) — read this once, apply to EVERY call
 
 **Binary.** The engine is provisioned as an isolated CLI tool:
-`uv tool install 'helixgen[device]==0.85.0'` puts a `helixgen` binary on
+`uv tool install 'helixgen[device]==0.86.0'` puts a `helixgen` binary on
 PATH (in uv's tool bin, usually `~/.local/bin`), in its own isolated env —
 deliberately robust against polluted base Pythons. Verification and failure
 modes are step 0 below.
@@ -169,13 +169,13 @@ Run:
 helixgen --version
 ```
 
-- **Prints `helixgen, version 0.85.0`** (the version this plugin release is
+- **Prints `helixgen, version 0.86.0`** (the version this plugin release is
   built against) → proceed.
 - **Command not found** → install it (isolated env; needs network the first
   time):
 
   ```bash
-  uv tool install 'helixgen[device]==0.85.0'
+  uv tool install 'helixgen[device]==0.86.0'
   ```
 
   If the shell still can't find `helixgen` afterwards, uv's tool bin isn't
@@ -495,6 +495,32 @@ new layout. The stderr warning about deprecated `instruments` /
 executing (`--plan <plan.json>` then runs a reviewed plan). EXPLAIN what migrate
 does and get explicit user consent before running the real (non-dry-run)
 migration.
+
+### 0.8. Surface tones a newer engine may have made stale
+
+When bugs are fixed or protocols change, tones authored by an older engine can
+be subtly wrong. The engine carries a **change registry** — each tone-affecting
+fix knows how to detect the tones it affects and repair them in place. Once the
+CLI is provisioned, run it in **report mode** (writes nothing), with the library
+env (see *Invoking helixgen*):
+
+```bash
+helixgen library upgrade          # dry run: reports affected tones/variants/blocks, never writes
+```
+
+- **Nothing affected (or no tone library yet)** — exits 0 with a zero count.
+  Say nothing; carry on.
+- **Something affected** — tell the user plainly, e.g. *"N tones predate M
+  engine fixes"* (and `helixgen changes` lists what changed between versions),
+  then **offer** to repair them: `helixgen library upgrade --apply` (in place,
+  idempotent, auto-committed; detection is content-based, so tones with no
+  provenance stamp are covered too). Get explicit consent before `--apply` —
+  **never apply on your own**. It touches only the library `.hsp` files; re-push
+  any tones already on the device with the `device` skill afterward.
+
+This is the sanctioned way to migrate — do **not** hand-edit `.hsp` files or
+read engine source to reproduce a fix. If a fix a user needs has no registry
+entry yet, that is an engine gap: file it against `helixgen-core`.
 
 ### 1. Confirm the device model
 
