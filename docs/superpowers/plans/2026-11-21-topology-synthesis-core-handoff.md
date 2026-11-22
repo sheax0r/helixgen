@@ -1,5 +1,22 @@
 # Handoff prompt — helixgen-core topology-synthesis epic
 
+> **CORRECTION 2026-11-22 — read before implementing.** A Frida capture of the
+> Stadium app's own traffic disproved this document's "live whole-buffer SET"
+> mechanism: that verb does not exist. **Live** topology edits are a
+> **`/doAgenda` op-transaction** (`movb` / `swap` / `setm` / `spld` / `jono` /
+> `clrb`); the whole-buffer `/setEditBuffer` the spike saw is the device's 2001
+> *echo*. What changes here:
+> - Do not pin or implement a whole-buffer SET RPC; the live push emits a
+>   `/doAgenda` op-list. Reasoning built on "a push replaces the entire buffer"
+>   (concurrency, undo) needs redoing for op-transactions, not word substitution.
+> - Do not implement `/ClearBlock` — `/clearBlock` is an echo; clear is a `clrb` op.
+> - Dual cab's second cab is confirmed: a plain `/ModelSet` with `subpos = 1`.
+> - **Unchanged:** the byte-faithful `_sbepgsm` encoder and the `.hsp`
+>   harness/branch modelling are still needed for Save and library round-trip.
+>
+> Facts: [`docs/helix-protocol.md`](../../helix-protocol.md) → "Structural edits —
+> `/doAgenda` op-transactions".
+
 Give the block below to a new agent working in **helixgen-core**. Tasks 1–2 need
 the owner's **Stadium XL on the LAN + the Helix Stadium app**, so run them on the
 owner's machine (where this plugin checkout and the design doc are readable at the

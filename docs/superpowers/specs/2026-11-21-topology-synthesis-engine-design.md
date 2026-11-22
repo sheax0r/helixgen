@@ -1,5 +1,22 @@
 # Engine topology-synthesis (helixgen-core) — design
 
+> **CORRECTION 2026-11-22 — read before implementing.** A Frida capture of the
+> Stadium app's own traffic disproved this document's "live whole-buffer SET"
+> mechanism: that verb does not exist. **Live** topology edits are a
+> **`/doAgenda` op-transaction** (`movb` / `swap` / `setm` / `spld` / `jono` /
+> `clrb`); the whole-buffer `/setEditBuffer` the spike saw is the device's 2001
+> *echo*. What changes here:
+> - Do not pin or implement a whole-buffer SET RPC; the live push emits a
+>   `/doAgenda` op-list. Reasoning built on "a push replaces the entire buffer"
+>   (concurrency, undo) needs redoing for op-transactions, not word substitution.
+> - Do not implement `/ClearBlock` — `/clearBlock` is an echo; clear is a `clrb` op.
+> - Dual cab's second cab is confirmed: a plain `/ModelSet` with `subpos = 1`.
+> - **Unchanged:** the byte-faithful `_sbepgsm` encoder and the `.hsp`
+>   harness/branch modelling are still needed for Save and library round-trip.
+>
+> Facts: [`docs/helix-protocol.md`](../../helix-protocol.md) → "Structural edits —
+> `/doAgenda` op-transactions".
+
 **Status:** design — pre-approved by owner (standing approval for design docs this
 session). Lands in **helixgen-core**.
 **Date:** 2026-11-21.
