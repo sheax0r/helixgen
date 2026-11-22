@@ -266,16 +266,21 @@ hidden engine epics + one cross-epic conflict.
 | Snapshots | 81v.2 | Model ready; live ops via whole-buffer push day-one, granular later. |
 | IR management | 81v.7 | One gap: WAV resampling; rest UI + disk-side IR folders. |
 | Global EQ | 81v.6 | Half — write-only protocol; needs shadow-state + connect-time snapshot. |
-| Command Center | 81v.4 | **Blocked** on the reverse decoder (below). |
+| Command Center | 81v.4 | **Ready** — `device to-hsp` already round-trips commands + MIDI-CC (bead hgc-mid, since 0.67.0). Pure UI-add. |
 | Matrix Mixer | 81v.8 | **Not engine-ready** — new protocol-RE epic (below). |
 
-### Two engine epics hide inside "the UI" (helixgen-core, critical path)
-1. **Untranscode reverse decoder** — `device to-hsp` drops Command Center
-   commands + MIDI-CC controller bindings; they don't round-trip. Gates 81v.4
-   and part of 81v.3.
-2. **Matrix Mixer protocol-RE** — no module/opcodes exist; needs HW capture +
+### One real engine epic hides inside "the UI" (helixgen-core, critical path)
+1. **Matrix Mixer protocol-RE** — no module/opcodes exist; needs HW capture +
    new `device/client.py` methods. Gates 81v.8; serialized behind 81v.1's
    `client.py` work and its exclusive HW use.
+
+**Correction (2026-11-22):** an earlier reading of the Command Center spec
+flagged an "untranscode reverse decoder" epic (claiming `device to-hsp` drops
+commands + MIDI-CC bindings). That was a **false alarm** — verification found the
+reverse decode already shipped on `main` under bead **hgc-mid** (since 0.67.0;
+`_recover_commands`/`_recover_midi`, round-trip tests included). So 81v.4 is a
+pure UI-add and 81v.3's round-trip concern is likewise moot. No reverse-decoder
+epic is needed.
 
 ### Cross-epic conflict to reconcile
 🔴 The 81v.1 spec (§8.4) stores amp-lens positions **as snapshots 1–8**, which
