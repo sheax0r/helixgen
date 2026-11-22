@@ -250,6 +250,49 @@ for an explicit won't-do unless the owner wants it.
 
 ---
 
+## Design-pass outcomes & implementation sequencing (2026-11-22)
+
+A parallel design pass produced a full spec per area (merged to
+`docs/superpowers/specs/2026-11-22-*-design.md`). It **supersedes the "first
+guess" priorities above** with grounded engine-readiness, and surfaced two
+hidden engine epics + one cross-epic conflict.
+
+### Engine-readiness per area
+| Area | Bead | Verdict |
+|---|---|---|
+| Global settings / I/O | 81v.5 | **Ready** — `device settings` reads/writes live. Pure UI-add. |
+| Preset / librarian | 81v.9 | **Nearly ready** — pool/ref model already matches; needs templates + folders (disk metadata). |
+| Controllers | 81v.3 | Offline ready; live needs 2 blob captures (light). |
+| Snapshots | 81v.2 | Model ready; live ops via whole-buffer push day-one, granular later. |
+| IR management | 81v.7 | One gap: WAV resampling; rest UI + disk-side IR folders. |
+| Global EQ | 81v.6 | Half — write-only protocol; needs shadow-state + connect-time snapshot. |
+| Command Center | 81v.4 | **Blocked** on the reverse decoder (below). |
+| Matrix Mixer | 81v.8 | **Not engine-ready** — new protocol-RE epic (below). |
+
+### Two engine epics hide inside "the UI" (helixgen-core, critical path)
+1. **Untranscode reverse decoder** — `device to-hsp` drops Command Center
+   commands + MIDI-CC controller bindings; they don't round-trip. Gates 81v.4
+   and part of 81v.3.
+2. **Matrix Mixer protocol-RE** — no module/opcodes exist; needs HW capture +
+   new `device/client.py` methods. Gates 81v.8; serialized behind 81v.1's
+   `client.py` work and its exclusive HW use.
+
+### Cross-epic conflict to reconcile
+🔴 The 81v.1 spec (§8.4) stores amp-lens positions **as snapshots 1–8**, which
+would commandeer the user's 8 scene slots — incompatible with 81v.2. Reconcile
+before either ships (likely an 81v.1 mis-map: lens zones ≠ scenes).
+
+### Serialization rule
+The editor UI is one shared surface (`src/helixgen/liveedit/`, esp.
+`page.html` + `server.py`) and every panel rides 81v.1's whole-buffer-SET
+keystone. So **engine epics parallelize** (separate `device/` + new modules) but
+**UI panels serialize** one-at-a-time through `liveedit/`, built on 81v.1's
+foundation (shared reverse-transcode, source bar, snapshot-bypass built once,
+not forked). Shipping order: engine long-poles → 81v.1 keystone → ready panels
+(81v.5, 81v.9, 81v.3-offline) → capture-gated panels → Matrix Mixer.
+
+---
+
 ## Explicitly out of scope (hardware-only, no app surface)
 Physical footswitches/scribble strips, on-device Maintenance (microSD
 backup/restore — the app itself doesn't do it either), capacitive-touch behavior.
