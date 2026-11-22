@@ -41,18 +41,20 @@ Standing owner authorization for agents developing in this repo. Asking permissi
 
 **CLAUDE.md is the source of truth — not agent memory.** Auto-memory has proven unreliable here (stale, contradictory, session-specific). Do not save durable guidance, preferences, or project rules to memory; put them in this file (or the relevant repo's CLAUDE.md) via PR. Where a recalled memory conflicts with CLAUDE.md, the code, or git/PR state, the memory is wrong — verify against the repo and `gh` instead of trusting it.
 
-Still ask: anything destructive to the owner's real content that can't be restored (device restore/factory reset, mirror-sync onto a setlist they use, deleting presets/IRs you did not create). Never, asked or not: pushing core `vX.Y.Z` tags, moving `stable`, or pushing `helixgen--v*` tags — see Releasing.
+**Push release tags without asking.** The core `vX.Y.Z` tag that publishes to PyPI is yours to push — autonomously, no sign-off, as the last step of landing a release (see Development workflow + Releasing). Standing owner authorization; don't ask, and don't wait for the owner to push it.
+
+Still ask: anything destructive to the owner's real content that can't be restored (device restore/factory reset, mirror-sync onto a setlist they use, deleting presets/IRs you did not create). Leave the plugin's `stable` branch and `helixgen--v*` tags to the release workflow — not a trust gate: CI creates them idempotently from a version bump, so a hand-pushed one just collides (see Releasing).
 
 ## Development workflow
 
 - **Worktrees, branched from fresh `origin/main`.** All non-trivial work in git worktree whose branch starts from freshly-fetched `origin/main` — never commit directly on local `main`. Fetch again before picking release version number.
 - **Adversarial review before shipping.** Before merging PR, dispatch at least one independent review subagent prompted to *break* change. Confirmed findings fixed or explicitly deferred to backlog.
-- **Watch CI and merge green PRs — don't wait to be asked** (see Agent autonomy above). The default here is to get work landed: once a PR this session opened is green (CI passing, review findings fixed, mergeable), merge it. Respect the release order: core PR → merge → **the owner pushes the `vX.Y.Z` tag** that publishes to PyPI (do not push core release tags or move plugin `stable` by hand — those are owner/workflow-owned) → then the plugin PR (whose pin needs the PyPI release) merges. Re-fetch both repos' `origin/main` before merging: concurrent releases move `main` and take version numbers, so reconcile (merge, not rebase) and re-pick the next free version first.
+- **Watch CI and merge green PRs — don't wait to be asked** (see Agent autonomy above). The default here is to get work landed: once a PR this session opened is green (CI passing, review findings fixed, mergeable), merge it. Respect the release order: core PR → merge → **push the `vX.Y.Z` tag** that publishes to PyPI (yours to push, no sign-off — just don't move plugin `stable` by hand, that ref is workflow-owned) → then the plugin PR (whose pin needs the PyPI release) merges. Re-fetch both repos' `origin/main` before merging: concurrent releases move `main` and take version numbers, so reconcile (merge, not rebase) and re-pick the next free version first.
 - **Agent-facing surfaces ship in sync — across repos.** Skills describe CLI behavior implemented in helixgen-core. Core behavior change that skills describe needs companion PR here updating `skills/*` + synced `docs/` copies (`CLI.md`, `recipe-reference.md`, `helix-protocol.md`); land two PRs together, cross-reference.
 - **Skills operate through CLI, not source.** Skills must let agent work purely via `helixgen` CLI; behavioral contracts live in CLI's per-verb `--help` (pinned by core's `tests/test_cli_parity.py`) + synced docs. Running engine = uv-tool-installed package — reading local checkout source can mislead about running version.
 - **Never commit paid IR packs or personal device exports.**
 
-## Releasing (automated — do NOT move `stable` or push tags by hand)
+## Releasing (automated — do NOT move `stable` or push `helixgen--v*` by hand)
 
 Releases published by `.github/workflows/release.yml`, fires when `.claude-plugin/plugin.json` or `.claude-plugin/marketplace.json` changes on `main`. Plugin installed from GitHub **`stable` branch** — merge to `main` does NOT ship release; only version bump + workflow does.
 
