@@ -20,7 +20,7 @@ When NOT to use: editing an existing `.hsp` (surgical edits — `helixgen patch`
 ## Prerequisites
 
 - The `helixgen` CLI is installed (the `setup` skill provisions it:
-  `uv tool install 'helixgen[device]==0.85.0'` — isolated env, `helixgen`
+  `uv tool install 'helixgen[device]==0.86.0'` — isolated env, `helixgen`
   binary on PATH). If `helixgen --version` fails or prints a traceback, go
   run the setup skill's step 0 (a stale install may be shadowing the uv
   tool binary — invoke `"$(NO_COLOR=1 uv tool dir --bin)/helixgen"` by
@@ -918,8 +918,18 @@ flags** from step 5 (no `-o` — this is the default library flow):
 
 ```bash
 HELIXGEN_LIBRARY="${CLAUDE_PLUGIN_ROOT}/data/library" helixgen generate /tmp/<slug>.recipe.json \
-  --artist "Foo Fighters" --song "White Limo" --guitar "Les Paul Jr"
+  --artist "Foo Fighters" --song "White Limo" --guitar "Les Paul Jr" \
+  --prompt-summary "<one line: the user's tone request, in your words>" \
+  --research-summary "<one line: why you chose this chain/voicing>"
 ```
+
+**Always pass `--prompt-summary` and `--research-summary`.** They stamp
+per-variant **provenance** on the tone — alongside the embedded recipe and the
+engine version, which `generate` records automatically — so a later `library
+upgrade` or regeneration (and your future self editing the tone) doesn't have to
+re-derive *why* this tone looks the way it does. Keep each to one line: the
+request as the user framed it, and the reasoning behind the chain. Optionally
+add `--plugin-version <this plugin's version>` (from `.claude-plugin/plugin.json`).
 
 **Say where it landed, and whether that's durable.** Report the written
 `.hsp` path. Under the bundled-library fallback
@@ -1317,12 +1327,12 @@ energies (low/low_mid/mid/high_mid/high) you can map straight onto the moves
 above (e.g. a fat `high` band → a targeted EQ cut or a darker mic). **It needs the
 `[analyze]` extra, which is NOT in the plugin's default install** (the pin
 stays `helixgen[device]`) — if the user asks for audio metrics, reinstall
-once with `uv tool install --force 'helixgen[device,analyze]==0.85.0'`.
+once with `uv tool install --force 'helixgen[device,analyze]==0.86.0'`.
 The EXPERIMENTAL `--record N -o <out.wav>` path records the capture first
 from an audio input — e.g. the Stadium's USB return — via sounddevice
 before analyzing it; that additionally needs the `[capture]` extra (plus
 the PortAudio system library):
-`uv tool install --force 'helixgen[device,analyze,capture]==0.85.0'`.
+`uv tool install --force 'helixgen[device,analyze,capture]==0.86.0'`.
 The capture flags `--input`/`--rate`/`--channels` apply only to `--record` —
 passing any of them without `--record` is a **usage error** (0.27.0; they
 used to be silently ignored). Two measurement caveats (0.27.0): the WAV is
