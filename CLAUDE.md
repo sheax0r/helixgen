@@ -28,7 +28,7 @@ CLI self-documenting: skills start capability discovery at `helixgen --help` / `
 - `docs/superpowers/specs/` — **design specs** (`YYYY-MM-DD-<topic>-design.md`), written before implementation and kept as the record of *why*. Distinct from `docs/plans/`, which holds ralphex implementation plan files. Spec assets (calibration audio, fixtures) live under `docs/superpowers/specs/assets/`.
 - `tests/` — skill-doc frontmatter + content checks (`python3 -m pytest`, needs only pytest)
 
-**Plugin work is tracked in beads** (`bd ready` / `bd create`; see Beads block below) — file plugin-only work there, not in TodoWrite or markdown TODO lists. `BACKLOG.md` in the coordination workspace remains the cross-repo shared backlog (entries #57–#59 cover the repo split); it is historical for plugin-only items.
+**The plugin backlog is a flat beads export — there is no served beads DB in this repo.** `bd ready` / `bd create` / `bd where` do **not** resolve here (beads proper lives in **helixgen-core**, at `helixgen-core/.beads`; engine work is tracked there). Don't reach for `bd` in this repo. Read and append the plugin backlog at [`docs/parity/stadium-parity-beads.jsonl`](docs/parity/stadium-parity-beads.jsonl) (its human-readable map is [`docs/parity/stadium-app-parity.md`](docs/parity/stadium-app-parity.md)); track plugin-only work there, not in TodoWrite or markdown TODO lists. `BACKLOG.md` in the coordination workspace remains the historical cross-repo backlog (entries #57–#59 cover the repo split).
 
 ## Agent autonomy — do these WITHOUT asking
 
