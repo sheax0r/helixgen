@@ -434,6 +434,7 @@ msgpack map.
 | **PARAM GET** | `/ParamValueGet` | `,iiiii` → `[reqid, path, grid_slot, 0, paramId]` | `/getParamValue [reqid, path, grid_slot, 0, paramId, value]` | **Live-verified 2026-07-15.** Reads one parameter's current value in RAW units. A coordinate with no block/param answers with a SHORT reply (no value field) rather than an error. Backs `helixgen device params` / `get_param`. |
 | **MODEL SET** | `/ModelSet` | `,iiiii` → `[cmd, dsp, grid_slot, subpos, modelId]` | edit-buffer update (echo `/setModelWithMID`) | Places/replaces a model. Args **decoded 2026-07-14** (e.g. `[117, 0, 4, 0, 70]`); the block coordinate is the **grid slot** (2026-07-15 erratum, same as PARAM SET — the capture's `4` was a contiguous chain where slot == `(blks_key−1)/2`); `modelId` is the **numeric** model id from the model defs (§8). A model swap **cascades**: `/setBlockEnable`, `/setBlockFavorite`, `/assignSnapshotBypass`, `/attachBlockBypassControllerWithBlob` (a `lrtcpgsm` blob), `/setControllerSource`+`/setSourceEnable`, and a batch of `/setPropertyValue` param defaults for the new model — replay these for a faithful live swap. |
 | **SNAPSHOT NAME** | `/SetSnapshotName` | `,iis` → `[reqid, snapshotIndex, "Name"]` | `/status` | Renames snapshot `snapshotIndex` (0–7). |
+| **SNAPSHOT COLOUR** | `/SnapshotColorSet` | `,iii` → `[reqid, snapshotIndex, colr]` | `/status` | **Decoded 2026-11-23 by device probing.** Sets snapshot `snapshotIndex`'s colour; `colr` is an int index into the shared preset-colour palette (`maintenance.PRESET_COLORS`), the same `colr` the snapshot carries in `cg__.entt.snps[].colr`. The device RPC is the CamelCase `/SnapshotColorSet` — the app-internal `/setSnapshotColor` answers `NOT known`. HW-verified: the stored `colr` reflects the written value (restored after). Reply `/status` only, no 2001 colour echo documented, so a caller that needs it reflected re-reads the buffer. |
 | **EDIT BUFFER GET** | `/EditBufferStateGet` | `(reqid:i)` | `/getEditBufferState` → `[reqid, len:h, blob:b]` where blob = `_sbepgsm…` | Pulls the entire current edit buffer as the dialect-B blob (§4). `len` is an int64 (`h`) byte count. |
 
 ### Structural edits — `/doAgenda` op-transactions (2026-11-22 capture)
@@ -486,6 +487,24 @@ Captured agendas:
 - **Clear:** `[{clrb, flow, bloc}]`.
 - **Remove a split:** `[{setm, bloc 14, modl 770, type 8}, {clrb, bloc 3}]` —
   model 770 is `P35_InputInst1`, re-placed at lane B's hidden input slot (14).
+
+> **⚠️ `clrb` does NOT work (HW-disproven, Stadium XL fw 1.4.1, 2026-11-22).**
+> The two `clrb` agendas above do **not** reproduce: the standalone **Clear**,
+> the **Remove-split** compound, instance-id addressing and added `type` fields
+> were every one a **no-op** (the buffer was byte-for-byte unchanged), while
+> `swap`/`setm`/`movb` in the *same* `/doAgenda` transport applied correctly —
+> so the transport and the other 4CCs are sound and `clrb` specifically is
+> wrong or incomplete here. `/setSelectedBlock` and `/clrb` both answer
+> `/error "… is NOT known!!!"` — neither is a dispatchable command.
+> **Block removal that DOES work:** `/ModelSet [reqid, dsp, grid_slot, 0,
+> modelId]` with `modelId` = the **Null model** (`HD2_AppNullModelMono` 132,
+> or `...Stereo` 96 — identical effect), which makes the device **drop the
+> block** from `blks` entirely, leaving a hole (nothing else shifts — matching
+> the offline `remove-block` verb). This is `HelixClient.remove_block` /
+> `device remove-block` / the live editor's `✕`. A full decode of the app's
+> own block-delete (whether it uses a working `clrb` variant the passive
+> capture mangled, or the same null-model `/ModelSet`) still wants a Frida
+> capture, but the null-model path is HW-validated and sufficient.
 - **Drag a block down to create a split** — one agenda, 7 ops. Lane A is grid
   slots 0–13, lane B is 14–27:
 
@@ -649,6 +668,58 @@ level = key `dsp.globaleq.<out>.level` slot 3. A full-EQ snapshot is key
 empty blob for `dsp.globaleq.*` (the app reads EQ state from the connect-time
 sync). Shipped as `device globaleq list|set`; codec
 `src/helixgen/device/globaleq.py`, hardware-validated 2026-07-14.
+
+### Matrix Mixer (per-output monitor mix) — RE spike, per-channel plane capture-pending
+
+The **Matrix Mixer** is the Stadium's **device-global, per-physical-output
+monitor mix** (one layer each for 1/4"/XLR/Phones), mixing **non-preset** sources
+(the 4 Home paths, 8 Song tracks, Click, Count-In, USB In 1/2, Bluetooth, Aux).
+Per channel: Level / Pan / Mute / Solo (pre-fader metering; no phase). It is
+**not** the preset "Output block" (`P35_OutputMatrix` model 783 in `transcode.py`
+— that is per-preset gain/pan in `.hsp`); same word, unrelated surface, separate
+write path. Full RE findings + the `device matrix` verb design:
+`docs/superpowers/specs/2026-11-22-matrix-mixer-re-spike.md`.
+
+**Decoded — the adjacent output/routing plane** (bundled catalog
+`_settings_pages.json`, shipping via `device settings`):
+
+| Key | Meaning |
+|---|---|
+| `global.out.level.{qtr,xlr,spdif}` | per-output **master** level (Volume-knob targets; no `.phones` key — Phones rides the Volume knob / Phones Global-EQ level) |
+| `global.out.usb.12`, `global.out.spdif`, `global.out.spdif.type`, `global.out.samplerate.spdif` | USB/SPDIF out routing + format (USB options incl. *Direct Out / Matrix 1/4" / Matrix XLR / Matrix Phones*) |
+| `global.out.groundlift.xlr`, `global.out.src.reamp.u7`/`.u8` | XLR ground lift; reamp send sources |
+| `global.midi.matrix.ch.{qtr,xlr,phones}` | the MIDI **channel** each output's Matrix layer listens on for CC remote control |
+
+**NOT a property — HW-confirmed (Stadium XL fw 1.4.1, 2026-11-22).** A live
+`/MatchingPropertyDefinitionsGet` glob of the **device's own** catalog (457 defs
+total) returned **zero** matrix per-channel keys — `dsp.matrix*` → 0, `dsp.out*`
+→ 0, `*.pan`/`*.solo`/`*.fader` → 0, `*.mute` → only global `hal.audio.mute`,
+`*matrix*` → only the three `global.midi.matrix.ch.*`. So the per-strip
+Level/Pan/Mute/Solo is **not a device property** (ruling out a Global-EQ-style
+`/PropertyValueSet` codec). Two hypotheses remain (see the spec §3):
+
+- **H2 (leading)** — a dedicated opcode family (like `/doAgenda` for topology).
+- **H3** — not echoed on the 2001 PUB stream → decode needs a Frida outbound
+  capture (`tools/hook_sockets.js`, as for `/doAgenda`).
+
+**No editor-protocol surface — CONFIRMED with Frida 2026-11-22.** The desktop
+editor (retail **and** the re-signed Debug build) has **no global Matrix-Mixer
+screen** — all five nav views (Home / Librarian / Command Center / Global EQ /
+Song) + the output endpoint + the Window/Devices menus were checked; the only
+"Matrix" is the **per-preset Output block's destination** (route a path into the
+matrix; `/setParamValue`), not the monitor-mix faders. A **Frida** hook on the
+Debug app (`tools/frida_run.py` + `hook_sockets.js`, over USB/IPv6) was validated
+working — toggling a block bypass captured `SEND 2002 /BlockEnableSet` (+ the 2001
+`/setBlockEnable` echo and 2002 `/status` ack), and param edits `/ParamValueSet` —
+so the no-matrix-traffic result is a genuine **absence**, not a missed capture.
+Separately, a LAN `device watch` sees **none** of the app's writes at all: the
+app↔device link is USB, not mirrored on the LAN 2001 PUB (5 min of driving → 0 LAN
+2001 frames; qualifies the §6 "the desktop editor echoes on 2001" note, which
+holds only for a LAN or hardware change). **Net: the Matrix Mixer is a
+hardware-front-panel feature; `device matrix` is a won't-do via the editor
+protocol** (only a future app build that adds the screen, or hardware-panel RE,
+could change that). `helixgen` emits no matrix write; full findings + the deferred
+verb design in the spec.
 
 ### Telemetry: tuner & meters (2003 `/dspEvent`)
 
@@ -950,6 +1021,13 @@ footswitch/controller assignment commands are parameterised on the device.
   `/PropertyValueGet` with an **empty blob** — writes work (`device globaleq`),
   reads don't. The app sources EQ state from the connect-time sync; whether a
   bulk read exposes it is unexplored.
+- **Matrix Mixer per-channel plane.** The per-output monitor mix's per-strip
+  Level/Pan/Mute/Solo is **not in the property defs** and **not yet wire-decoded**
+  — see the "Matrix Mixer" subsection in §6 and
+  `docs/superpowers/specs/2026-11-22-matrix-mixer-re-spike.md` (H1/H2/H3 + the
+  read-only capture method + the `device matrix` verb design). The adjacent
+  output/routing/MIDI-channel keys (`global.out.*`, `global.midi.matrix.ch.*`) are
+  decoded and ship via `device settings`.
 - **`.hss` filled-slot payload — RESOLVED 2026-07-15** (real non-empty export
   captured; `docs/superpowers/specs/2026-07-15-hss-and-cc-capture-findings.md`).
   A *filled* slot's manifest entry is `{"path":".N","type":"application/stadium-preset"}`
