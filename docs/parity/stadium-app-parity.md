@@ -224,6 +224,17 @@ Per-output matrix layer (1/4"/XLR/Phones), channels (paths, song tracks, click,
 USB, Bluetooth, Aux), level/pan/mute/solo, per-output global EQ, reset. Larger,
 newer surface; lower priority unless the owner uses multi-out routing.
 
+**UPDATE 2026-11-23 — the mixer has a READ surface after all** (see
+`docs/superpowers/specs/2026-11-23-undocumented-ops-discovery-findings.md`).
+The per-strip Level/Pan/Mute/Solo plane is readable over the LAN as the single
+structured property **`server.mixer.state`** (per channel `vol_`/`pan_`/`mute`/
+`solo`/`src_`/`name`; AUX / Bluetooth / Click / Count / the four Home paths /
+layer mixes). The prior "not a device property / won't-do" verdict rested on a
+`dsp.matrix*` glob that missed it — the mixer is one `server.*` blob, not
+per-strip dotted keys. **Write is still unproven** (candidate:
+`/PropertyValueSet server.mixer.state` variant codec), so 81v.8 is re-scoped
+from "won't-do" to "read-ready; one HW write-capture gates the write path".
+
 ### P2 — Preset / librarian management
 Manual: [presets](https://manuals.line6.com/en/helix-stadium/live/presets),
 librarian-view. Overlaps the existing library drawer. Parity gaps beyond today:
@@ -267,12 +278,15 @@ hidden engine epics + one cross-epic conflict.
 | IR management | 81v.7 | One gap: WAV resampling; rest UI + disk-side IR folders. |
 | Global EQ | 81v.6 | Half — write-only protocol; needs shadow-state + connect-time snapshot. |
 | Command Center | 81v.4 | **Ready** — `device to-hsp` already round-trips commands + MIDI-CC (bead hgc-mid, since 0.67.0). Pure UI-add. |
-| Matrix Mixer | 81v.8 | **Not engine-ready** — new protocol-RE epic (below). |
+| Matrix Mixer | 81v.8 | **Read-ready, write-gated** (updated 2026-11-23) — `server.mixer.state` reads the whole mix over the LAN; only the *write* path needs a HW capture (was mis-scoped "not engine-ready / no surface"). |
 
 ### One real engine epic hides inside "the UI" (helixgen-core, critical path)
-1. **Matrix Mixer protocol-RE** — no module/opcodes exist; needs HW capture +
-   new `device/client.py` methods. Gates 81v.8; serialized behind 81v.1's
-   `client.py` work and its exclusive HW use.
+1. **Matrix Mixer protocol-RE** — **partially solved 2026-11-23**: the mixer is
+   **readable** as `server.mixer.state` (one structured property; no new opcode,
+   no capture needed for reads). Only the **write** path still needs a HW capture
+   + `device/client.py` method. Gates 81v.8's write half; serialized behind
+   81v.1's `client.py` work and its exclusive HW use. See
+   `docs/superpowers/specs/2026-11-23-undocumented-ops-discovery-findings.md`.
 
 **Correction (2026-11-22):** an earlier reading of the Command Center spec
 flagged an "untranscode reverse decoder" epic (claiming `device to-hsp` drops
