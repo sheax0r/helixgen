@@ -5,6 +5,16 @@ with the Line 6 Helix Stadium *Edit application*** (the Mac/Windows desktop
 editor), **plus** the library-management surface the Stadium app has no
 equivalent of (helixgen owns the authored on-disk `.hsp` + IR library).
 
+> **Status — PARITY COMPLETE (2026-11-24).** Shipped in plugin **5.34.0** /
+> engine **0.91.0**: the full `device live` editor — signal-flow editor (81v.1),
+> snapshots (81v.2), controllers & assignments incl. footswitch→bypass (81v.3),
+> Command Center authoring (81v.4), global settings (81v.5), Global EQ (81v.6),
+> IR + librarian (81v.7/9), read-only Matrix Mixer (81v.8), Tuner (81v.10), and
+> Device Info (81v.11). Two items are closed as won't-build: **Matrix Mixer
+> write** (81v.13 — confirmed hardware-panel-only no-op, so read-only is the
+> ceiling) and **Song View** (81v.12 — owner-ratified won't-do). Only optional
+> polish (a cross-pane consistency pass) remains.
+
 This file is the **enumeration + epic map**. It exists because the plugin's
 beads DB isn't currently serveable (see *Filing* at the bottom). The
 **Signal-flow editor** section below is written to be **design-session-ready**:
@@ -253,11 +263,12 @@ Manual: [main-menu](https://manuals.line6.com/en/helix-stadium/live/main-menu).
 Connect dialog, firmware updates, remote-access PIN, rename device, licenses,
 account. helixgen covers discovery/backup/restore via CLI. Low UI priority.
 
-### P3 — Song View / Showcase  *(candidate won't-do)*
+### P3 — Song View / Showcase  *(WON'T-DO — owner-ratified 2026-11-24)*
 Manual: [song-view](https://manuals.line6.com/en/helix-stadium/live/song-view).
 Backing-track / stem-split / playlist feature needing a purchased microSD and a
-lot of surface for little overlap with helixgen's tone-authoring mission. Flag
-for an explicit won't-do unless the owner wants it.
+lot of surface for little overlap with helixgen's tone-authoring mission. The
+owner ratified the won't-do on 2026-11-24 — not built; the parity epic is
+complete without it.
 
 ---
 
