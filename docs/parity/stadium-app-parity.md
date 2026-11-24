@@ -83,6 +83,19 @@ live and ack it? That answer picks the model.
 
 ## EPIC — Signal-flow editor parity  *(the "editor bead": make ready first)*
 
+> **UPDATE 2026-11-24 — the editor UX reframe shipped (engine 0.92.0).** The
+> Signal-flow pane is now a compact **glyph-tile canvas + focus panel**: type
+> icons + category accents per block, **click a tile to edit it** in a focus
+> panel (knobs, lenses, 2nd cab), **within-lane drag-reorder**, a **categorized
+> model browser** for Add/Swap, and adjective-search that lights the matching
+> **tiles** (↑/↓) and the **knobs** in the focus panel. This closes the UX gap
+> this roadmap had enumerated functionally but never addressed. Design:
+> `docs/superpowers/specs/2026-11-24-live-editor-canvas-ux-design.md`.
+> **Remaining here is Stage 2:** moving a block *across* lanes / building new
+> parallel topology by drag (gated on the topology-synthesis engine epic) and
+> the deep Focus-View editors. Library/slot sidebar → bead **81v.14**; a
+> canvas-UX pass for the IR / Command-Center / Global-EQ panes → bead **81v.15**.
+
 **One-liner:** bring the `device live` chain editor from *read-the-structure,
 turn-the-knobs* up to the Stadium Edit app's full **signal-flow editor** —
 structural editing, the model browser, parallel routing, dual-amp/dual-cab,
