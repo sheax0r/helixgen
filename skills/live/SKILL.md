@@ -1,6 +1,6 @@
 ---
 name: live
-description: Use when the user wants to open the live Helix Stadium workspace in a browser — tweak the loaded tone by hand AND browse/reconcile their tone + IR library against the device, in one window (`helixgen device live`). This is the single surface that replaces the old standalone `library ui`: the active tone as a signal chain of knobs (with adjective-search knob highlighting), plus a slide-out LIBRARY DRAWER to search the authored library, see what has drifted from the Stadium, and copy/pull/organize setlists and IRs. Triggers on "open the live editor", "let me tweak the knobs", "dial it in by hand", "open my library", "what's on my Helix vs my library", "browse my tones", "reconcile my library", "show me what drifted", "pull the edited tone back", "open the helixgen workspace".
+description: Use when the user wants to open the live Helix Stadium workspace in a browser — tweak the loaded tone by hand AND browse/reconcile their tone + IR library against the device, in one window (`helixgen device live`). This is the single surface that replaces the old standalone `library ui`: the active tone as a compact signal-flow canvas of blocks — click a block to edit its knobs in a focus panel, drag to reorder, add blocks from a categorized model browser, and adjective-search highlights the matching blocks + knobs — plus a slide-out LIBRARY DRAWER to search the authored library, see what has drifted from the Stadium, and copy/pull/organize setlists and IRs. Triggers on "open the live editor", "edit a tone by hand", "let me tweak the knobs", "dial it in by hand", "add/swap a block", "reorder the chain", "open my library", "what's on my Helix vs my library", "browse my tones", "reconcile my library", "show me what drifted", "pull the edited tone back", "open the helixgen workspace".
 ---
 
 # live
@@ -9,10 +9,17 @@ Open the one local browser workspace for working with the Stadium live:
 `helixgen device live`. It is the chain editor **and** the library hub in a
 single window — the chain editor is the frame, the library is a drawer.
 
-- **Chain editor (the frame):** the ACTIVE tone as a signal chain, every
-  parameter a knob/switch, bypass per block, undo/redo, device-native Save,
-  adjective-search knob highlighting. Every control writes to the device and
-  is heard at once; the page follows the hardware.
+- **Chain editor (the frame):** the ACTIVE tone as a compact **signal-flow
+  canvas** — each block a glyph tile (category icon + colour + a bypass dot),
+  parallel paths drawn as branches. **Click a tile** to edit that block in a
+  **focus panel** below (its knobs/switches, plus the amp/EQ/cab lenses and 2nd
+  cab). **Drag a tile** to reorder it within its lane; **+ Add block** opens a
+  **categorized model browser** (category rail + search); swap a block's model,
+  split, add a 2nd cab, remove; bypass per block; undo/redo; device-native Save.
+  **Adjective-search** lights the matching tiles (↑/↓ by direction) and the
+  specific knobs once a tile is open. Every control writes to the device and is
+  heard at once; the page follows the hardware. (Needs device firmware 1.4+;
+  moving a block *across* lanes is not yet supported — reorder is within-lane.)
 - **Library drawer** (**Tones / Setlists / IRs** tabs): search the authored tone
   + IR library, see each tone's drift from the Stadium (a "changed — pull ←"
   badge), copy a tone onto the device, pull an edited preset back into the
