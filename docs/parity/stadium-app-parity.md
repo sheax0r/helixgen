@@ -186,6 +186,39 @@ now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** ep
 - Parity items that the live protocol genuinely cannot do are documented as
   won't-do with the reason, not left silently missing.
 
+### Demonstrated final status — editor-view parity (2026-11-25)
+
+Each editor-view feature verified against the Stadium app AND helixgen's code, not
+asserted. Core editing capability is at parity; the remaining gaps are documented
+won't-dos (data/HW/RE limits a third-party tool can't overcome), per the acceptance
+criterion above.
+
+**At parity — shipped & released:** add/remove/move/swap blocks; split/merge; cross-lane
+move into a split's lane B (core 0.95.0); within-lane drag-reorder; model selection
+(categorized browser, type icons); per-block param editing for every block type incl. cab
+mic position/distance/angle/model; editable dual-cab 2nd cab (core 0.96.0); input/output
+source + level; I/O + clip metering; EQ drag-band graphic/parametric lens; amp focus editor
++ a Drive x Level lens pad Stadium's amp editor does NOT have (helixgen exceeds here).
+
+**Won't-do — documented with reason (verified, not assumed):**
+- Compressor/Gate gain-reduction meter [81v.17] — no per-block telemetry; the 2003 stream
+  carries only chain-level input/output taps (bypass-diff: every block changes the same cells).
+- Amp "Based On" model info [81v.20] — no basis metadata in the model data (internal names only).
+- Clone/Capture metadata panel [81v.21] — no Capture/Clone block support in the engine data.
+- Amp>Cab Link indicator/toggle [81v.22] — lives in the preset structure the topology-synthesis
+  design flags as not-yet-decoded (Trails/Amp>Cab Link/defaults); RE-gated.
+- Cab IR frequency-response plot, built-in cabs [81v.23] — impulse is internal to device DSP,
+  not extractable (only CabIdx/AmpCabZFir flags exposed).
+
+**Resolved — not a real Stadium gap:** amp-lens "5-zone morph / 8 lens positions" [81v.19] —
+HW-verified: Stadium's amp editor is a standard param editor (knobs/sliders toggle), no
+lens/morph; the "5-zone morph" was an 81v.1 spec mis-map.
+
+**Optional refinements (not capability gaps):** user-IR frequency-response plot [81v.23]
+(FFT-buildable for IR-loader blocks; niche); slider-view toggle (cosmetic — knobs already show
+the identical params).
+
+
 ### Out of scope for this epic (other epics)
 Snapshots UI, controller/footswitch assignment, Command Center, global
 settings/EQ, Matrix Mixer, IR import, tuner, Song View, librarian.
