@@ -2,10 +2,14 @@
 
 **Status:** design **approved** (owner, 2026-11-24). Implementation plan:
 [`plans/2026-11-24-live-editor-canvas-stage1.md`](../plans/2026-11-24-live-editor-canvas-stage1.md).
-**Stage 1 build is ON HOLD** until the `liveedit/` UI-panel wave drains (owner,
-2026-11-24) — ~8 branches are concurrently editing `page.html` and the parity doc
-requires UI panels to serialize through `liveedit/`, so the reframe waits for a settled
-file rather than forcing rebases or merging into churn.
+**SHIPPED (2026-11-25).** The `liveedit/` panel wave drained and the reframe landed.
+**Stage 1** (glyph-tile canvas + focus panel + type icons + categorized model browser +
+within-lane drag + adjective tile-highlighting) shipped in helixgen-core **0.92.0** (#198).
+**Stage 2** (cross-lane moves / topology synthesis) also shipped: `add_split` (0.88.0),
+drag-to-split (0.94.0), cross-lane `move_into_split` (0.95.0), serial multi-split (0.100.0);
+Focus-View deep editors (0.89.0). Plugin skills/docs current through **5.49.0**; the parity
+doc marks the editor epic **PARITY COMPLETE**. The design narrative below is the as-designed
+record (why), not current state.
 **Date:** 2026-11-24
 **Owner:** mike
 **Lands in:** `helixgen-core` (`src/helixgen/liveedit/page.html` + server), companion

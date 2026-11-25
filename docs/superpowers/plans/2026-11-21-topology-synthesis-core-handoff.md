@@ -1,5 +1,10 @@
 # Handoff prompt — helixgen-core topology-synthesis epic
 
+> **SHIPPED (2026-11-25).** This epic is built and released in helixgen-core:
+> `add_split` parallel-routing synthesis (0.88.0), `/doAgenda` live topology ops —
+> move/swap/split/join (0.87.0), drag-to-split (0.94.0), cross-lane `move_into_split`
+> (0.95.0), serial multi-split (0.100.0). Retained as the implementation record.
+
 > **CORRECTION 2026-11-22 — read before implementing.** A Frida capture of the
 > Stadium app's own traffic disproved this document's "live whole-buffer SET"
 > mechanism: that verb does not exist. **Live** topology edits are a

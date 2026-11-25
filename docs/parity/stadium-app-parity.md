@@ -100,10 +100,11 @@ live and ack it? That answer picks the model.
 > **tiles** (↑/↓) and the **knobs** in the focus panel. This closes the UX gap
 > this roadmap had enumerated functionally but never addressed. Design:
 > `docs/superpowers/specs/2026-11-24-live-editor-canvas-ux-design.md`.
-> **Remaining here is Stage 2:** moving a block *across* lanes / building new
-> parallel topology by drag (gated on the topology-synthesis engine epic) and
-> the deep Focus-View editors. Library/slot sidebar → bead **81v.14**; a
-> canvas-UX pass for the IR / Command-Center / Global-EQ panes → bead **81v.15**.
+> **Stage 2 shipped (2026-11-25):** cross-lane moves / parallel topology by drag —
+> `add_split` (0.88.0), drag-to-split (0.94.0), cross-lane `move_into_split` (0.95.0),
+> serial multi-split (0.100.0) — plus the deep Focus-View editors (0.89.0). What's left
+> is the **separate follow-on pass** (not this epic): library/slot sidebar → bead
+> **81v.14**; a canvas-UX pass for the IR / Command-Center / Global-EQ panes → bead **81v.15**.
 
 **One-liner:** bring the `device live` chain editor from *read-the-structure,
 turn-the-knobs* up to the Stadium Edit app's full **signal-flow editor** —
@@ -118,9 +119,10 @@ input/output sourcing, and the per-block Focus View deep editors.
 **Depends on:** the model decision above (protocol spike) — **RESOLVED 2026-11-21**:
 unified-live model, design in
 `docs/superpowers/specs/2026-11-21-signalflow-editor-parity-design.md`. The editor is
-now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** epic
+now **engine-first**: it was gated on a helixgen-core **topology-synthesis** epic
 (`docs/superpowers/specs/2026-11-21-topology-synthesis-engine-design.md`, handoff in
-`docs/superpowers/plans/2026-11-21-topology-synthesis-core-handoff.md`), built first.
+`docs/superpowers/plans/2026-11-21-topology-synthesis-core-handoff.md`) — **built and
+shipped** (engine 0.88.0–0.100.0).
 
 ### Per-feature comparison vs. the Stadium editor (complete, 2026-11-25)
 
