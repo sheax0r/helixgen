@@ -10,14 +10,11 @@
 
 **Spec:** [`docs/superpowers/specs/2026-11-24-live-editor-canvas-ux-design.md`](../specs/2026-11-24-live-editor-canvas-ux-design.md) (plugin repo). Stage 2 (cross-lane moves) = the existing [topology-synthesis handoff](2026-11-21-topology-synthesis-core-handoff.md); **out of scope here**.
 
-> **Status (2026-11-24): ON HOLD — do not start yet.** ~8 branches are concurrently
-> editing `src/helixgen/liveedit/page.html` (controllers 81v.3, global EQ, IR folders,
-> mixer, snapshots 81v.2, global settings 81v.5, library drawer, command-center) and the
-> parity doc mandates UI panels serialize through `liveedit/`. Owner decision: **wait for
-> that wave to drain**, then build this against a settled `page.html`. When resuming:
-> re-base on fresh `origin/main`, re-confirm the `blockEl`/`render()`/`seg()`/`MODELS`/
-> `#adjsearch` anchors (line numbers will have moved), and re-check which categories the
-> live state emits before Task 1.
+> **Status (2026-11-25): SHIPPED — complete.** The panel wave drained and this reframe
+> landed in helixgen-core **0.92.0** (device live canvas + focus editor, #198). Stage 2
+> (cross-lane / topology synthesis, out of scope here) also shipped: drag-to-split (0.94.0),
+> cross-lane `move_into_split` (0.95.0), serial multi-split (0.100.0). Plugin skills/docs
+> current through 5.49.0. Retained as the implementation record; nothing left to start.
 
 ## Global Constraints
 
