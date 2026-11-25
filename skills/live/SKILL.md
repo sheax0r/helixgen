@@ -18,8 +18,10 @@ single window — the chain editor is the frame, the library is a drawer.
   split, add a 2nd cab, remove; bypass per block; undo/redo; device-native Save.
   **Adjective-search** lights the matching tiles (↑/↓ by direction) and the
   specific knobs once a tile is open. Every control writes to the device and is
-  heard at once; the page follows the hardware. (Needs device firmware 1.4+;
-  moving a block *across* lanes is not yet supported — reorder is within-lane.)
+  heard at once; the page follows the hardware. (Needs device firmware 1.4+.
+  Moving a block *across* lanes **is** supported (`move_into_split`); the one
+  structural thing the device can't do is collapse a whole parallel lane — there
+  is no unsplit/merge op.)
 - **Library drawer** (**Tones / Setlists / IRs** tabs): search the authored tone
   + IR library, see each tone's drift from the Stadium (a "changed — pull ←"
   badge), copy a tone onto the device, pull an edited preset back into the
