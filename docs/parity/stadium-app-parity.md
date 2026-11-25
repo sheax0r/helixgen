@@ -246,8 +246,8 @@ convert (core 0.101.0) — swap to the twin, params carried by name, HW-validate
 **Won't-do — documented with reason (verified, not assumed):**
 - Compressor/Gate gain-reduction meter [81v.17] — no per-block telemetry; the 2003 stream
   carries only chain-level input/output taps (bypass-diff: every block changes the same cells).
-- Amp "Based On" model info [81v.20] — no basis metadata in the model data (internal names only).
-- Clone/Capture metadata panel [81v.21] — app-verified: Stadium has Amp Clone / Amp+Cab Clone block types; helixgen's defs model only a clone-HARNESS node (`P35_AppCloneHarness`), with no clone block models or capture metadata (Brand/Product/UUID/Notes), so the panel can't be built.
+- Amp "Based On" model info [81v.20] — no basis metadata in the model data (internal names only). **Defs-verified** (`src/helixgen/device/_defs_data.json`): no `basedon`/`basis`/`modeled`/`real_amp` field exists anywhere; a model record is only (id, display-name, category, params). Nothing to source a basis panel from.
+- Clone/Capture metadata panel [81v.21] — app-verified: Stadium has Amp Clone / Amp+Cab Clone block types; helixgen's defs model only a clone-HARNESS node (`P35_AppCloneHarness`), with no clone block models or capture metadata (Brand/Product/UUID/Notes), so the panel can't be built. **Defs-verified**: the only clone/capture model in `_defs_data.json` is `P35_AppCloneHarness`; no `brand`/`product`/`uuid`/`notes` keys exist.
 - Amp>Cab Link indicator/toggle [81v.22] — **reclassified: not an editor-view feature.** App-
   verified it is a Global Settings preference (IR loader + built-in cab), not an amp/cab param;
   out of `device live` editor-view scope.
@@ -261,7 +261,7 @@ convert (core 0.101.0) — swap to the twin, params carried by name, HW-validate
 - Model-browser Mono/Stereo/Legacy subcategory tabs [81v.30] — app-verified the tabs are real, but
   they can't be faithfully built: legacy models also carry mono/stereo suffixes (e.g.
   `HD2_DL4AnalogDelayStereo` is in Stadium's Legacy tab), so a suffix filter MISFILES them, and the
-  Legacy set is absent from the vendored defs (entries carry only category id/name/short).
+  Legacy set is absent from the vendored defs (entries carry only category id/name/short). **Defs-verified**: `_defs_data.json` carries 25 model categories (amp, cab_ir_interp, delay … wah) and **none is Legacy**.
 - ~~Trails + other harness settings [81v.31]~~ — **RESOLVED and shipped (core 0.102.0).** The
   harness live-write path `/HarnessParamValueSet` was decoded via a frida capture of the Stadium
   app; the editor now writes Trails On/Off on delay/reverb blocks (HW-validated). Write-only —
