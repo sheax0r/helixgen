@@ -52,8 +52,7 @@ The chain editor (the frame of `device live`) today:
 
 - **No structural editing** — cannot add, remove, or move blocks, or swap a
   block's model.
-- **Only each block's primary model** is shown — not a dual-cab's 2nd cab, nor
-  harness settings such as Trails.
+- **Only each block's primary model** is shown — not a dual-cab's 2nd cab.
 - No deep per-block editors (amp lens/XY morph, cab mic placement + IR plot,
   graphic EQ drag, comp gain-reduction meter).
 - No Matrix Mixer; no snapshot-management UI; no controller/Command-Center
@@ -189,7 +188,7 @@ scope** (another epic).
 | Cab: mic position / distance / angle / model | ✅ | shipped |
 | Cab: IR frequency-response plot — **user IRs** | ✅ | core 0.98.0 |
 | Cab: IR frequency-response plot — built-in cabs | 🔬 | 81v.23 — impulse is DSP-internal, not extractable (only CabIdx/AmpCabZFir flags) |
-| Cab: Amp>Cab Link indicator + toggle | ⛔ | 81v.22 — app-verified: not an amp or cab param (the amp's full param list has no link control); a separate preset-structure linking mechanism helixgen hasn't decoded. RE-gated |
+| Cab: Amp>Cab Link indicator + toggle | ➖ | 81v.22 — app-verified **not an editor-view feature**: it is a **Global Settings preference** (governs the IR loader + built-in cab globally), not an amp or cab param (the amp's full param list has no link control). Out of `device live` editor-view scope — reclassified from the earlier "RE-gated" verdict |
 | EQ: drag-band graphic/parametric editor | ✅ | EQ lens |
 | Compressor/Gate: real-time gain-reduction meter | 🔬 | 81v.17 — no per-block telemetry; the 2003 stream carries only chain-level taps (bypass-diff proven) |
 | Clone: read-only metadata panel | ⛔ | 81v.21 — no Capture/Clone block support in the engine data |
@@ -197,17 +196,18 @@ scope** (another epic).
 **Harness / preset-level the editor surfaces**
 | Stadium feature | Status | Evidence / note |
 |---|---|---|
-| Trails + other harness settings | ⛔ | HW-characterized this session: Trails is shown as a per-block knob in the editor, but it lives on the block's `hrns` (fx-harness) node, not the model. Dumped live from the device, the block's harness is `P35_AppFxHarnessMono` (420) whose only params are bypass/upper/EvtIdx/CpuMonitor — **no Trails**. So the app's Trails toggle is a harness-MODEL swap (420 ↔ a Trails-capable harness), and the harness node isn't in the addressable grid, so no decoded op can write it. Buildable only via a frida capture of the app's harness write (a dedicated RE project). RE-gated |
+| Trails (spillover) On/Off | ✅ | core 0.102.0 — the editor shows an **On/Off set-control** on every delay/reverb block. Trails lives on the block's fx-harness node (`P35_AppFxHarness…`), not the model; its live-write path `/HarnessParamValueSet` (harness pid 1) was **decoded via a frida capture of the Stadium app** and HW-validated on a Stadium XL. The device accepts the write but **does not expose Trails state to read back** (absent from both the `sfg_` and `_sbepgsm` dumps, and there is no Get), so it is a fire-and-forget **SET**, not a reflected toggle — this is a device read-limitation, not a helixgen gap |
 
 **Summary.** Every editor-view feature is now either **✅ shipped** or a **⛔/🔬
 demonstrated limit** — there are no "buildable but not built" items left, and the
 ⛔/🔬 verdicts are checked against the live Stadium app, not just the code. Shipped:
 add/remove/move/swap, split/merge, cross-lane move, drag-to-split, **serial multi-
 split**, dual cab, I/O meters, amp/EQ/cab lenses, mic placement, knobs/sliders,
-the user-IR response plot, **block copy/paste**, and **mono↔stereo convert**. The
-**⛔/🔬** items are limits a third-party tool can't overcome, each proven: the
-compressor meter (chain-aggregate telemetry, bypass-diff proven), Amp>Cab Link /
-Trails (harness nodes with no decoded live-write address), Based On / Clone (absent
+the user-IR response plot, **block copy/paste**, **mono↔stereo convert**, and the
+**Trails (spillover) On/Off set-control** (core 0.102.0 — `/HarnessParamValueSet`
+decoded via frida, HW-validated; write-only because the device doesn't read Trails
+back). The **⛔/🔬** items are limits a third-party tool can't overcome, each proven:
+the compressor meter (chain-aggregate telemetry, bypass-diff proven), Based On / Clone (absent
 model metadata), the model-browser Mono/Stereo/Legacy filter (legacy models carry
 mono/stereo suffixes so a suffix filter misfiles them, and the Legacy set is absent
 from the defs), built-in-cab IR plot (DSP-internal impulse), and Clear-Path-B (the
@@ -247,8 +247,9 @@ convert (core 0.101.0) — swap to the twin, params carried by name, HW-validate
   carries only chain-level input/output taps (bypass-diff: every block changes the same cells).
 - Amp "Based On" model info [81v.20] — no basis metadata in the model data (internal names only).
 - Clone/Capture metadata panel [81v.21] — app-verified: Stadium has Amp Clone / Amp+Cab Clone block types; helixgen's defs model only a clone-HARNESS node (`P35_AppCloneHarness`), with no clone block models or capture metadata (Brand/Product/UUID/Notes), so the panel can't be built.
-- Amp>Cab Link indicator/toggle [81v.22] — lives in the preset structure the topology-synthesis
-  design flags as not-yet-decoded (Trails/Amp>Cab Link/defaults); RE-gated.
+- Amp>Cab Link indicator/toggle [81v.22] — **reclassified: not an editor-view feature.** App-
+  verified it is a Global Settings preference (IR loader + built-in cab), not an amp/cab param;
+  out of `device live` editor-view scope.
 - Cab IR frequency-response plot, built-in cabs [81v.23] — impulse is internal to device DSP,
   not extractable (only CabIdx/AmpCabZFir flags exposed).
 - Clear-Path-B / collapse a parallel lane [81v.28] — the `clrb` op is HW-disproven (exhaustively,
@@ -258,8 +259,10 @@ convert (core 0.101.0) — swap to the twin, params carried by name, HW-validate
   they can't be faithfully built: legacy models also carry mono/stereo suffixes (e.g.
   `HD2_DL4AnalogDelayStereo` is in Stadium's Legacy tab), so a suffix filter MISFILES them, and the
   Legacy set is absent from the vendored defs (entries carry only category id/name/short).
-- Trails + other harness settings [81v.31] — Trails lives on the fx harness node with no decoded
-  live-write address (hgc-5gh/hgc-mn3/hgc-1yx); RE-gated, same wall as Amp>Cab Link.
+- ~~Trails + other harness settings [81v.31]~~ — **RESOLVED and shipped (core 0.102.0).** The
+  harness live-write path `/HarnessParamValueSet` was decoded via a frida capture of the Stadium
+  app; the editor now writes Trails On/Off on delay/reverb blocks (HW-validated). Write-only —
+  the device doesn't expose Trails state to read back.
 
 **Resolved — not a real Stadium gap:** amp-lens "5-zone morph / 8 lens positions" [81v.19] —
 HW-verified: Stadium's amp editor is a standard param editor (knobs/sliders toggle), no
