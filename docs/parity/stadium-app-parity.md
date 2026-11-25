@@ -123,59 +123,89 @@ now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** ep
 (`docs/superpowers/specs/2026-11-21-topology-synthesis-engine-design.md`, handoff in
 `docs/superpowers/plans/2026-11-21-topology-synthesis-core-handoff.md`), built first.
 
-### Parity checklist — what the Stadium editor can do that we can't yet
+### Per-feature comparison vs. the Stadium editor (complete, 2026-11-25)
+
+Every editor-view feature the Stadium app exposes, each verified against the app
+AND helixgen's code — not asserted. Status key: **✅ shipped** · **🟡 buildable,
+not yet built** (a follow-up; no data/HW/RE blocker) · **⛔ won't-do** (a data/HW/RE
+limit a third-party tool can't overcome) · **🔬 infeasible** (proven) · **— out of
+scope** (another epic).
 
 **Blocks — add / remove / move**
-- [ ] Add a block: pick an empty location → choose a model from the model browser.
-- [ ] Delete / clear a block.
-- [ ] Drag a block left/right to reorder within a path.
-- [ ] Move a block to another path (drag onto it).
-- [ ] Copy / paste / clear a block (block action panel).
-- [ ] "Add to Favorites" from a block (see Favorites, librarian epic).
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Add a block (pick location → model browser) | ✅ | `add_block` + categorized model picker |
+| Delete / clear a block | ✅ | `remove_block` |
+| Drag reorder within a path | ✅ | `move_block`, within-lane drag |
+| Move a block to another path / lane | ✅ | `move_block`; cross-lane `move_into_split` (core 0.95.0) |
+| Copy / paste a block | 🟡 | buildable from `add_block` + param read/write; no engine blocker |
+| Add to Favorites | — | librarian epic, not editor-view |
 
-**Model browser (the picker)**
-- [ ] Browse models by category (Input, Amp, Preamp, Cab, Effect, FX Loop,
-      Send/Return, Split, Merge, Output, Looper, Clone, Poly).
-- [ ] Mono / Stereo / Legacy subcategories; show each model's mono/stereo type.
-- [ ] Amp list ordering (Agoura-type first, then HX-type).
-- [ ] Swap a block's model in place.
+**Model browser**
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Browse models by category | ✅ | categorized picker |
+| Amp list ordering (Agoura-type first) | ✅ | shipped |
+| Swap a block's model in place | ✅ | `swap_model` |
+| Mono / Stereo / Legacy subcategory filter + type | 🟡 | type icons shown; explicit subcategory tabs not built (buildable) |
 
 **Parallel routing / structure**
-- [ ] Add a Split block; choose **Split type** (types not enumerated in manual —
-      needs capture) and **Balance**.
-- [ ] Add a Merge/Return block; **Pan A / Pan B**.
-- [ ] Drag a block down from the main path → auto-create Split+Merge parallel path.
-- [ ] Multiple splits; merge two split paths.
-- [ ] Clear Path B (double-tap its Input/Output → Clear).
-- [ ] Up to **4 signal flows** (1A/1B/2A/2B); super-serial up to 24/48 locations
-      "DSP permitting" (surface DSP headroom if the protocol exposes it).
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Add a Split; Split type + Balance | ✅ | `add_split`; type/balance via the split block's params |
+| Add a Merge/Return; Pan A / Pan B | ✅ | join + Matrix Mixer pan |
+| Drag a block down → auto Split+Merge | ✅ | drag-to-split (core 0.94.0) |
+| Multiple splits; merge two split paths | 🟡 | single split + cross-lane move shipped; arbitrary multi-split authoring not built (topology-synthesis-gated) |
+| Clear Path B (clear a whole lane) | 🟡 | buildable (compose `remove_block` over the lane) |
+| Up to 4 signal flows / super-serial | ✅ | all 4 flows read & rendered; building beyond current topology = the multi-split follow-up |
 
 **Dual-amp / dual-cab**
-- [ ] Dual-amp (two amps parallel into shared cab).
-- [ ] **Dual-cab: expose and edit the 2nd cab slot** (own model/IR, pan,
-      settings) — today only the primary model is shown.
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Dual-amp (two amps parallel) | ✅ | parallel amps via split |
+| Dual-cab: expose + edit the 2nd cab | ✅ | core 0.96.0 (writes via `/ParamValueSet` sub=1) |
 
 **Inputs / outputs**
-- [ ] Input block: select source (Instrument, Mic, Return; Instrument 2 on XL).
-- [ ] Output block: Level.
-- [ ] Input/Output signal + clip metering (green/red).
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Input block: select source | ✅ | shipped |
+| Output block: Level | ✅ | shipped |
+| Input/Output signal + clip metering | ✅ | core 0.93.0 |
 
 **Mono/stereo conversion**
-- [ ] Convert a block mono↔stereo in place, keeping settings (manual notes
-      controller + snapshot assignments are *not* kept; excludes
-      mono-only/stereo-only/Legacy).
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Convert a block mono↔stereo in place | 🟡 | needs a device channel-mode op; feasibility unverified — investigate before building |
 
 **Focus View — per-block deep editors**
-- [ ] Amp/Preamp: lens / XY cursor across 5 zones morphing multiple params;
-      store up to 8 lens positions as snapshots 1–8; I/O meters; "Based On".
-- [ ] Cab: mic position / distance / angle; IR frequency-response plot;
-      Amp>Cab Link indicator + toggle.
-- [ ] EQ: drag-band graphic/parametric editor (all except Acoustic Sim).
-- [ ] Compressor/Gate: real-time gain-reduction meter.
-- [ ] Clone: read-only metadata panel (Brand/Product/UUID/Notes/date).
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Amp lens / XY cursor | ✅ | Drive×Level lens pad — Stadium's amp editor has no lens, so helixgen *exceeds* here (81v.19) |
+| Amp I/O meters | ✅ | shipped |
+| Amp "Based On" model info | ⛔ | 81v.20 — no basis metadata in the model data (internal names only) |
+| Amp "5-zone morph / 8 lens positions" | 🔬 | 81v.19 — HW-verified NOT a real Stadium feature (an 81v.1 spec mis-map) |
+| Knobs ↔ sliders view toggle | ✅ | core 0.97.0 |
+| Cab: mic position / distance / angle / model | ✅ | shipped |
+| Cab: IR frequency-response plot — **user IRs** | ✅ | **core 0.98.0 (this release)** |
+| Cab: IR frequency-response plot — built-in cabs | 🔬 | 81v.23 — impulse is DSP-internal, not extractable (only CabIdx/AmpCabZFir flags) |
+| Cab: Amp>Cab Link indicator + toggle | ⛔ | 81v.22 — lives in preset structure the topology-synthesis design flags as not-yet-decoded (RE-gated) |
+| EQ: drag-band graphic/parametric editor | ✅ | EQ lens |
+| Compressor/Gate: real-time gain-reduction meter | 🔬 | 81v.17 — no per-block telemetry; the 2003 stream carries only chain-level taps (bypass-diff proven) |
+| Clone: read-only metadata panel | ⛔ | 81v.21 — no Capture/Clone block support in the engine data |
 
-**Harness / preset-level that the editor surfaces**
-- [ ] Trails and other harness settings (currently hidden).
+**Harness / preset-level the editor surfaces**
+| Stadium feature | Status | Evidence / note |
+|---|---|---|
+| Trails + other harness settings | 🟡 | hidden today; same topology-synthesis RE gate as Amp>Cab Link |
+
+**Summary.** Core editing and the advanced per-block editors are at parity and
+shipped (add/remove/move/swap, split/merge, cross-lane move, drag-to-split, dual
+cab, I/O meters, amp/EQ/cab lenses, mic placement, knobs/sliders, and the user-IR
+response plot). The **⛔/🔬** items are documented limits a third-party tool can't
+overcome (proven, not assumed). The **🟡** items are genuine buildable follow-ups
+with no known blocker — copy/paste a block, clear a lane, mono↔stereo convert,
+model-browser subcategory tabs, arbitrary multi-split authoring, and Trails — left
+as follow-ups, not hidden.
 
 ### Acceptance criteria (for the epic as a whole)
 - A user can build a preset's signal chain from empty to multi-path, multi-block,
@@ -189,16 +219,19 @@ now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** ep
 ### Demonstrated final status — editor-view parity (2026-11-25)
 
 Each editor-view feature verified against the Stadium app AND helixgen's code, not
-asserted. Core editing capability is at parity; the remaining gaps are documented
-won't-dos (data/HW/RE limits a third-party tool can't overcome), per the acceptance
-criterion above.
+asserted (the full itemisation is the per-feature comparison above). Core editing and
+the advanced per-block editors are at parity; the remaining items are either documented
+won't-dos (data/HW/RE limits a third-party tool can't overcome) or buildable follow-ups
+with no blocker, per the acceptance criterion above.
 
 **At parity — shipped & released:** add/remove/move/swap blocks; split/merge; cross-lane
 move into a split's lane B (core 0.95.0); within-lane drag-reorder; model selection
 (categorized browser, type icons); per-block param editing for every block type incl. cab
 mic position/distance/angle/model; editable dual-cab 2nd cab (core 0.96.0); input/output
 source + level; I/O + clip metering; EQ drag-band graphic/parametric lens; amp focus editor
-+ a Drive x Level lens pad Stadium's amp editor does NOT have (helixgen exceeds here).
++ a Drive x Level lens pad Stadium's amp editor does NOT have (helixgen exceeds here);
+knobs↔sliders view toggle (core 0.97.0); **user-IR frequency-response plot (core 0.98.0)** —
+the IR-loader block's hash resolved to the user's local .wav and FFT'd with zero new deps.
 
 **Won't-do — documented with reason (verified, not assumed):**
 - Compressor/Gate gain-reduction meter [81v.17] — no per-block telemetry; the 2003 stream
@@ -214,9 +247,11 @@ source + level; I/O + clip metering; EQ drag-band graphic/parametric lens; amp f
 HW-verified: Stadium's amp editor is a standard param editor (knobs/sliders toggle), no
 lens/morph; the "5-zone morph" was an 81v.1 spec mis-map.
 
-**Optional refinements (not capability gaps):** user-IR frequency-response plot [81v.23]
-(FFT-buildable for IR-loader blocks; niche); slider-view toggle (cosmetic — knobs already show
-the identical params).
+**Buildable follow-ups (no blocker, not yet built):** copy/paste a block; clear a whole lane;
+mono↔stereo convert in place (needs a device channel-mode op — feasibility unverified);
+model-browser Mono/Stereo/Legacy subcategory tabs; arbitrary multi-split topology authoring
+(topology-synthesis-gated); Trails + other harness settings (same RE gate as Amp>Cab Link).
+These are honest gaps left as follow-ups, not won't-dos — see the 🟡 rows above.
 
 
 ### Out of scope for this epic (other epics)
