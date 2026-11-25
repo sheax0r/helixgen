@@ -197,7 +197,7 @@ scope** (another epic).
 **Harness / preset-level the editor surfaces**
 | Stadium feature | Status | Evidence / note |
 |---|---|---|
-| Trails + other harness settings | ⛔ | app-verified: Trails IS shown as a per-block knob in the reverb/delay editor, BUT it's the fx-HARNESS param — confirmed absent from the model's own param table in the defs (`HD2_Reverb63SpringStereo` has Decay/HighCut/Level/LowCut/Mix/Predelay, no Trails). The device writes it via an undecoded harness path, so helixgen can't. RE-gated |
+| Trails + other harness settings | ⛔ | HW-characterized this session: Trails is shown as a per-block knob in the editor, but it lives on the block's `hrns` (fx-harness) node, not the model. Dumped live from the device, the block's harness is `P35_AppFxHarnessMono` (420) whose only params are bypass/upper/EvtIdx/CpuMonitor — **no Trails**. So the app's Trails toggle is a harness-MODEL swap (420 ↔ a Trails-capable harness), and the harness node isn't in the addressable grid, so no decoded op can write it. Buildable only via a frida capture of the app's harness write (a dedicated RE project). RE-gated |
 
 **Summary.** Every editor-view feature is now either **✅ shipped** or a **⛔/🔬
 demonstrated limit** — there are no "buildable but not built" items left, and the
