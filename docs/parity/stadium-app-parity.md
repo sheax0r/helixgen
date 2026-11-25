@@ -156,7 +156,7 @@ scope** (another epic).
 | Add a Merge/Return; Pan A / Pan B | ✅ | join + Matrix Mixer pan |
 | Drag a block down → auto Split+Merge | ✅ | drag-to-split (core 0.94.0) |
 | Multiple splits (serial parallel sections) | ✅ | core 0.100.0 — a 2nd (3rd…) split past the last section; the 2-row grid runs sections in series, each branch at `split_col+14`. HW-validated on a Stadium XL |
-| Clear Path B (collapse a whole lane) | ⛔ | removing the split/join routing nodes is impossible: the `clrb` op is HW-disproven (exhaustively, 2026-11-22) and there is no unsplit/merge op; block removal only nulls a block (`/ModelSet`→Null), it can't drop a routing node |
+| Clear Path B (collapse a whole lane) | ⛔ | **capture-verified impossible.** The Stadium app's own remove-split (the split node's ⊖ control) sends `/doAgenda{setm, clrb}`; a device **grid read after the op** shows `P35_AppDSPSplitY` + `P35_AppDSPJoin` **still present** — the device rejects `clrb`. Clearing a block uses `/clrBlock` and leaves the routing intact (also captured). Bare `clrb` was HW-disproven 2026-11-22; the app's own bundled form is equally unhonored. No unsplit/merge op exists |
 | Up to 4 signal flows / super-serial | ✅ | all 4 flows read & rendered; building beyond current topology = the multi-split follow-up |
 
 **Dual-amp / dual-cab**
@@ -210,8 +210,9 @@ back). The **⛔/🔬** items are limits a third-party tool can't overcome, each
 the compressor meter (chain-aggregate telemetry, bypass-diff proven), Based On / Clone (absent
 model metadata), the model-browser Mono/Stereo/Legacy filter (legacy models carry
 mono/stereo suffixes so a suffix filter misfiles them, and the Legacy set is absent
-from the defs), built-in-cab IR plot (DSP-internal impulse), and Clear-Path-B (the
-`clrb`/remove-split op is HW-disproven and no unsplit op exists).
+from the defs), built-in-cab IR plot (DSP-internal impulse), and Clear-Path-B (the app's own
+`/doAgenda{setm,clrb}` remove-split is device-rejected — grid-verified the split/join
+survive — and no unsplit op exists).
 
 ### Acceptance criteria (for the epic as a whole)
 - A user can build a preset's signal chain from empty to multi-path, multi-block,
@@ -252,9 +253,11 @@ convert (core 0.101.0) — swap to the twin, params carried by name, HW-validate
   out of `device live` editor-view scope.
 - Cab IR frequency-response plot, built-in cabs [81v.23] — impulse is internal to device DSP,
   not extractable (only CabIdx/AmpCabZFir flags exposed).
-- Clear-Path-B / collapse a parallel lane [81v.28] — the `clrb` op is HW-disproven (exhaustively,
-  2026-11-22) and there is no unsplit/merge op; block removal only nulls a block, it can't drop
-  a split/join routing node.
+- Clear-Path-B / collapse a parallel lane [81v.28] — **capture-verified impossible.** The Stadium
+  app's own remove-split (split node ⊖) sends `/doAgenda{setm, clrb}`; a device grid read right
+  after shows the split (`P35_AppDSPSplitY`) and join (`P35_AppDSPJoin`) still present — the device
+  rejects `clrb`. Clearing a block uses `/clrBlock` and leaves the routing intact. Bare `clrb` was
+  HW-disproven 2026-11-22; the app's bundled form is equally unhonored. No unsplit/merge op exists.
 - Model-browser Mono/Stereo/Legacy subcategory tabs [81v.30] — app-verified the tabs are real, but
   they can't be faithfully built: legacy models also carry mono/stereo suffixes (e.g.
   `HD2_DL4AnalogDelayStereo` is in Stadium's Legacy tab), so a suffix filter MISFILES them, and the
