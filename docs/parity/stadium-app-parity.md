@@ -126,9 +126,9 @@ now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** ep
 ### Per-feature comparison vs. the Stadium editor (complete, 2026-11-25)
 
 Every editor-view feature the Stadium app exposes, each verified against the app
-AND helixgen's code — not asserted. Status key: **✅ shipped** · **🟡 buildable,
-not yet built** (a follow-up; no data/HW/RE blocker) · **⛔ won't-do** (a data/HW/RE
-limit a third-party tool can't overcome) · **🔬 infeasible** (proven) · **— out of
+AND helixgen's code — not asserted. Every item is now **✅ shipped** or a demonstrated
+limit; nothing is "buildable but not built". Status key: **✅ shipped** · **⛔ won't-do**
+(a data/HW/RE limit a third-party tool can't overcome) · **🔬 infeasible** (proven) · **— out of
 scope** (another epic).
 
 **Blocks — add / remove / move**
@@ -138,7 +138,7 @@ scope** (another epic).
 | Delete / clear a block | ✅ | `remove_block` |
 | Drag reorder within a path | ✅ | `move_block`, within-lane drag |
 | Move a block to another path / lane | ✅ | `move_block`; cross-lane `move_into_split` (core 0.95.0) |
-| Copy / paste a block | 🟡 | buildable from `add_block` + param read/write; no engine blocker |
+| Copy / paste a block | ✅ | core 0.99.0 — Copy captures model/params/bypass/2nd-cab; Paste appends a duplicate (no insert-and-shift — the engine's `move_block` swaps, so Paste appends and the user drags to reposition) |
 | Add to Favorites | — | librarian epic, not editor-view |
 
 **Model browser**
@@ -147,7 +147,7 @@ scope** (another epic).
 | Browse models by category | ✅ | categorized picker |
 | Amp list ordering (Agoura-type first) | ✅ | shipped |
 | Swap a block's model in place | ✅ | `swap_model` |
-| Mono / Stereo / Legacy subcategory filter + type | 🟡 | type icons shown; explicit subcategory tabs not built (buildable) |
+| Mono / Stereo / Legacy subcategory filter + type | ⛔ | the classification data is absent from the vendored defs — every catalog entry carries only `{category_id, name, short}`, no mono/stereo/legacy field. A name-suffix heuristic ("…Mono") is unreliable and can't detect Legacy at all, so a correct filter can't be built. Type icons are shown |
 
 **Parallel routing / structure**
 | Stadium feature | Status | Evidence / note |
@@ -155,8 +155,8 @@ scope** (another epic).
 | Add a Split; Split type + Balance | ✅ | `add_split`; type/balance via the split block's params |
 | Add a Merge/Return; Pan A / Pan B | ✅ | join + Matrix Mixer pan |
 | Drag a block down → auto Split+Merge | ✅ | drag-to-split (core 0.94.0) |
-| Multiple splits; merge two split paths | 🟡 | single split + cross-lane move shipped; arbitrary multi-split authoring not built (topology-synthesis-gated) |
-| Clear Path B (clear a whole lane) | 🟡 | buildable (compose `remove_block` over the lane) |
+| Multiple splits (serial parallel sections) | ✅ | core 0.100.0 — a 2nd (3rd…) split past the last section; the 2-row grid runs sections in series, each branch at `split_col+14`. HW-validated on a Stadium XL |
+| Clear Path B (collapse a whole lane) | ⛔ | removing the split/join routing nodes is impossible: the `clrb` op is HW-disproven (exhaustively, 2026-11-22) and there is no unsplit/merge op; block removal only nulls a block (`/ModelSet`→Null), it can't drop a routing node |
 | Up to 4 signal flows / super-serial | ✅ | all 4 flows read & rendered; building beyond current topology = the multi-split follow-up |
 
 **Dual-amp / dual-cab**
@@ -175,7 +175,7 @@ scope** (another epic).
 **Mono/stereo conversion**
 | Stadium feature | Status | Evidence / note |
 |---|---|---|
-| Convert a block mono↔stereo in place | 🟡 | needs a device channel-mode op; feasibility unverified — investigate before building |
+| Convert a block mono↔stereo in place | ⛔ | not a model swap and not a block flag: no model carries both a Mono and a Stereo twin (verified across the catalog), and mono/stereo for effects lives on the fx HARNESS node (`P35_AppFxHarness{Mono,Stereo}`), which has no decoded live-write address. No target to convert to |
 
 **Focus View — per-block deep editors**
 | Stadium feature | Status | Evidence / note |
@@ -186,7 +186,7 @@ scope** (another epic).
 | Amp "5-zone morph / 8 lens positions" | 🔬 | 81v.19 — HW-verified NOT a real Stadium feature (an 81v.1 spec mis-map) |
 | Knobs ↔ sliders view toggle | ✅ | core 0.97.0 |
 | Cab: mic position / distance / angle / model | ✅ | shipped |
-| Cab: IR frequency-response plot — **user IRs** | ✅ | **core 0.98.0 (this release)** |
+| Cab: IR frequency-response plot — **user IRs** | ✅ | core 0.98.0 |
 | Cab: IR frequency-response plot — built-in cabs | 🔬 | 81v.23 — impulse is DSP-internal, not extractable (only CabIdx/AmpCabZFir flags) |
 | Cab: Amp>Cab Link indicator + toggle | ⛔ | 81v.22 — lives in preset structure the topology-synthesis design flags as not-yet-decoded (RE-gated) |
 | EQ: drag-band graphic/parametric editor | ✅ | EQ lens |
@@ -196,16 +196,19 @@ scope** (another epic).
 **Harness / preset-level the editor surfaces**
 | Stadium feature | Status | Evidence / note |
 |---|---|---|
-| Trails + other harness settings | 🟡 | hidden today; same topology-synthesis RE gate as Amp>Cab Link |
+| Trails + other harness settings | ⛔ | Trails lives on the fx HARNESS node (`P35_AppFxHarnessTrails{Mono,Stereo}`), which has no decoded live-write address; the default harness emitted per effect can't even hold Trails. RE-gated (hgc-5gh/hgc-mn3/hgc-1yx) |
 
-**Summary.** Core editing and the advanced per-block editors are at parity and
-shipped (add/remove/move/swap, split/merge, cross-lane move, drag-to-split, dual
-cab, I/O meters, amp/EQ/cab lenses, mic placement, knobs/sliders, and the user-IR
-response plot). The **⛔/🔬** items are documented limits a third-party tool can't
-overcome (proven, not assumed). The **🟡** items are genuine buildable follow-ups
-with no known blocker — copy/paste a block, clear a lane, mono↔stereo convert,
-model-browser subcategory tabs, arbitrary multi-split authoring, and Trails — left
-as follow-ups, not hidden.
+**Summary.** Every editor-view feature is now either **✅ shipped** or a **⛔/🔬
+demonstrated limit** — there are no "buildable but not built" items left. Shipped:
+add/remove/move/swap, split/merge, cross-lane move, drag-to-split, **serial multi-
+split**, dual cab, I/O meters, amp/EQ/cab lenses, mic placement, knobs/sliders,
+the user-IR response plot, and **block copy/paste**. The **⛔/🔬** items are limits
+a third-party tool can't overcome, each proven, not assumed: the compressor meter
+(chain-aggregate telemetry, bypass-diff proven), Amp>Cab Link / Trails / mono↔stereo
+(harness nodes with no decoded live-write address), Based On / Clone (absent model
+metadata), model-browser mono/stereo/legacy tabs (absent classification data),
+built-in-cab IR plot (DSP-internal impulse), and Clear-Path-B (the `clrb`/remove-
+split op is HW-disproven and no unsplit op exists).
 
 ### Acceptance criteria (for the epic as a whole)
 - A user can build a preset's signal chain from empty to multi-path, multi-block,
@@ -230,8 +233,10 @@ move into a split's lane B (core 0.95.0); within-lane drag-reorder; model select
 mic position/distance/angle/model; editable dual-cab 2nd cab (core 0.96.0); input/output
 source + level; I/O + clip metering; EQ drag-band graphic/parametric lens; amp focus editor
 + a Drive x Level lens pad Stadium's amp editor does NOT have (helixgen exceeds here);
-knobs↔sliders view toggle (core 0.97.0); **user-IR frequency-response plot (core 0.98.0)** —
-the IR-loader block's hash resolved to the user's local .wav and FFT'd with zero new deps.
+knobs↔sliders view toggle (core 0.97.0); user-IR frequency-response plot (core 0.98.0 —
+the IR-loader block's hash resolved to the user's local .wav and FFT'd with zero new deps);
+**block copy/paste (core 0.99.0)**; and **serial multi-split (core 0.100.0) — a 2nd/3rd
+parallel section past the last join, HW-validated on a Stadium XL**.
 
 **Won't-do — documented with reason (verified, not assumed):**
 - Compressor/Gate gain-reduction meter [81v.17] — no per-block telemetry; the 2003 stream
@@ -242,16 +247,23 @@ the IR-loader block's hash resolved to the user's local .wav and FFT'd with zero
   design flags as not-yet-decoded (Trails/Amp>Cab Link/defaults); RE-gated.
 - Cab IR frequency-response plot, built-in cabs [81v.23] — impulse is internal to device DSP,
   not extractable (only CabIdx/AmpCabZFir flags exposed).
+- Clear-Path-B / collapse a parallel lane [81v.28] — the `clrb` op is HW-disproven (exhaustively,
+  2026-11-22) and there is no unsplit/merge op; block removal only nulls a block, it can't drop
+  a split/join routing node.
+- Convert a block mono↔stereo in place [81v.29] — no model carries both a Mono and a Stereo twin
+  (catalog-verified), and mono/stereo lives on the fx harness node, which has no live-write address.
+- Model-browser Mono/Stereo/Legacy subcategory tabs [81v.30] — the classification data is absent
+  from the vendored defs (entries carry only category id/name/short); a name-suffix heuristic is
+  unreliable and can't detect Legacy, so a correct filter can't be built.
+- Trails + other harness settings [81v.31] — Trails lives on the fx harness node with no decoded
+  live-write address (hgc-5gh/hgc-mn3/hgc-1yx); RE-gated, same wall as Amp>Cab Link.
 
 **Resolved — not a real Stadium gap:** amp-lens "5-zone morph / 8 lens positions" [81v.19] —
 HW-verified: Stadium's amp editor is a standard param editor (knobs/sliders toggle), no
 lens/morph; the "5-zone morph" was an 81v.1 spec mis-map.
 
-**Buildable follow-ups (no blocker, not yet built):** copy/paste a block; clear a whole lane;
-mono↔stereo convert in place (needs a device channel-mode op — feasibility unverified);
-model-browser Mono/Stereo/Legacy subcategory tabs; arbitrary multi-split topology authoring
-(topology-synthesis-gated); Trails + other harness settings (same RE gate as Amp>Cab Link).
-These are honest gaps left as follow-ups, not won't-dos — see the 🟡 rows above.
+**Buildable follow-ups:** none. Every editor-view feature is now shipped or a demonstrated
+limit (⛔/🔬) with its reason — the parity epic is complete.
 
 
 ### Out of scope for this epic (other epics)
