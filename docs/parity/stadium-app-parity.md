@@ -147,7 +147,7 @@ scope** (another epic).
 | Browse models by category | ✅ | categorized picker |
 | Amp list ordering (Agoura-type first) | ✅ | shipped |
 | Swap a block's model in place | ✅ | `swap_model` |
-| Mono / Stereo / Legacy subcategory filter + type | ⛔ | the classification data is absent from the vendored defs — every catalog entry carries only `{category_id, name, short}`, no mono/stereo/legacy field. A name-suffix heuristic ("…Mono") is unreliable and can't detect Legacy at all, so a correct filter can't be built. Type icons are shown |
+| Mono / Stereo / Legacy subcategory filter | ⛔ | app-verified: Stadium's browser has the three tabs, but they can't be faithfully built. Mono/Stereo is derivable from the model-name suffix, BUT **Legacy models also carry Mono/Stereo suffixes** (e.g. `HD2_DL4AnalogDelayStereo` sits in Stadium's Legacy tab, not Stereo), so a suffix filter would MISFILE every legacy model — and the Legacy set is absent from the vendored defs (catalog entries carry only category id/name/short). No correct 3-tab filter without the Legacy classification |
 
 **Parallel routing / structure**
 | Stadium feature | Status | Evidence / note |
@@ -175,7 +175,7 @@ scope** (another epic).
 **Mono/stereo conversion**
 | Stadium feature | Status | Evidence / note |
 |---|---|---|
-| Convert a block mono↔stereo in place | ⛔ | not a model swap and not a block flag: no model carries both a Mono and a Stereo twin (verified across the catalog), and mono/stereo for effects lives on the fx HARNESS node (`P35_AppFxHarness{Mono,Stereo}`), which has no decoded live-write address. No target to convert to |
+| Convert a block mono↔stereo in place | ✅ | core 0.101.0 — swap to the mono/stereo twin, carrying shared params over by name. **Corrects an earlier won't-do**: app-side verification showed 158 base names DO carry both a Mono and a Stereo twin (the earlier "no twins" analysis was wrong); HW-validated on a Stadium XL |
 
 **Focus View — per-block deep editors**
 | Stadium feature | Status | Evidence / note |
@@ -199,16 +199,18 @@ scope** (another epic).
 | Trails + other harness settings | ⛔ | Trails lives on the fx HARNESS node (`P35_AppFxHarnessTrails{Mono,Stereo}`), which has no decoded live-write address; the default harness emitted per effect can't even hold Trails. RE-gated (hgc-5gh/hgc-mn3/hgc-1yx) |
 
 **Summary.** Every editor-view feature is now either **✅ shipped** or a **⛔/🔬
-demonstrated limit** — there are no "buildable but not built" items left. Shipped:
+demonstrated limit** — there are no "buildable but not built" items left, and the
+⛔/🔬 verdicts are checked against the live Stadium app, not just the code. Shipped:
 add/remove/move/swap, split/merge, cross-lane move, drag-to-split, **serial multi-
 split**, dual cab, I/O meters, amp/EQ/cab lenses, mic placement, knobs/sliders,
-the user-IR response plot, and **block copy/paste**. The **⛔/🔬** items are limits
-a third-party tool can't overcome, each proven, not assumed: the compressor meter
-(chain-aggregate telemetry, bypass-diff proven), Amp>Cab Link / Trails / mono↔stereo
-(harness nodes with no decoded live-write address), Based On / Clone (absent model
-metadata), model-browser mono/stereo/legacy tabs (absent classification data),
-built-in-cab IR plot (DSP-internal impulse), and Clear-Path-B (the `clrb`/remove-
-split op is HW-disproven and no unsplit op exists).
+the user-IR response plot, **block copy/paste**, and **mono↔stereo convert**. The
+**⛔/🔬** items are limits a third-party tool can't overcome, each proven: the
+compressor meter (chain-aggregate telemetry, bypass-diff proven), Amp>Cab Link /
+Trails (harness nodes with no decoded live-write address), Based On / Clone (absent
+model metadata), the model-browser Mono/Stereo/Legacy filter (legacy models carry
+mono/stereo suffixes so a suffix filter misfiles them, and the Legacy set is absent
+from the defs), built-in-cab IR plot (DSP-internal impulse), and Clear-Path-B (the
+`clrb`/remove-split op is HW-disproven and no unsplit op exists).
 
 ### Acceptance criteria (for the epic as a whole)
 - A user can build a preset's signal chain from empty to multi-path, multi-block,
@@ -235,8 +237,9 @@ source + level; I/O + clip metering; EQ drag-band graphic/parametric lens; amp f
 + a Drive x Level lens pad Stadium's amp editor does NOT have (helixgen exceeds here);
 knobs↔sliders view toggle (core 0.97.0); user-IR frequency-response plot (core 0.98.0 —
 the IR-loader block's hash resolved to the user's local .wav and FFT'd with zero new deps);
-**block copy/paste (core 0.99.0)**; and **serial multi-split (core 0.100.0) — a 2nd/3rd
-parallel section past the last join, HW-validated on a Stadium XL**.
+**block copy/paste (core 0.99.0)**; **serial multi-split (core 0.100.0) — a 2nd/3rd
+parallel section past the last join, HW-validated on a Stadium XL**; and **mono↔stereo
+convert (core 0.101.0) — swap to the twin, params carried by name, HW-validated**.
 
 **Won't-do — documented with reason (verified, not assumed):**
 - Compressor/Gate gain-reduction meter [81v.17] — no per-block telemetry; the 2003 stream
@@ -250,11 +253,10 @@ parallel section past the last join, HW-validated on a Stadium XL**.
 - Clear-Path-B / collapse a parallel lane [81v.28] — the `clrb` op is HW-disproven (exhaustively,
   2026-11-22) and there is no unsplit/merge op; block removal only nulls a block, it can't drop
   a split/join routing node.
-- Convert a block mono↔stereo in place [81v.29] — no model carries both a Mono and a Stereo twin
-  (catalog-verified), and mono/stereo lives on the fx harness node, which has no live-write address.
-- Model-browser Mono/Stereo/Legacy subcategory tabs [81v.30] — the classification data is absent
-  from the vendored defs (entries carry only category id/name/short); a name-suffix heuristic is
-  unreliable and can't detect Legacy, so a correct filter can't be built.
+- Model-browser Mono/Stereo/Legacy subcategory tabs [81v.30] — app-verified the tabs are real, but
+  they can't be faithfully built: legacy models also carry mono/stereo suffixes (e.g.
+  `HD2_DL4AnalogDelayStereo` is in Stadium's Legacy tab), so a suffix filter MISFILES them, and the
+  Legacy set is absent from the vendored defs (entries carry only category id/name/short).
 - Trails + other harness settings [81v.31] — Trails lives on the fx harness node with no decoded
   live-write address (hgc-5gh/hgc-mn3/hgc-1yx); RE-gated, same wall as Amp>Cab Link.
 
