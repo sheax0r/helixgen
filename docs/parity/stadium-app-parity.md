@@ -127,7 +127,8 @@ now **engine-first**: it is blocked on a helixgen-core **topology-synthesis** ep
 
 Every editor-view feature the Stadium app exposes, each verified against the app
 AND helixgen's code — not asserted. Every item is now **✅ shipped** or a demonstrated
-limit; nothing is "buildable but not built". Status key: **✅ shipped** · **⛔ won't-do**
+limit; nothing is "buildable but not built". Each ⛔/🔬 verdict is cross-checked
+against the live Stadium app (model browser + block editors), not code alone. Status key: **✅ shipped** · **⛔ won't-do**
 (a data/HW/RE limit a third-party tool can't overcome) · **🔬 infeasible** (proven) · **— out of
 scope** (another epic).
 
@@ -182,13 +183,13 @@ scope** (another epic).
 |---|---|---|
 | Amp lens / XY cursor | ✅ | Drive×Level lens pad — Stadium's amp editor has no lens, so helixgen *exceeds* here (81v.19) |
 | Amp I/O meters | ✅ | shipped |
-| Amp "Based On" model info | ⛔ | 81v.20 — no basis metadata in the model data (internal names only) |
+| Amp "Based On" model info | ⛔ | 81v.20 — app-verified: the amp browser lists models by display name only (US Luxe Black…), no basis panel; helixgen's defs carry internal names, not the real-amp basis metadata |
 | Amp "5-zone morph / 8 lens positions" | 🔬 | 81v.19 — HW-verified NOT a real Stadium feature (an 81v.1 spec mis-map) |
 | Knobs ↔ sliders view toggle | ✅ | core 0.97.0 |
 | Cab: mic position / distance / angle / model | ✅ | shipped |
 | Cab: IR frequency-response plot — **user IRs** | ✅ | core 0.98.0 |
 | Cab: IR frequency-response plot — built-in cabs | 🔬 | 81v.23 — impulse is DSP-internal, not extractable (only CabIdx/AmpCabZFir flags) |
-| Cab: Amp>Cab Link indicator + toggle | ⛔ | 81v.22 — lives in preset structure the topology-synthesis design flags as not-yet-decoded (RE-gated) |
+| Cab: Amp>Cab Link indicator + toggle | ⛔ | 81v.22 — app-verified: not an amp or cab param (the amp's full param list has no link control); a separate preset-structure linking mechanism helixgen hasn't decoded. RE-gated |
 | EQ: drag-band graphic/parametric editor | ✅ | EQ lens |
 | Compressor/Gate: real-time gain-reduction meter | 🔬 | 81v.17 — no per-block telemetry; the 2003 stream carries only chain-level taps (bypass-diff proven) |
 | Clone: read-only metadata panel | ⛔ | 81v.21 — no Capture/Clone block support in the engine data |
@@ -196,7 +197,7 @@ scope** (another epic).
 **Harness / preset-level the editor surfaces**
 | Stadium feature | Status | Evidence / note |
 |---|---|---|
-| Trails + other harness settings | ⛔ | Trails lives on the fx HARNESS node (`P35_AppFxHarnessTrails{Mono,Stereo}`), which has no decoded live-write address; the default harness emitted per effect can't even hold Trails. RE-gated (hgc-5gh/hgc-mn3/hgc-1yx) |
+| Trails + other harness settings | ⛔ | app-verified: Trails IS shown as a per-block knob in the reverb/delay editor, BUT it's the fx-HARNESS param — confirmed absent from the model's own param table in the defs (`HD2_Reverb63SpringStereo` has Decay/HighCut/Level/LowCut/Mix/Predelay, no Trails). The device writes it via an undecoded harness path, so helixgen can't. RE-gated |
 
 **Summary.** Every editor-view feature is now either **✅ shipped** or a **⛔/🔬
 demonstrated limit** — there are no "buildable but not built" items left, and the
@@ -245,7 +246,7 @@ convert (core 0.101.0) — swap to the twin, params carried by name, HW-validate
 - Compressor/Gate gain-reduction meter [81v.17] — no per-block telemetry; the 2003 stream
   carries only chain-level input/output taps (bypass-diff: every block changes the same cells).
 - Amp "Based On" model info [81v.20] — no basis metadata in the model data (internal names only).
-- Clone/Capture metadata panel [81v.21] — no Capture/Clone block support in the engine data.
+- Clone/Capture metadata panel [81v.21] — app-verified: Stadium has Amp Clone / Amp+Cab Clone block types; helixgen's defs model only a clone-HARNESS node (`P35_AppCloneHarness`), with no clone block models or capture metadata (Brand/Product/UUID/Notes), so the panel can't be built.
 - Amp>Cab Link indicator/toggle [81v.22] — lives in the preset structure the topology-synthesis
   design flags as not-yet-decoded (Trails/Amp>Cab Link/defaults); RE-gated.
 - Cab IR frequency-response plot, built-in cabs [81v.23] — impulse is internal to device DSP,
